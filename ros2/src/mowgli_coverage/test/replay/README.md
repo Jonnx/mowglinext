@@ -30,7 +30,7 @@ python3 ros2/src/mowgli_coverage/test/replay/run_replay.py \
 Build types `Debug` and `RelWithDebInfo` use the same commands with separate build
 directories. The normal package's ament suite runs `test_planning_trace`, the
 Python runner/provenance tests and a 26-fixture replay matrix with two repetitions in each
-of two fresh processes (104 planning calls). Larger stress runs use the commands
+of two fresh processes (104 replay runs). Larger stress runs use the commands
 above. These are registered checks, not a statement that they have passed.
 The standalone suite builds all five existing planner test files unchanged.
 

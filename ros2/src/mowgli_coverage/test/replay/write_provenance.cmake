@@ -12,7 +12,11 @@ endif()
 if(NOT REPLAY_REVISION MATCHES "^[0-9a-fA-F]+$")
   message(FATAL_ERROR "REPLAY_REVISION must be a hexadecimal repository revision")
 endif()
-file(WRITE "${OUTPUT}.tmp" "#pragma once\n#define REPLAY_REVISION \"${REPLAY_REVISION}\"\n#define REPLAY_SOURCE_SHA256 \"${source_sha256}\"\n#define REPLAY_HEADER_SHA256 \"${header_sha256}\"\n")
+file(WRITE "${OUTPUT}.tmp"
+  "#pragma once\n"
+  "#define REPLAY_REVISION \"${REPLAY_REVISION}\"\n"
+  "#define REPLAY_SOURCE_SHA256 \"${source_sha256}\"\n"
+  "#define REPLAY_HEADER_SHA256 \"${header_sha256}\"\n")
 execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${OUTPUT}.tmp" "${OUTPUT}"
   RESULT_VARIABLE copy_result)
 file(REMOVE "${OUTPUT}.tmp")
