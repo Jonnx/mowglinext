@@ -71,11 +71,22 @@ outputs, exit 1). These are comparator checks, not real planner replay.
 Clang-format 18.1.8 changed-lines and Git whitespace checks passed. Initial CI
 formatting and cppcheck jobs passed.
 
-The candidate C++ build, five existing planner suites, trace-passivity tests,
-104-call registered replay matrix and Release/Debug/RelWithDebInfo comparisons
-are pending Linux execution. No passing result is claimed for these checks.
-The isolated pinned dependency alone was built successfully; that does not
-validate the candidate planner or replay executable.
+Linux Release CI at `37a3a1b599c80149623d0cf41fa14c230213fe36` built the real
+candidate successfully against the project's pinned F2C. All five existing
+planner suites passed (73 + 17 + 22 + 13 + 3 = 128 tests), as did all three
+trace-passivity tests and five provenance regressions. All 26 fixtures produced
+one exact output across four replay runs each: two repetitions in each of two
+fresh processes, 104 replay runs total. The multi-polygon fixture calls the
+planner twice per run, giving 108 field-planning calls overall. Changed-input
+controls passed. The replay matrix took 18.89 seconds on that CI runner.
+
+The package check still failed: the POSIX timeout test raced with an already
+reaped child's `/proc` entry, and Python/CMake style checks failed. These are
+corrected in the subsequent patch; a complete green check is still required.
+Source/header logic was unchanged by Python formatting (AST comparison passed).
+Debug/RelWithDebInfo and baseline performance comparisons remain pending.
+
+Evidence: [CI job and test artifact](https://github.com/mowglinext/mowglinext/actions/runs/38004115593/job/114069040471).
 
 Baseline versus candidate pose count, path length, swath/transit counts,
 connector outcomes, runtime and peak RSS are **unmeasured**. The harness emits
