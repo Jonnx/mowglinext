@@ -25,7 +25,7 @@ References: [#823](https://github.com/mowglinext/mowglinext/issues/823),
 
 ## Pinned dependency and numerical findings
 
-Source baseline: `9f39497f26f4759a0b26e601904710fb934beb65` on `dev`.
+Initial investigation baseline: `9f39497f26f4759a0b26e601904710fb934beb65` on `dev`.
 Fields2Cover pin: `884d895b59192882476e986ba44ea9143a06a6a9` (3.0.0).
 
 - Brute-force AUTO costs are stored by ascending candidate index; `min_element`
@@ -59,60 +59,101 @@ unchanged to preserve #924 ownership.
 
 ## Validation status
 
-Local Windows validation: seven Python unit tests ran; six passed and the POSIX
-process-group test was skipped. These test comparison and timeout behavior,
-not Fields2Cover. Five additional provenance regressions passed using real
-CMake 4.2.0: exact hashes, source/header edits, unchanged timestamps, packed-ref
-commits and archive overrides. These do not compile C++.
-All 26 generated fixture schemas passed a separate audit with
-Isabey discovery mocked. A mocked runner exercised 20 stable records across five
-cases and correctly rejected an injected divergence (four records, two distinct
-outputs, exit 1). These are comparator checks, not real planner replay.
-Clang-format 18.1.8 changed-lines and Git whitespace checks passed. Initial CI
-formatting and cppcheck jobs passed.
+The completed x86_64 CI comparison tested PR head
+`54dbcbc1fddc86d7166c92f137e3018a10c9cc7a` in synthetic merge
+`6f9255585d5d531a101f29a2d3453c5290a403e3`, whose parents are baseline
+`fd244fecace467d0046b28012bc29d5a4099220f` and that PR head. The workflow extracts
+matching baseline source, header, tests and fixtures from its first parent.
+These revisions differ from the initial investigation baseline above.
 
-Linux Release CI at `37a3a1b599c80149623d0cf41fa14c230213fe36` built the real
-candidate successfully against the project's pinned F2C. All five existing
-planner suites passed (73 + 17 + 22 + 13 + 3 = 128 tests), as did all three
-trace-passivity tests and five provenance regressions. All 26 fixtures produced
-one exact output across four replay runs each: two repetitions in each of two
-fresh processes, 104 replay runs total. The multi-polygon fixture calls the
-planner twice per run, giving 108 field-planning calls overall. Changed-input
-controls passed. The replay matrix took 18.89 seconds on that CI runner.
+All three dedicated jobs passed: Release, Debug and RelWithDebInfo. Each tested
+26 exact fixtures with 15 untraced baseline runs, 15 untraced candidate runs and
+100 traced candidate runs per fixture, including repetitions within a process
+and fresh processes. That is 3,380 matrix records and 3,510 field-planning calls
+per configuration; the multi-polygon case has two field calls per record.
+Across the three configurations: **10,140 matrix records / 10,530 field calls**.
+Standalone smoke checks add 48 records / 48 field calls overall.
 
-The package check still failed: the POSIX timeout test raced with an already
-reaped child's `/proc` entry, and Python/CMake style checks failed. These are
-corrected in the subsequent patch; a complete green check is still required.
-Source/header logic was unchanged by Python formatting (AST comparison passed).
-Debug/RelWithDebInfo and baseline performance comparisons remain pending.
+Within each configuration all 26 fixtures were stable, all baseline/candidate
+exact outputs and coverage/connector metrics matched, and all traced/untraced
+candidate execution geometry, quaternions and fingerprints matched. Changed
+width, angle and geometry controls had distinct diagnostic input identities and
+execution fingerprints. There was no intermittent divergence in these runs.
+Pose counts, total path length, swath and blade-off transit counts, endpoint-link
+lengths and connector outcomes were unchanged by this implementation. Endpoint
+links are straight-line diagnostics, not measured Nav2 travel or robot safety.
 
-Evidence: [CI job and test artifact](https://github.com/mowglinext/mowglinext/actions/runs/38004115593/job/114069040471).
+Each standalone baseline passed 9/9 CTest targets and candidate passed 10/10.
+The ROS package passed all 15 targets: 128 existing C++ tests, 3 trace-passivity
+tests, 7 runner tests, 9 comparison tests, 5 provenance tests, the 104-record
+replay matrix and lint checks. The complete ROS CI rerun passed; its first
+attempt timed out in an unrelated Nav2 speed-limit test's cleanup. No Nav2 file
+was changed. Formatting, cppcheck, configuration drift and both amd64/arm64
+runtime image builds passed. ARM64 image construction is not ARM64 replay evidence.
 
-Baseline versus candidate pose count, path length, swath/transit counts,
-connector outcomes, runtime and peak RSS are **unmeasured**. The harness emits
-these metrics and supports the unchanged baseline source/header via
-`REPLAY_BASELINE`; use the README commands and compare both with `--no-trace`.
-The dedicated replay workflow now registers this comparison in Release, Debug
-and RelWithDebInfo, with 15 untraced baseline/candidate runs and 100 traced
-candidate runs per fixture. It retains exact inputs, snapshots and environment
-metadata. Registration is not passing evidence; these results remain pending.
-Nine local comparison regressions pass: retained evidence, missing/null values,
-fixture/output/input hash mismatches, missing baseline snapshots, invalid numeric
-measurements, ordered stages, duplicate stages and exact trace drift. These test
-evidence validation, not planner behavior. Python lint and workflow YAML/Bash
-syntax checks pass. Review required retained fixture/snapshot hashes and ordered
-exact execution/quaternion comparisons; incomplete evidence must fail closed.
+Evidence: [planner jobs and retained artifacts](https://github.com/mowglinext/mowglinext/actions/runs/38092863429),
+[ROS CI, successful attempt 2](https://github.com/mowglinext/mowglinext/actions/runs/38092861214).
+The planner artifacts retain exact fixtures, compressed snapshots, per-fixture
+metrics, hashes, build logs and metadata for 14 days. Reproduction commands and
+the retained-evidence comparator are in [README.md](README.md).
 
-Independent source reviews examined Fields2Cover determinism and the replay
-implementation. Confirmed replay fixes include the server's rings-dependent
-start-hint pin condition, process-tree timeout cleanup and bitwise trace parity
-tests for holes, multiple cells, perpendicular swaths and pivot joins.
-Build-time provenance generation was added after review identified stale
-source/header hashes and a packed-to-loose Git-ref transition. Unchanged values
-preserve the generated header timestamp. Initial ARM64 Docker CI stopped at dependency
-resolution because this Draft used the CMake package name as a rosdep key; the
-manifest now uses the verified `nlohmann-json-dev` key. Candidate compilation
-had not begun in that job.
+### Performance and build provenance
+
+The table reports median relative changes across the 26 per-fixture medians,
+candidate versus baseline, with both untraced. Positive means more time or RSS.
+RSS includes the replay process and JSON serialization. These runner measurements
+are not a claimed speed improvement; no timing percentage is used as a CI gate.
+
+| Build | Planner time | Connector time | Process time | Median process RSS |
+| --- | ---: | ---: | ---: | ---: |
+| Release | -0.60% | -1.37% | -0.81% | +0.008% |
+| RelWithDebInfo | -0.08% | -6.88% | 0.00% | +0.008% |
+| Debug | +1.58% | -1.30% | +3.13% | +0.007% |
+
+Maximum measured peak RSS was 119,084 / 119,160 KiB (baseline / candidate) in
+Release and 118,968 / 118,956 KiB in RelWithDebInfo. Full per-fixture values,
+including timing outliers, are in each artifact's `comparison.json`.
+
+All jobs used Ubuntu 26.04, ROS Lyrical, GCC 15.2.0, GDAL 3.12.2 and GEOS 3.14.1.
+The actual CMake executable reported 4.4.3; the package inventory separately
+reported 4.2.3. The pinned F2C library was identical across configurations:
+SHA-256 `1f006c551c5b747fc594d4c69a00f7cecf5299b12aa8cb61aa7cea535c69e6e4`.
+Its cache hit does not retain the original dependency compiler flags; those are
+explicitly unavailable. Planner compiler commands and source/header hashes are
+retained. Do not extrapolate the separately inspected upstream build's macro
+flags to this cached binary or the incident binary.
+
+### Limits of repeatability
+
+Release and RelWithDebInfo execution hashes matched for all 26 fixtures.
+Debug produced different plans for several identical fixture files, in both the
+baseline and candidate. For example, `square_fixed` had 7,059 poses in Release
+and 7,017 in Debug (278.9444 versus 277.6467 m); the recorded float32 field had
+4,315 versus 4,321 poses. Independent artifact review localized the earliest
+recorded `square_fixed` divergence to `0.rings`, first ring, point index 6, Y:
+Debug bits `40032f4af56bf5c8`, Release bits `40032f4af56bf5c9` (one ULP).
+Transported/normalized geometry, parameters and the preceding `safe_cell` stage
+matched. This fixed-angle example differs before recorded swath/connector output;
+it does not support blaming AUTO selection.
+
+Retained planner flags were Debug `-g`, Release `-O3 -DNDEBUG` and RelWithDebInfo
+`-O2 -g -DNDEBUG`. The observations establish build-dependent output in the
+compiled planner stack, not the responsible floating-point operation, optimizer
+behavior or F2C defect. Cached dependency flags and possible inline/header-library
+interactions remain unresolved.
+
+Repeatability within one build therefore does not establish plan identity across
+build configurations. This is build sensitivity, not a reproduction or causal
+explanation of the original charging incident. A changed binary/configuration
+must not authorize reuse of an incompatible positional cursor.
+
+Independent reviews found and closed replay issues in rings-dependent start
+pinning, process-tree timeout cleanup, exact trace assertions, incremental and
+packed-ref build provenance, required retained evidence and ordered trace-stage
+comparison. Nine comparison regressions reject missing/null values, incorrect
+fixture/output/input hashes, missing baseline snapshots, invalid measurements,
+stage reordering/duplicates and submillimetre trace drift. None of these harness
+repairs is presented as a production fix for #823.
 
 ## Integration and resume risks
 
@@ -128,3 +169,30 @@ A genuinely different execution plan must continue to reject stale cursors.
 Charge/restart persistence, accepted-plan retention, reset/remapping and semantic
 completion in #925/#931/#932 remain outside this change. See the README's
 `HARDWARE_REQUIRED` procedure for physical resume acceptance.
+
+## Changed files
+
+The implementation branch changes these 19 files; no coverage-server, Nav2,
+behavior, hardware, map, monitoring or GUI file is changed:
+
+```text
+.github/workflows/coverage-replay.yml
+ros2/src/mowgli_coverage/CMakeLists.txt
+ros2/src/mowgli_coverage/include/mowgli_coverage/coverage_planning.hpp
+ros2/src/mowgli_coverage/package.xml
+ros2/src/mowgli_coverage/src/coverage_planning.cpp
+ros2/src/mowgli_coverage/test/replay/.gitignore
+ros2/src/mowgli_coverage/test/replay/CMakeLists.txt
+ros2/src/mowgli_coverage/test/replay/Dockerfile
+ros2/src/mowgli_coverage/test/replay/INVESTIGATION.md
+ros2/src/mowgli_coverage/test/replay/README.md
+ros2/src/mowgli_coverage/test/replay/compare_replay.py
+ros2/src/mowgli_coverage/test/replay/configure_replay.cmake
+ros2/src/mowgli_coverage/test/replay/replay.cpp
+ros2/src/mowgli_coverage/test/replay/run_replay.py
+ros2/src/mowgli_coverage/test/replay/test_comparison.py
+ros2/src/mowgli_coverage/test/replay/test_provenance.py
+ros2/src/mowgli_coverage/test/replay/test_runner.py
+ros2/src/mowgli_coverage/test/replay/test_trace.cpp
+ros2/src/mowgli_coverage/test/replay/write_provenance.cmake
+```
