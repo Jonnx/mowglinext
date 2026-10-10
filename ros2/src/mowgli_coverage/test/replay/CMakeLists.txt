@@ -15,6 +15,7 @@ get_filename_component(ROS_SRC "${PACKAGE_ROOT}/.." ABSOLUTE)
 set(PLANNER_SOURCE "${PACKAGE_ROOT}/src/coverage_planning.cpp" CACHE FILEPATH
     "Planner implementation (override for a baseline comparison)")
 set(PLANNER_INCLUDE "${PACKAGE_ROOT}/include" CACHE PATH "Matching planner headers")
+set(PLANNER_TEST_ROOT "${PACKAGE_ROOT}/test" CACHE PATH "Matching planner test sources")
 option(REPLAY_BASELINE "Build against planner headers without optional trace support" OFF)
 add_library(replay_planner STATIC "${PLANNER_SOURCE}")
 target_include_directories(replay_planner PUBLIC "${PLANNER_INCLUDE}"
@@ -27,7 +28,7 @@ include(configure_replay.cmake)
 add_coverage_replay(replay_planner)
 
 foreach(test_name coverage_planning pivot_joins start_point coverage_preview coverage_route)
-  add_executable(test_${test_name} "${PACKAGE_ROOT}/test/test_${test_name}.cpp")
+  add_executable(test_${test_name} "${PLANNER_TEST_ROOT}/test_${test_name}.cpp")
   target_link_libraries(test_${test_name} PRIVATE replay_planner GTest::gtest_main)
   add_test(NAME test_${test_name} COMMAND test_${test_name})
 endforeach()

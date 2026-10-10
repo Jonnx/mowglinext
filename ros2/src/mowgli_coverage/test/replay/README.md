@@ -102,7 +102,9 @@ and not every submillimetre change changes that quantized fingerprint.
 
 Build the same harness against a separately extracted baseline implementation
 and matching headers using `-DPLANNER_SOURCE=... -DPLANNER_INCLUDE=...`
-and `-DREPLAY_BASELINE=ON`. Then run baseline and candidate with `--no-trace`
+and `-DREPLAY_BASELINE=ON`. If the baseline tests differ, also supply
+`-DPLANNER_TEST_ROOT=...` with that revision's test sources and relative fixtures.
+Then run baseline and candidate with `--no-trace`
 using the same fixtures, dependency library, compiler and build type. This avoids
 charging snapshot allocation to ordinary planner performance. Compare exact
 output hashes, fingerprints and geometry metrics before interpreting timing/RSS.
@@ -114,7 +116,8 @@ revision refresh at build time, including incremental and packed-ref updates.
 
 The dedicated `Coverage planner replay` workflow runs Release, Debug and
 RelWithDebInfo on changes to this package (or by manual dispatch). It extracts
-the PR's exact base planner/header, freezes the 26 fixture files once and feeds
+the tested synthetic merge's base parent (validated against the PR head), with
+matching planner/header/tests/fixtures, freezes the 26 fixture files once and feeds
 them to both implementations. Each configuration runs 15 untraced repetitions
 per fixture for each implementation and 100 traced candidate repetitions per
 fixture: 3,380 replay records, plus the standalone tests. Multi-polygon records
