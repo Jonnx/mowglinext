@@ -49,11 +49,18 @@ jobs:
         id: baseline
         env:
           EVENT_NAME: ${{ github.event_name }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           if [[ "$EVENT_NAME" == 'pull_request' ]]; then
-            BASE_SHA="$PR_BASE_SHA"
+            # The event's base SHA can lag the synthetic merge checkout.
+            # Compare against the base actually merged into this candidate.
+            if [[ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ||
+                  "$(git rev-parse HEAD^2)" != "$PR_HEAD_SHA" ]]; then
+              echo 'Expected the pull request synthetic merge checkout.' >&2
+              exit 1
+            fi
+            BASE_SHA="$(git rev-parse HEAD^1)"
           else
             git fetch --no-tags origin dev
             BASE_SHA="$(git rev-parse FETCH_HEAD)"
@@ -206,17 +213,22 @@ jobs:
           BASELINE_PLANNER="ros2/src/mowgli_coverage/src/coverage_planning.cpp"
           BASELINE_HEADER="ros2/src/mowgli_coverage/include/mowgli_coverage/coverage_planning.hpp"
           mkdir -p "$BASELINE_SOURCE/src" \
-            "$BASELINE_SOURCE/include/mowgli_coverage" "$ROOT/build-metadata"
+            "$BASELINE_SOURCE/include/mowgli_coverage" "$BASELINE_SOURCE/test" \
+            "$ROOT/build-metadata"
           git show "${BASELINE_SHA}:${BASELINE_PLANNER}" \
             > "$BASELINE_SOURCE/src/coverage_planning.cpp"
           git show "${BASELINE_SHA}:${BASELINE_HEADER}" \
             > "$BASELINE_SOURCE/include/mowgli_coverage/coverage_planning.hpp"
+          # Keep relative fixture includes with the baseline's own test sources.
+          git -c core.autocrlf=false archive "$BASELINE_SHA" ros2/src/mowgli_coverage/test \
+            | tar -x -C "$BASELINE_SOURCE" --strip-components=3
           build_variant() {
             local label="$1"
             local source="$2"
             local include="$3"
             local revision="$4"
             local baseline_mode="$5"
+            local test_root="$6"
             local build_dir="$BUILD_ROOT/$label"
             local metadata_dir="$ROOT/build-metadata/$label"
             mkdir -p "$metadata_dir"
@@ -226,6 +238,7 @@ jobs:
               -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
               -DPLANNER_SOURCE="$source" \
               -DPLANNER_INCLUDE="$include" \
+              -DPLANNER_TEST_ROOT="$test_root" \
               -DREPLAY_BASELINE="$baseline_mode" \
               -DREPLAY_REVISION="$revision" \
               2>&1 | tee "$metadata_dir/configure.log"
@@ -237,9 +250,9 @@ jobs:
             cp "$build_dir/compile_commands.json" "$metadata_dir/"
           }
           build_variant baseline "$BASELINE_SOURCE/src/coverage_planning.cpp" \
-            "$BASELINE_SOURCE/include" "$BASELINE_SHA" ON
+            "$BASELINE_SOURCE/include" "$BASELINE_SHA" ON "$BASELINE_SOURCE/test"
           build_variant candidate "$PACKAGE/src/coverage_planning.cpp" \
-            "$PACKAGE/include" "$CANDIDATE_SHA" OFF
+            "$PACKAGE/include" "$CANDIDATE_SHA" OFF "$PACKAGE/test"
 
       - name: Replay identical fixtures and compare evidence
         env:
