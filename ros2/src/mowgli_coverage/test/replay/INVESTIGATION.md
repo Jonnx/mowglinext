@@ -92,6 +92,16 @@ Baseline versus candidate pose count, path length, swath/transit counts,
 connector outcomes, runtime and peak RSS are **unmeasured**. The harness emits
 these metrics and supports the unchanged baseline source/header via
 `REPLAY_BASELINE`; use the README commands and compare both with `--no-trace`.
+The dedicated replay workflow now registers this comparison in Release, Debug
+and RelWithDebInfo, with 15 untraced baseline/candidate runs and 100 traced
+candidate runs per fixture. It retains exact inputs, snapshots and environment
+metadata. Registration is not passing evidence; these results remain pending.
+Nine local comparison regressions pass: retained evidence, missing/null values,
+fixture/output/input hash mismatches, missing baseline snapshots, invalid numeric
+measurements, ordered stages, duplicate stages and exact trace drift. These test
+evidence validation, not planner behavior. Python lint and workflow YAML/Bash
+syntax checks pass. Review required retained fixture/snapshot hashes and ordered
+exact execution/quaternion comparisons; incomplete evidence must fail closed.
 
 Independent source reviews examined Fields2Cover determinism and the replay
 implementation. Confirmed replay fixes include the server's rings-dependent

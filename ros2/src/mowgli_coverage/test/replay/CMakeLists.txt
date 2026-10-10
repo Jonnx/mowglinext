@@ -38,6 +38,8 @@ if(NOT REPLAY_BASELINE)
 endif()
 add_test(NAME replay_runner_unit COMMAND "${Python3_EXECUTABLE}"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_runner.py")
+add_test(NAME replay_comparison_unit COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_comparison.py")
 add_test(NAME replay_provenance_unit COMMAND "${Python3_EXECUTABLE}"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_provenance.py")
 set_tests_properties(replay_provenance_unit PROPERTIES
