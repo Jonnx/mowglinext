@@ -112,6 +112,38 @@ For source archives, supply `-DREPLAY_REVISION=<hex commit>`; the build refuses
 to invent a revision when Git metadata is absent. Source/header hashes and Git
 revision refresh at build time, including incremental and packed-ref updates.
 
+The dedicated `Coverage planner replay` workflow runs Release, Debug and
+RelWithDebInfo on changes to this package (or by manual dispatch). It extracts
+the PR's exact base planner/header, freezes the 26 fixture files once and feeds
+them to both implementations. Each configuration runs 15 untraced repetitions
+per fixture for each implementation and 100 traced candidate repetitions per
+fixture: 3,380 replay records, plus the standalone tests. Multi-polygon records
+contain more than one field-planning call.
+
+Artifacts named `coverage-planner-replay-<build type>` retain the exact fixtures,
+compressed snapshots, summaries, comparison JSON/Markdown, build logs/flags,
+dependency versions and library hashes for 14 days. Baseline and candidate must
+match exact execution output and geometry metrics; traced execution coordinates
+and quaternions must match the untraced candidate. Source identities are allowed
+to differ. Runtime/RSS measurements are reported rather than gated by a noisy
+percentage threshold. The job uses the existing pinned dependency cache; on a
+cache hit its original compiler flags are unavailable and are reported as such.
+The comparison verifies summaries against retained fixture/snapshot hashes and
+rejects missing, null or invalid evidence. Its nine rejection/passivity tests
+run in both the package and standalone suites.
+
+To compare downloaded artifacts locally:
+
+```sh
+python3 ros2/src/mowgli_coverage/test/replay/compare_replay.py \
+  --baseline-dir Release/results/baseline-no-trace \
+  --candidate-dir Release/results/candidate-no-trace \
+  --trace-dir Release/results/candidate-trace \
+  --environment Release/environment/environment.json \
+  --output-json /tmp/comparison.json --output-markdown /tmp/comparison.md \
+  --require-identical
+```
+
 Record the F2C source commit, actual compiler flags (the pinned CMake
 `ALLOW_PARALLELIZATION=ON` option alone does not define the C++ macro), library
 SHA-256, compiler, GDAL/GEOS versions, architecture and repo/source hashes with
