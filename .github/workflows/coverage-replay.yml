@@ -92,8 +92,10 @@ jobs:
         env:
           F2C_SHA: 884d895b59192882476e986ba44ea9143a06a6a9
         run: |
-          set -euo pipefail
+          # ROS setup reads optional unset variables; enable nounset afterwards.
+          set -eo pipefail
           source "/opt/ros/${ROS_DISTRO}/setup.bash"
+          set -u
           export CMAKE_PREFIX_PATH="/opt/fields2cover-300:${CMAKE_PREFIX_PATH:-}"
           cd "$RUNNER_TEMP"
           git clone https://github.com/Fields2Cover/Fields2Cover.git f2c3
@@ -122,8 +124,9 @@ jobs:
           CANDIDATE_SHA: ${{ github.sha }}
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
         run: |
-          set -euo pipefail
+          set -eo pipefail
           source "/opt/ros/${ROS_DISTRO}/setup.bash"
+          set -u
           export LD_LIBRARY_PATH="/opt/fields2cover-300/lib:${LD_LIBRARY_PATH:-}"
           ROOT="$RUNNER_TEMP/coverage-replay-artifacts/$BUILD_TYPE"
           mkdir -p "$ROOT/environment"
@@ -189,8 +192,9 @@ jobs:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
           CANDIDATE_SHA: ${{ github.sha }}
         run: |
-          set -euo pipefail
+          set -eo pipefail
           source "/opt/ros/${ROS_DISTRO}/setup.bash"
+          set -u
           export CMAKE_PREFIX_PATH="/opt/fields2cover-300:${CMAKE_PREFIX_PATH:-}"
           export LD_LIBRARY_PATH="/opt/fields2cover-300/lib:${LD_LIBRARY_PATH:-}"
           REPO="$GITHUB_WORKSPACE"
@@ -242,8 +246,9 @@ jobs:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
           CANDIDATE_SHA: ${{ github.sha }}
         run: |
-          set -euo pipefail
+          set -eo pipefail
           source "/opt/ros/${ROS_DISTRO}/setup.bash"
+          set -u
           export CMAKE_PREFIX_PATH="/opt/fields2cover-300:${CMAKE_PREFIX_PATH:-}"
           export LD_LIBRARY_PATH="/opt/fields2cover-300/lib:${LD_LIBRARY_PATH:-}"
           REPO="$GITHUB_WORKSPACE"
