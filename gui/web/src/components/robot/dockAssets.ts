@@ -14,8 +14,9 @@ export type DockArtwork = {
     sideAnchor: [number, number];
 };
 export const DOCK_ARTWORK = {
+    // Built-in parked alignment: footprint centre 220 mm ahead of rear axle.
     standard: {part: "dock", height: .15, origin: "rearAxle",
-        offset: {forward: 0, left: 0}, topAnchor: [.5, .5], sideAnchor: [.5, 1]},
+        offset: {forward: .220, left: 0}, topAnchor: [.5, .5], sideAnchor: [.5, 1]},
     // Slatted platform centre x=355, cropped source starts x=47 and is 721px
     // wide. The charging pedestal is outside this reference, within the crop.
     worx: {part: "dock-worx", height: .14, origin: "chassisCenter",

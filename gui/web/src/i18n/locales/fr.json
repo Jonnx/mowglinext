@@ -2464,9 +2464,9 @@
     "dock_visual_x_offset": "Centre X de la station",
     "dock_visual_lengthTooltip": "Mesurez la station complète d’avant en arrière, tête de charge comprise, en mètres. Règle sa longueur affichée dans les aperçus et sur la carte sans déplacer la pose d’accostage.",
     "dock_visual_widthTooltip": "Mesurez la station complète de gauche à droite, borne de charge latérale comprise, en mètres. Règle sa largeur affichée en vue de dessus et sur la carte.",
-    "dock_visual_x_offsetTooltip": "Dock Worx : mesurez entre le centre du châssis et le centre du plateau ajouré, vers l’avant ou l’arrière. Zéro centre le plateau sous la tondeuse. Autres docks : mesurez de l’essieu arrière au centre de l’emprise totale. Positif vers l’avant. En mètres ; illustration uniquement, sans modifier la pose calibrée.",
+    "dock_visual_x_offsetTooltip": "Ajustement longitudinal supplémentaire par rapport à l’alignement intégré du dessin, en mètres. Zéro utilise cet alignement : centre du dock standard à 0,220 m devant l’essieu arrière ; plateau ajouré Worx centré sur le châssis. Positif vers l’avant, négatif vers l’arrière. Illustration uniquement ; sans modifier la pose calibrée.",
     "dock_visual_y_offset": "Centre Y de la station",
-    "dock_visual_y_offsetTooltip": "Dock Worx : décalage latéral du centre du plateau ajouré par rapport à l’axe de la tondeuse ; zéro les aligne, sans inclure la borne latérale. Autres docks : centre de l’emprise totale. Positif à gauche, négatif à droite. En mètres ; illustration uniquement."
+    "dock_visual_y_offsetTooltip": "Ajustement latéral supplémentaire par rapport à l’alignement intégré du dessin, en mètres. Zéro conserve le centre de référence aligné sur la tondeuse ; les bornes latérales ne décalent pas le centre du plateau. Positif à gauche, négatif à droite. Illustration uniquement ; sans modifier le calibrage."
   },
   "settingsDriveMotor": {
     "savedLiveTitle": "Sauvegardé et appliqué en direct",

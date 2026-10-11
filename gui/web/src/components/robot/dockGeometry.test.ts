@@ -10,7 +10,7 @@ describe("dock display geometry", () => {
         const side = dockBounds("side", "standard", geometry);
         expect(top.width).toBe(.6);
         expect(top.height).toBe(.8);
-        expect(top.y).toBeCloseTo(-.65);
+        expect(top.y).toBeCloseTo(-.87);
         expect(side.x).toBe(top.y);
         expect(side.width).toBe(top.height);
     });
@@ -22,7 +22,8 @@ describe("dock display geometry", () => {
     });
     it("rejects invalid saved dimensions without collapsing the renderer", () => {
         expect(dockVisualGeometry({dock_visual_length: 0, dock_visual_width: "", dock_visual_x_offset: Infinity})).toEqual(dockVisualGeometry());
-        expect(dockVisualGeometry({dock_visual_x_offset: 0}).centerX).toBe(0);
+        expect(dockVisualGeometry({dock_visual_x_offset: 0}).centerX).toBe(.220);
+        expect(dockVisualGeometry().centerX).toBe(.220);
         expect(dockVisualGeometry({dock_visual_width: "0.7"}).width).toBe(.7);
     });
     it("frames an oversized, rearward dock without moving any robot component", () => {

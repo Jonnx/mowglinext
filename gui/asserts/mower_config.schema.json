@@ -102,10 +102,10 @@
         "dock_visual_x_offset": {
           "type": "number",
           "title": "Dock Center X",
-          "default": 0.235,
+          "default": 0.0,
           "minimum": -2,
           "maximum": 2,
-          "description": "With the mower parked, measure from the rear wheel axle to the centre of the full dock footprint along the mower’s length, in metres. Positive is forwards; negative is backwards. Moves only the illustration, not the calibrated docking pose."
+          "description": "Additional forward/backward adjustment from the dock artwork’s built-in alignment, in metres. Zero uses that alignment: the standard dock centre is 0.220 m ahead of the rear axle; the Worx slatted platform is centred on the chassis. Positive moves the dock forwards, negative backwards. Illustration only; does not change the calibrated docking pose."
         },
         "dock_visual_y_offset": {
           "type": "number",
@@ -113,7 +113,7 @@
           "default": 0.0,
           "minimum": -2,
           "maximum": 2,
-          "description": "With the mower parked, measure from its centreline to the centre of the full dock footprint, including any side charging pedestal, in metres. Positive is to the mower’s left; negative is to its right. Moves the illustration sideways in top views and on the map; does not change docking calibration."
+          "description": "Additional left/right adjustment from the dock artwork’s built-in alignment, in metres. Zero keeps its registered centre aligned with the mower; side charging pedestals do not shift the platform centre. Positive moves left, negative right. Illustration only; does not change docking calibration."
         },
         "chassis_mass_kg": {
           "type": "number",

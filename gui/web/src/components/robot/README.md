@@ -387,3 +387,11 @@ cropped footprint. `dockGeometry.ts` and `DockGraphic.tsx` have no model-specifi
 positioning branches. A new dock is added as metadata; mower `shellAssets.ts`
 physical frames similarly preserve its true chassis extent despite image padding
 or wheel openings. Both map and setup previews consume the same registration.
+
+
+The standard dock has a built-in +0.220 m forward offset from the parked rear
+axle in `dockAssets.ts`. Operator X/Y adjustments default to zero in the frontend,
+GUI schema and template; they are added to that registration, not a second nominal
+alignment. Existing explicitly saved adjustments remain additive; early test
+installations using a nominal dock-centre value should reset X to zero. This only
+moves the illustration and does not change the calibrated dock pose.

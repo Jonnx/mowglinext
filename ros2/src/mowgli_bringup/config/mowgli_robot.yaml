@@ -66,9 +66,10 @@ mowgli:
     # Full visible footprint; nominal defaults, not surveyed dock dimensions.
     dock_visual_length: 0.67
     dock_visual_width: 0.46
-    # Footprint centre forward of the parked rear axle, metres.
-    dock_visual_x_offset: 0.235
-    # Full footprint centre left of the parked mower centreline, metres.
+    # Extra forward adjustment from the artwork registration, metres.
+    # Zero uses the built-in dock alignment (+0.220 m for the standard dock).
+    dock_visual_x_offset: 0.0
+    # Extra left adjustment from the artwork registration, metres.
     dock_visual_y_offset: 0.0
 
     # Drive wheels (rear)

@@ -9,7 +9,7 @@ import type {Bounds, RobotView} from "../../utils/robotModel";
 export const DOCK_VISUAL_DEFAULTS = {
     dock_visual_length: .67,
     dock_visual_width: .46,
-    dock_visual_x_offset: .235,
+    dock_visual_x_offset: 0,
     dock_visual_y_offset: 0,
 };
 export const DOCK_VISUAL_KEYS = Object.keys(DOCK_VISUAL_DEFAULTS);
