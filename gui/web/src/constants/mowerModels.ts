@@ -163,7 +163,9 @@ export const MOWER_MODELS: MowerModel[] = [
         // No battery, sensor or firmware calibration is inferred from this body model.
         defaults: {
             wheel_radius: 0.1, wheel_track: 0.36, wheel_x_offset: -0.005,
-            wheel_width: 0.04, chassis_height: 0.23, chassis_mass_kg: 8.76,
+            // Provisional shallow shell envelope from the reference photos/approved preview.
+            // The screenshot's 230 mm value was not a measured shell height.
+            wheel_width: 0.04, chassis_height: 0.14, chassis_z_offset: -0.07, chassis_mass_kg: 8.76,
             // Provisional front caster position: 50 mm tyre clearance from the front edge.
             caster_x_offset: 0.405, caster_radius: 0.03, caster_track: 0.0,
             blade_radius: 0.1, tool_width: 0.20, ticks_per_meter: 343,

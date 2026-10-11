@@ -37,7 +37,7 @@ test("WORX 500M Plus applies supplied dimensions and blade origin, with its matc
     const writes:string[]=[];
     page.on("request",r=>{if(r.method()!=="GET" && !r.url().includes("/config/keys/get")) writes.push(r.url());});
     await installMockBackend(page,{name:"worx-preset",topics:{robotDescription:{data:ROBOT_URDF}},rest:{
-        "/api/settings/yaml":{mower_model:"CUSTOM",blade_x_offset:.04,blade_y_offset:0,lidar_enabled:false,chassis_z_offset:-.05,caster_x_offset:.4},
+        "/api/settings/yaml":{mower_model:"CUSTOM",blade_x_offset:.04,blade_y_offset:0,lidar_enabled:false,gps_z:.055,imu_z:0,chassis_z_offset:.02,caster_x_offset:.4},
     }});
     await page.goto("/#/settings?section=hardware");
     await page.getByRole("radio",{name:"WORX 500M Plus",exact:true}).click();
@@ -46,16 +46,19 @@ test("WORX 500M Plus applies supplied dimensions and blade origin, with its matc
     await expect(page.locator("#setting-wheel_track")).toHaveValue("0.360");
     await expect(page.locator("#setting-ticks_per_meter")).toHaveValue("343.000");
     await page.getByText("Chassis & Geometry",{exact:true}).click();
-    for(const [key,value] of Object.entries({chassis_length:"0.580",chassis_width:"0.395",chassis_height:"0.230",
+    for(const [key,value] of Object.entries({chassis_length:"0.580",chassis_width:"0.395",chassis_height:"0.140",
         chassis_center_x:"0.195",wheel_x_offset:"-0.005",caster_radius:"0.030",caster_track:"0.000",
         blade_x_offset:"0.0000",blade_y_offset:"-0.0575"}))
         await expect(page.locator("#setting-"+key)).toHaveValue(value);
     await expect(page.locator("#setting-caster_track")).toHaveAttribute("aria-valuemin","0");
     await expect(page.locator("#setting-caster_x_offset")).toHaveValue("0.405");
-    await expect(page.locator("#setting-chassis_z_offset")).toHaveValue("-0.050");
+    await expect(page.locator("#setting-chassis_z_offset")).toHaveValue("-0.070");
     await page.locator("#setting-blade_y_offset").click();
     const preview=page.getByTestId("mower-preview");
     await expect(preview.getByTestId("mower-top").locator('[data-mower-style]')).toHaveAttribute("data-mower-style","worx");
+    const sideShell=preview.getByTestId("mower-side").locator('[data-layer="shell-art"]');
+    await expect(sideShell).toHaveAttribute("height","0.14");
+    expect(Number(await sideShell.getAttribute("y"))).toBeCloseTo(-.07);
     await expect(preview.getByTestId("measurement-overlay")).toContainText("-0.0575 m");
     mkdirSync("screenshots.local/wheel-presets",{recursive:true});
     await page.screenshot({path:"screenshots.local/wheel-presets/worx-preset.png",fullPage:true});

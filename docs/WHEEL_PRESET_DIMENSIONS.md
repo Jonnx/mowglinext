@@ -59,7 +59,7 @@ preset for a physical mower, record:
   wheel/caster positions against those measurements before any drive test. Recheck
   actual sensor heights after applying the model change.
 
-This PR is independent of the layered-artwork and dashboard-illustration PRs.
+The radius corrections are independent; the WORX preset below depends on #966.
 
 
 ## WORX 500M Plus preset
@@ -75,7 +75,8 @@ The robot serial, controller conversion, firmware, tyre variant and measuring me
 | Rear-wheel X offset | −5 mm | Supplied screenshot |
 | Caster radius / track | 30 / 0 mm | Supplied screenshot; central caster |
 | Caster X position | 405 mm | Provisional: places the tyre 50 mm inside the front edge, consistent with the other built-in presets; not measured |
-| Chassis length / width / height | 580 / 395 / 230 mm | Supplied screenshot |
+| Chassis length / width | 580 / 395 mm | Supplied screenshot |
+| Chassis shell height / bottom Z | 140 / −70 mm | Provisional shallow envelope from supplied photos and the earlier approved WORX preview; replaces the screenshot's unverified 230 mm height |
 | Chassis centre X | 195 mm | Supplied screenshot |
 | Mass | 8.76 kg | Screenshot value; not independently weighed |
 | Blade radius / tool width | 100 / 200 mm | Supplied screenshot |
@@ -87,7 +88,7 @@ With `wheel_x_offset = -0.005`, the blade is 200 mm ahead of the rear-wheel axle
 195 mm is the distance from **base_link**, not the axle. Positive Y is left, so right
 uses a negative value. Four decimal places preserve `-0.0575` exactly.
 
-The preset deliberately does not replace battery voltages, sensor mounts, chassis vertical offset,
+The preset deliberately does not replace battery voltages, sensor mounts,
 or firmware selection. They were not established by the supplied data;
 review those retained/defaulted values and the provisional caster X on the installed conversion. Selecting a body preset does not
 establish stock WORX mainboard compatibility. The matching appearance is the registered WORX shell
@@ -104,3 +105,5 @@ caster X on the actual robot. Then, blades removed and in a supervised clear tes
 accessible cutoff, validate ticks-per-metre against a measured travel distance using the drive
 calibration procedure before autonomous operation. The asymmetric cutting-tool clearance and
 coverage require a supervised field test; these software tests do not establish that behaviour.
+
+The shallow WORX default puts the shell bottom 30 mm above ground and its top 170 mm above ground with the 100 mm wheel radius. These are provisional model coordinates, not physical measurements. For acceptance on the exact unit/configuration/firmware baseline above, measure shell bottom/top relative to the rear axle with power isolated and blades removed; accept only if both agree within 5 mm, otherwise use measured overrides.
