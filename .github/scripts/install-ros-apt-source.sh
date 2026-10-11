@@ -57,7 +57,17 @@ if [[ "${print_url_only}" -eq 0 ]] && apt-cache policy | grep -Fq "${expected_re
   exit 0
 fi
 
-release_json="$(curl -fsSL "${release_api_url}")"
+# GitHub-hosted runners share an unauthenticated API quota (60 requests/hour
+# per source IP). Query public release metadata with the workflow's scoped
+# GITHUB_TOKEN when available; local --print-url usage remains anonymous.
+# Do not authenticate browser_download_url: the selected release asset is public.
+release_api_headers=(--header "Accept: application/vnd.github+json")
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  release_api_headers+=(--header "Authorization: Bearer ${GITHUB_TOKEN}")
+fi
+release_json="$(curl --fail --silent --show-error --location \\
+  --retry 3 --retry-delay 2 \\
+  "${release_api_headers[@]}" "${release_api_url}")"
 asset_url="$(
   jq -r \
     --arg package_name "${package_name}" \

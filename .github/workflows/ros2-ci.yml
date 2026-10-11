@@ -183,6 +183,10 @@ jobs:
 
       - name: Preinstall ROS apt source package
         working-directory: .
+        env:
+          # Authenticate release-metadata lookup: the shared runner IP can
+          # exhaust GitHub's anonymous API quota and receive HTTP 403.
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           # setup-ros currently synthesizes the GitHub release asset filename
           # for ros2-apt-source. Preinstall the package from the release
