@@ -283,16 +283,12 @@ a model preset explicitly proposes its model-specific geometry. Explicit saved
 caster and chassis offsets continue to win. This avoids moving visual/collision
 geometry simply by upgrading.
 
-An old `gui.map.mower.appearance=biltema-rm1000` preference selects the **new
-assembled RM1000 shell**, including for a Custom Robot. No static mower image is
-restored. Reading settings does not rewrite config; the next ordinary save stores
-`mower_visual_style`. An explicit new style, including the empty model-default
-choice, takes precedence. Empty style is intentionally retained during sparse
-pruning so a reset or Advanced removal cannot resurrect the old DB preference.
+The retired map appearance preference is not migrated. Users of the earlier dev
+build can reselect the new assembled RM1000 shell in Hardware. There is no static
+image fallback, special RM1000 save/reset handling or migration state.
 
 Validation: full Go API suite, 91 ROS/xacro and configuration-loader tests,
 configuration-drift check, 36 focused frontend tests, registry validation and
-TypeScript/production build passed. New regressions cover sparse-template geometry,
-explicit overrides, read-only migration, unrelated saves, new choices and repeated
-reset/removal. These checks run locally; they do not claim physical validation or
-installation on .118.
+TypeScript/production build passed before removing the migration. The geometry
+regressions cover sparse-template geometry and explicit overrides. These checks
+run locally; they do not claim physical validation or installation on .118.

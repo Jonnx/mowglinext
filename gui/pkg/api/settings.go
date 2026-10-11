@@ -1391,7 +1391,6 @@ func GetSettingsYAML(r *gin.RouterGroup, dbProvider types.IDBProvider) gin.IRout
 		}
 
 		responseFlat := cloneFlatMap(doc.Flat)
-		applyLegacyMowerAppearance(responseFlat, doc.ExplicitFlat, dbProvider)
 		applyUniversalGnssCompatibility(responseFlat, loadSchemaDefaults(dbProvider))
 		if activeHardwareBackend(doc.RuntimeEnv) == "openmower" {
 			applyOpenMowerRuntimeFallbacks(responseFlat, doc.RuntimeEnv)
@@ -1495,7 +1494,6 @@ func PostSettingsYAML(r *gin.RouterGroup, dbProvider types.IDBProvider) gin.IRou
 
 		// Flatten existing to get current values
 		existing := flattenROS2YAML(existingYAML)
-		applyLegacyMowerAppearance(existing, existing, dbProvider)
 
 		// Merge schema defaults
 		schema, err := getSchema(dbProvider)
@@ -1538,16 +1536,7 @@ func PostSettingsYAML(r *gin.RouterGroup, dbProvider types.IDBProvider) gin.IRou
 		// through to the package template (the source of defaults). This is
 		// also how "reset to default" persists — the field is written with
 		// its default value from the form, and pruned here.
-		// Keep even an empty style as an explicit opt-out of legacy migration.
-		// A null/Advanced delete is equivalent to choosing the model default.
-		style := existing["mower_visual_style"]
-		if style == nil {
-			style = ""
-		}
 		prunedKeys := sparsifyFlat(existing, defaults)
-		existing["mower_visual_style"] = style
-		delete(prunedKeys, "mower_visual_style")
-		delete(explicitlyDeletedKeys, "mower_visual_style")
 		// Retired keys have no schema default left, so sparsifyFlat cannot see
 		// them — scrub them explicitly (issue #195).
 		for key := range retiredParamKeys {
