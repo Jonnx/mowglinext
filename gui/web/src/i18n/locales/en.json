@@ -2449,7 +2449,7 @@
     "modelConfirmBody": "This overwrites hardware dimensions, sensor offsets and battery thresholds — including any calibrated values.",
     "modelConfirmOk": "Apply preset",
     "modelConfirmCancel": "Cancel",
-    "casterXOffset": "Caster front/back position",
+    "casterXOffset": "Caster Front/Back Position",
     "casterXOffsetTooltip": "Measure horizontally from base_link (normally the rear drive-axle centre) to the caster wheel axles with the casters pointing straight ahead. Positive is forward, negative rearward. Fixes both caster positions in the robot model and artwork, independently of chassis length. Built-in model values are provisional starting points: measure your robot.",
     "chassisZOffset": "Chassis vertical offset",
     "chassisZOffsetTooltip": "Measure the height of the body bottom above the ground, then subtract the drive-axle height. This is the body bottom relative to base_link: negative is below the axle, positive above. For example, 0.050 m clearance minus 0.100 m axle height gives -0.050 m. Moves the body vertically without moving wheels, blade or sensors.",
