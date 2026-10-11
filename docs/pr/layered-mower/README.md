@@ -203,3 +203,15 @@ browser cases passed, including saved colour across fresh browsers, draft reload
 Original reset, missing-mask fallback and compact map raster size. TypeScript and
 lint pass (0 errors, the existing 900-warning ratchet unchanged). Go schema/default,
 generated-type and settings tests pass in the non-root Linux build environment.
+
+
+### Corrected side-charging dock profile
+
+The separate side sprite now has a broad charging housing halfway along its tray,
+with both charging contacts at the same height. The original top sprite, its map
+asset, dock dimensions and registration offsets are unchanged. Galleries and Worx
+Hardware/Sensors screenshots above have been refreshed. See the
+[asset provenance and generation prompt](dock-side-artwork.md).
+
+This artwork-only follow-up passed 10 registry tests, 43 robot-rendering unit tests,
+three focused browser captures (Worx setup and both galleries), and touched-file lint.

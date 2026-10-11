@@ -247,15 +247,16 @@ export const APPEARANCE_REGISTRY = {
         },
         "dock-worx": {
             "size": [1774, 887],
+            "sizes": {"top": [1774, 887], "side": [1984, 793]},
             "top": {
                 "crop": [47, 53, 721, 772]
             },
             "side": {
-                "crop": [798, 370, 934, 267]
+                "crop": [100, 282, 1784, 332]
             },
             "files": {
                 "top": "dock-worx.png",
-                "side": "dock-worx.png"
+                "side": "dock-worx-side.png"
             },
             "mapMaxSize": 384
         },

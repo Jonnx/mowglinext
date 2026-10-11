@@ -500,3 +500,10 @@ registry's compact limit (currently 384 px). It retains up to eight prepared
 pixel/coverage buffers and sixteen painted images per browser, not an unbounded
 history of picker colours. Map pose updates only move the existing image; they
 never rerun pixel processing. No separate set of full-colour PNGs is shipped.
+
+
+Side-charging dock: the top atlas remains the original reference. Its side view
+uses `dock-worx-side.png`, with a broad charging housing midway along the tray
+and two contacts at one height. Part entries may declare per-view `sizes` when
+separate source images differ; crops always use that view's native pixel coordinates.
+Registration and dock footprint settings are unchanged by an artwork correction.

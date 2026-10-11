@@ -7,6 +7,7 @@ export function PartSprite({part,view,width,height,fallback,artwork="full"}: {
 }) {
     const [loaded,setLoaded]=useState(false);
     const asset=PARTS[part], region=asset[view];
+    const sourceSize=asset.sizes?.[view] ?? asset.size;
     const [x,y,w,h]=region.crop;
     // The caster's reference is its tyre, not its taller fork. This keeps wheel
     // diameter and axle height true to URDF even with an asymmetric drawing.
@@ -17,7 +18,7 @@ export function PartSprite({part,view,width,height,fallback,artwork="full"}: {
             viewBox={[x,y,w,h].join(" ")} preserveAspectRatio="none" overflow="hidden">
             <image href={artwork === "map" ? `/assets/robots/layered/map/${part}-${view}.webp` : `/assets/robots/layered/${asset.files[view]}`}
                 x={artwork === "map" ? x : 0} y={artwork === "map" ? y : 0}
-                width={artwork === "map" ? w : asset.size[0]} height={artwork === "map" ? h : asset.size[1]}
+                width={artwork === "map" ? w : sourceSize[0]} height={artwork === "map" ? h : sourceSize[1]}
                 onLoad={()=>setLoaded(true)} onError={()=>setLoaded(false)}/>
         </svg>
     </g>;
