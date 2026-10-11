@@ -174,3 +174,15 @@ python3 sensors/mavros/test_integration.py
 It validates the image pin, installer/compose mapping, by-id support, launch
 ownership boundaries, and that no local command/blade enable override or
 machine-specific Pixhawk identity has been introduced.
+
+
+### Cyclone DDS compatibility
+
+Main ROS2 participants use `docker/config/cyclonedds.xml` with the
+`PruneDelay="inf"` unicast peer option to avoid permanent discovery loss.
+The older Cyclone DDS 0.10.x included with MowgliMAVROS cannot parse that
+option. The MAVROS Compose fragment therefore mounts
+`docker/config/cyclonedds-mavros.xml`, seeded from
+`install/config/cyclonedds-mavros.xml` if missing. Both use loopback-only
+unicast discovery. Existing runtime files are not overwritten; verify
+cross-version ROS discovery and Nav2 lifecycle services before hardware use.

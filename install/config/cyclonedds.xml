@@ -20,12 +20,10 @@
       <MaxAutoParticipantIndex>500</MaxAutoParticipantIndex>
       <!-- Multicast is disabled above, so seed unicast discovery on lo. -->
       <Peers>
-        <!-- Keep this peer entry compatible with the Cyclone DDS versions used
-             by the deployed ROS images. In particular, do not add the Peer
-             PruneDelay attribute: older Cyclone DDS releases reject it and abort
-             ROS node initialization. The installer raises the DDS socket buffers
-             separately in install/lib/sysctl.sh to reduce boot-burst packet loss. -->
-        <Peer Address="localhost"/>
+        <!-- Keep the main Cyclone DDS unicast peer from being pruned after a
+             missed startup discovery burst. Without multicast it might never
+             be rediscovered. MAVROS uses its own older-compatible profile. -->
+        <Peer Address="localhost" PruneDelay="inf"/>
       </Peers>
     </Discovery>
   </Domain>

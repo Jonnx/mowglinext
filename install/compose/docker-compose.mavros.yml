@@ -16,7 +16,8 @@ services:
     volumes:
       - /dev:/dev
       - ./docker/config/mavros:/ros2_ws/config:ro
-      - ./docker/config/cyclonedds.xml:/cyclonedds.xml:ro
+      # The older MAVROS Cyclone DDS cannot parse the main peer pruning option.
+      - ./docker/config/cyclonedds-mavros.xml:/cyclonedds.xml:ro
     environment:
       <<: *ros2-env
       HARDWARE_BACKEND: ${HARDWARE_BACKEND:-mavros}

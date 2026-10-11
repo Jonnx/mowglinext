@@ -1724,7 +1724,8 @@ void FollowStrip::onHalted()
   // Preempt (recharge, e-stop, command change) mid-path: capture how far we got
   // and persist the resume cursor so the next dispatch continues from here
   // rather than re-mowing the whole area from the start.
-  if ((follow_handle_ || follow_accept_) && total_path_poses_ > 0 && swath_idx_ < swaths_.size())
+  if ((follow_handle_ || follow_accept_ || transit_active_ || transit_pending_) &&
+      total_path_poses_ > 0 && swath_idx_ < swaths_.size())
   {
     // Selection is already valid while a blade-off transit or the asynchronous
     // goal response is pending. Persist that logical cursor even without a
@@ -1742,8 +1743,8 @@ void FollowStrip::onHalted()
 
 BT::NodeStatus FollowStrip::yieldToFleet(const std::shared_ptr<BTContext>& ctx, bool mid_pass)
 {
-  if (mid_pass && (follow_handle_ || follow_accept_) && total_path_poses_ > 0 &&
-      swath_idx_ < swaths_.size())
+  if (mid_pass && (follow_handle_ || follow_accept_ || transit_active_ || transit_pending_) &&
+      total_path_poses_ > 0 && swath_idx_ < swaths_.size())
   {
     if (follow_handle_ && !transit_active_ && !transit_pending_)
     {

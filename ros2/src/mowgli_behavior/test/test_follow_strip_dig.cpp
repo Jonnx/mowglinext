@@ -1000,6 +1000,30 @@ TEST_F(FollowStripDigTest, HaltDuringTransitToEarlierIncompleteUnitPersistsLogic
   EXPECT_TRUE(ctx->completed_areas.empty());
 }
 
+TEST_F(FollowStripDigTest, FleetYieldDuringTransitToEarlierIncompleteUnitPersistsLogicalStart)
+{
+  ctx->area_resume_pose_index[0] = 81;
+  setRobot(6.0, 0.0);
+  startFollowStrip({straightUnit(2.0, 4.0), straightUnit(4.0, 10.0)});
+  ASSERT_EQ(tickUntil(
+                [&]()
+                {
+                  return navigate->goalCount() == 1 && bladeRequestCount() > 0;
+                },
+                10.0),
+            BT::NodeStatus::RUNNING);
+  EXPECT_FALSE(bladeRequest(bladeRequestCount() - 1).mow_enabled);
+  EXPECT_EQ(follow->goalRequests(), 0u);
+  // Being on the swath during blade-off transit is not mowing progress.
+  setRobot(3.0, 0.0);
+  ctx->fleet_excluded_areas.insert(0);
+  EXPECT_EQ(tree->tickOnce(), BT::NodeStatus::SUCCESS);
+  EXPECT_EQ(ctx->area_resume_pose_index.at(0), 0u);
+  EXPECT_EQ(ctx->fleet_yielded_areas.count(0), 1u);
+  EXPECT_TRUE(ctx->area_completed_swaths[0].empty());
+  EXPECT_TRUE(ctx->completed_areas.empty());
+}
+
 TEST_F(FollowStripDigTest, HaltWithAcceptedHandlePreservesMidUnitResume)
 {
   startFollowStrip({straightUnit(0.0, 10.0)});

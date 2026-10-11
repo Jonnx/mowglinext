@@ -37,6 +37,7 @@ ensure_default_configs() {
   # stack self-heals, not just the full installer's migrate_runtime_paths.
   fix_path_type_conflict "$DOCKER_DIR/config/mqtt/mosquitto.conf" "file"
   fix_path_type_conflict "$DOCKER_DIR/config/cyclonedds.xml" "file"
+  fix_path_type_conflict "$DOCKER_DIR/config/cyclonedds-mavros.xml" "file"
   # The GNSS sidecar reads mowgli_robot.yaml directly. A derived parameters
   # file left by an earlier install is dead weight holding the NTRIP password.
   rm -rf "$DOCKER_DIR/config/universal_gnss"
@@ -52,6 +53,12 @@ ensure_default_configs() {
   if [ ! -f "$DOCKER_DIR/config/cyclonedds.xml" ]; then
     cp "$defaults/cyclonedds.xml" "$DOCKER_DIR/config/cyclonedds.xml"
     info "Created default cyclonedds.xml"
+  fi
+
+  # The MAVROS sidecar needs an older-Cyclone-compatible peer configuration.
+  if [ ! -f "$DOCKER_DIR/config/cyclonedds-mavros.xml" ]; then
+    cp "$defaults/cyclonedds-mavros.xml" "$DOCKER_DIR/config/cyclonedds-mavros.xml"
+    info "Created default cyclonedds-mavros.xml"
   fi
 }
 

@@ -180,9 +180,6 @@ export function RobotAnatomy({inputs}: RobotAnatomyProps) {
           <g onMouseEnter={handleEnter('battery')} onMouseLeave={handleLeave} style={{cursor: 'pointer'}}>
             <rect x={120} y={150} width={80} height={26} rx={4}
                   fill={fill('battery')} stroke={stroke('battery')} strokeWidth={sw('battery')}/>
-            <text x={166} y={166} textAnchor="end" fontSize={9} fontWeight={600} fill={colors.text}>
-              {inputs.batteryPct.toFixed(0)}
-            </text>
             <text x={160} y={166} textAnchor="middle" fontSize={9} fontWeight={600} fill={colors.text}>
               {Number.isFinite(inputs.batteryPct) ? `${inputs.batteryPct.toFixed(0)}%` : "—"}
             </text>

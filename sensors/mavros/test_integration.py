@@ -56,12 +56,26 @@ def main() -> int:
         "image: ${MAVROS_IMAGE}",
         "- /dev:/dev",
         "./docker/config/mavros:/ros2_ws/config:ro",
-        "./docker/config/cyclonedds.xml:/cyclonedds.xml:ro",
+        "./docker/config/cyclonedds-mavros.xml:/cyclonedds.xml:ro",
         "MAVROS_PORT: ${MAVROS_PORT:-/dev/mavros}",
         "MAVROS_BAUD: ${MAVROS_BAUD:-921600}",
     ):
         require(value in compose, f"MAVROS compose contract missing: {value}")
 
+    require(
+        "./docker/config/cyclonedds.xml:/cyclonedds.xml:ro" not in compose,
+        "MAVROS must not mount the main Cyclone DDS profile",
+    )
+    require(
+        'PruneDelay="inf"' in read(ROOT / "install/config/cyclonedds.xml")
+        and 'PruneDelay="inf"' in read(ROOT / "docker/config/cyclonedds.xml"),
+        "Main ROS2 peer pruning protection was removed",
+    )
+    require(
+        'PruneDelay=' not in read(ROOT / "install/config/cyclonedds-mavros.xml")
+        and 'PruneDelay=' not in read(ROOT / "docker/config/cyclonedds-mavros.xml"),
+        "MAVROS compatibility profile contains unsupported pruning attribute",
+    )
     require(
         "./docker/config/mowgli:/ros2_ws/config:ro" not in compose,
         "MAVROS must not mount the operator-facing Mowgli config",
