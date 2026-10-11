@@ -42,7 +42,7 @@ GPS/LiDAR/IMU box/cylinder visuals and direct joints. Other URDF layouts use the
 existing map fallback rather than claiming guessed geometry is authoritative.
 
 Source atlas bounds exclude transparent padding. A browser regression scans the
-actual alpha pixels of all ten shell projections (outside the configured crop
+actual alpha pixels of all registered shell projections (outside the configured crop
 as well) and requires their solid edges to match the crop exactly. The crop maps
 to chassis width/length in top view and length/height in side view. Viewport
 padding provides display space only; it cannot alter those physical extents. Caster artwork has a separate
@@ -83,12 +83,12 @@ Generation specification:
 
 Unit tests cover parser rejection, edited vs live geometry, sensor rotations,
 scale independence, identical solid/transparent assets and map projection.
-Mocked Playwright checks cover all four styles, Hardware-only selection, mobile
+Mocked Playwright checks cover the registered shell styles, Hardware-only selection, mobile
 navigation, sensor editing/dragging and actual Mapbox projection at multiple
 zooms/headings/bearings/pitches. Screenshots are in screenshots.local/layered-mower.
 
 These checks use the processed URDF fixture matching current template geometry
-on upstream dev d4924a4b; no mower was moved, flashed or deployed for this work.
+on upstream dev d4924a4b; those fixture checks do not validate a physical mower.
 
 Latest artwork corrections (built-in ImageGen edits/generations):
 - Caster: narrow true overhead tread and small pivot cap; rolling direction +X.
@@ -102,7 +102,7 @@ Latest artwork corrections (built-in ImageGen edits/generations):
 
 ROS validation: non-root Docker xacro tests exercise automatic, positive, zero
 and negative caster positions. GUI schema/template/default-type parity tests
-run in a non-root Go container. This feature has not been deployed to .118.
+run in a non-root Go container. The GUI feature has also been exercised in a test deployment; that does not validate physical geometry.
 
 ## Chassis vertical placement
 
@@ -186,7 +186,7 @@ all telemetry is fixture data and no mower was contacted. Full source imagery
 is retained for the larger settings previews.
 
 Verification: TypeScript/production build; 27 focused unit tests; 12 application
-Playwright cases including all four styles, five preset selections, mobile,
+Playwright cases including the registered shell styles, five preset selections, mobile,
 height/offset/track, sensors and map; map projection fixture checks physical
 corners under zoom, heading, bearing and pitch. Map tests reject PNG requests,
 images above 384 px, and initial artwork transfers above 150 kB. Regeneration
@@ -277,7 +277,7 @@ static generic mower becomes the shared assembly. No migration writes ROS config
 
 Future dock artwork belongs in `DOCK_APPEARANCES`; a model can pair its ID with a
 chassis style. Photo docks use the existing calibrated MapImageMarker; a new
-assembled dock needs a renderer branch alongside StyledDockMarker. Old photo
+assembled dock uses declarative artwork metadata shared by the setup and map renderers. Old photo
 assets remain as contributed source/reference material, not selectable mower
 renderers. The obsolete static generic mower WebP is no longer shipped.
 
@@ -288,7 +288,7 @@ RM1000 overhead photograph plus `sculpted.png` as a style reference. Its approve
 top view is unchanged. The side now uses `rm1000-side.png`, generated from the
 user-supplied RM1000 side photograph (clipboard ff774aba-79d3-44f9-95be-269d297f4027).
 It follows the stepped front skirt, raised console and large rear wheel opening,
-restyled in graphite/mint. Wheels, sensors and the rear stop remain separate layers.
+restyled in graphite/mint. Wheels and sensors remain separate layers; there is no separate stop-button layer.
 This is a photo-informed illustration, not CAD or new physical measurements.
 
 The exact generation and projection-correction prompts are in
@@ -333,13 +333,13 @@ for the two open rear wheel bays and graphite/mint palette. The dock was generat
 from the supplied slatted station photographs. Source photos and branding are
 not shipped. Earlier rejected shell variants are not included.
 
-Dock setup previews use a fixed 18% opacity behind the robot in both shell modes. Map docks remain opaque. Hardware → Advanced exposes `dock_visual_length`, `dock_visual_width` `dock_visual_x_offset` and `dock_visual_y_offset`, persisted with robot settings and shared by Hardware, Sensors and the map without a ROS restart. Length/width scale the tight visible asset bounds, including a side pedestal. Front/back positions the footprint centre relative to the parked rear axle, positive forwards (the renderer accounts for `wheel_x_offset`). These display-only settings do not alter calibrated dock poses, navigation, keepouts or URDF geometry. Generic defaults are provisional illustration dimensions, not hardware measurements.
+Dock setup previews use 70% opacity with a solid shell and 18% with a transparent shell; map docks remain opaque. Hardware exposes dock footprint length/width and Dock Center X/Y adjustments. They persist with GUI settings without a ROS restart and do not change calibrated dock poses, navigation, keepouts or URDF geometry. Artwork registration and additive adjustments are described below.
 
 The Worx side projection uses `worx-side.png` with a round, open rear wheel arch; its approved top remains in `worx.png`. Wheels stay independently scaled and positioned by the configured robot geometry, so a shell choice never silently changes physical dimensions.
 
 Worx side drive wheels are drawn outside the body panels, matching the supplied photo and exposing the full wheel face at any configured size. Other styles retain shell-over-wheel layering.
 
-Dock Center X and Dock Center Y locate the centre of the full visible footprint, including any side pedestal. X is forward from the parked rear axle; Y is left from the mower centreline. The renderer has no additional per-style lateral offset. Existing saved X values retain their meaning.
+Dock Center X and Dock Center Y adjust the built-in artwork registration. Zero uses the paired dock alignment; positive X moves forward and positive Y moves left. Earlier test settings that stored a nominal centre need their adjustment reset to zero.
 
 ### Side projection registration
 
@@ -377,7 +377,7 @@ centre/centreline. With both at zero the mower is centred on the tray. Top sourc
 registration is x=355 within crop [47,53,721,772]; the charging pedestal extends
 right of the tray and does not define its centre. The full configured dock width
 still sizes the complete artwork. Hardware, Sensors and map use the same anchor.
-Standard dock coordinates retain their rear-axle/full-footprint convention.
+The standard dock uses its rear-axle registration and built-in +0.220 m forward alignment.
 Solid setup views use 70% dock opacity; transparent views use 18%.
 
 

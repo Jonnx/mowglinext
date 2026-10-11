@@ -6,7 +6,7 @@ import {ROBOT_URDF} from "../../src/test/robotUrdf";
 import {MOWER_MODELS} from "../../src/constants/mowerModels";
 const output="screenshots.local/layered-mower/pr";
 // Illustrative custom geometry, not a measured mower or a shipped preset.
-const custom={mower_model:"CUSTOM",robot_name:"Angular custom concept",chassis_length:.66,chassis_width:.46,
+const custom={lidar_enabled:true,dock_visual_x_offset:0,dock_visual_y_offset:0,mower_model:"CUSTOM",robot_name:"Angular custom concept",chassis_length:.66,chassis_width:.46,
     chassis_height:.18,chassis_z_offset:-.06,chassis_center_x:.18,wheel_radius:.10,wheel_width:.05,
     wheel_track:.30,wheel_x_offset:0,caster_radius:.04,caster_track:.28,caster_x_offset:.39,blade_radius:.115,tool_width:.23,ticks_per_meter:300,
     gps_x:.16,gps_y:0,gps_z:0.13,lidar_x:.32,lidar_y:0,lidar_z:.131,lidar_yaw:0,
@@ -17,7 +17,7 @@ for(const example of ["yardforce500","custom-angular","rm1000"] as const){
         mkdirSync(output,{recursive:true});
         await page.setViewportSize({width:1440,height:1250});
         const values=example === "yardforce500"
-            ? {mower_model:"YardForce500",robot_name:"Yardforce 500",...MOWER_MODELS[0].defaults,
+            ? {lidar_enabled:true,dock_visual_x_offset:0,dock_visual_y_offset:0,mower_model:"YardForce500",robot_name:"Yardforce 500",...MOWER_MODELS[0].defaults,
                 // Example installation: preset chassis/drive geometry, with
                 // inset casters and a plausible roof-mounted sensor layout.
                 caster_x_offset:.40,caster_track:.30,
@@ -52,7 +52,7 @@ for(const example of ["yardforce500","custom-angular","rm1000"] as const){
         }
         await page.goto("/#/settings?section=sensors");
         await expect(page.getByTestId("mower-side")).toBeVisible();
-        if(example !== "custom-angular")await page.getByRole("switch",{name:"Transparent shell"}).click();
+        await expect(page.getByRole("switch",{name:"Transparent shell"})).toBeChecked();
         await page.getByTestId("sensor-placement").evaluate(node=>node.scrollIntoView({block:"start"}));
         await page.waitForTimeout(500); // Let scroll and toggle transitions settle for the capture.
         await page.screenshot({path:`${output}/${example}-sensors.png`,fullPage:true});
@@ -70,8 +70,8 @@ test("chassis style gallery",async({page})=>{
     mkdirSync(output,{recursive:true});
     await page.setViewportSize({width:1600,height:1150});
     await page.goto("/tests/e2e/fixtures/chassis-gallery.html");
-    await expect(page.locator("article")).toHaveCount(6);
-    await expect(page.locator("[data-mower-style]")).toHaveCount(10);
+    await expect(page.locator("article")).toHaveCount(8);
+    await expect(page.locator("[data-mower-style]")).toHaveCount(12);
     await page.evaluate(async()=>{
         await Promise.all([...document.querySelectorAll("image")].map(e=>{
             const image=new Image();image.src=e.getAttribute("href")!;return image.decode();

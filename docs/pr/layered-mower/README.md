@@ -1,147 +1,139 @@
-# Layered mower draft PR screenshots
+# Layered mower PR screenshots and interaction plan
 
-Captured from the real application with mocked REST/WebSocket telemetry using
-`gui/web/tests/e2e/layered-pr-gallery.spec.ts`, Chromium, 1440 x 1250.
-No mower was contacted. The settings preview uses the example values below;
-the map continues to use the running robot description, not unsaved settings.
-These are illustrative installations, not measurements of .118 or new presets.
+These captures use the production GUI and renderer with mocked REST/WebSocket
+telemetry. They do not show a live mower or validate physical dimensions.
+Hardware/Sensors preview edited settings; the map uses the running robot description.
 
-| Geometry (metres) | Yardforce 500 example | Custom angular (Utility) |
+## Current behavior
+
+- Six graphite/mint shells: Rounded, Sculpted, Utility, Yardforce-inspired,
+  RM1000-inspired and Worx-inspired. Choose once in Hardware, below the model selector.
+- Each appearance pairs a chassis and dock. Existing styles share the standard
+  station; Worx uses the side-charging station. There is no separate map dock selector.
+- Hardware and Sensors show a docked illustration. Sensors opens transparent;
+  the map always shows a solid shell, rear wheels, GPS and enabled LiDAR only.
+- Disabled LiDAR artwork and editor handles disappear without losing its mount settings.
+- Source bounds/physical frames exclude padding and preserve the real chassis rear
+  across wheel cutouts. Wheels, blade and sensors scale independently.
+- Dock footprint length/width and Dock Center X/Y are display-only settings.
+  Zero X/Y uses the artwork registration: standard +0.220 m forward of the rear
+  axle; Worx slatted-platform centre aligned with chassis centre. Operator adjustments
+  are additive. Early test configurations that saved a nominal centre should reset
+  X/Y to zero. Calibrated dock poses and navigation are unaffected.
+- Solid setup previews use 70% dock opacity; transparent previews use 18%.
+- Caster front/back position is an explicit numeric field with model starting values.
+  Measurement tooltips and expanding mobile label rows are implemented.
+- There is no separate stop-button overlay.
+
+## Screenshot geometry
+
+Illustrative fixture values in metres, not recommended physical installations.
+Coordinates are forward/left/up from the rear axle. Sensor positions follow
+the visible shell roof in the examples; generated shells are not CAD.
+
+| Geometry | Yardforce 500 | Custom Utility | RM1000 | Shallow Worx |
+| --- | --- | --- | --- | --- |
+| Chassis L / W / H | .600 / .450 / .190 | .660 / .460 / .180 | .570 / .400 / .190 | .540 / .360 / .140 |
+| Chassis centre X / bottom Z | .180 / -.050 | .180 / -.060 | .145 / -.050 | .160 / -.070 |
+| Drive radius / width / centre track | .100 / .040 / .325 | .100 / .050 / .300 | .100 / .040 / .300 | .110 / .040 / .320 |
+| Caster radius / centre track / X | .030 / .300 / .400 | .040 / .280 / .390 | .040 / .260 / .355 | .025 / .220 / .340 |
+| GPS X / Y / Z | .150 / 0 / .148 | .160 / 0 / .130 | .115 / 0 / .145 | .200 / 0 / .080 |
+| LiDAR X / Y / Z | .310 / 0 / .139 | .320 / 0 / .131 | .245 / 0 / .145 | Disabled |
+
+The collection gallery is a presentation fixture using the production renderer,
+not a new application screen. Its first five shells use a common 600 x 450 x 190 mm
+envelope for comparison; Worx uses the shallower dimensions above. Its RM1000
+chassis centre is .150 m. Sensors are omitted from the collection gallery.
+
+Map screenshots use the same mock running URDF across both appearance choices,
+showing that changing shell style does not change physical geometry. Docked views
+give mower and station the same parked pose. Undocked views separate the poses
+deliberately. A local plain basemap avoids publishing private garden/location data.
+
+## Gallery
+
+![Six chassis styles and their paired docks](chassis-gallery.png)
+
+| Hardware | Transparent sensor editor |
+| --- | --- |
+| ![Yardforce 500](yardforce500-hardware.png) | ![Yardforce sensors](yardforce500-sensors.png) |
+| ![Custom Utility](custom-angular-hardware.png) | ![Utility sensors](custom-angular-sensors.png) |
+| ![RM1000](rm1000-hardware.png) | ![RM1000 sensors](rm1000-sensors.png) |
+| ![Worx on its side-charging dock](worx-shallow-hardware.png) | ![Worx with LiDAR disabled](worx-shallow-sensors.png) |
+
+![Transparent Worx assembly](worx-shallow-transparent.png)
+![Docked map view](app-map-desktop-docked.png)
+![Mobile docked map view](app-map-mobile-docked.png)
+
+## Planned: focused measurement editing
+
+**Proposal only: the overlays and mobile dialog below are not implemented yet.**
+
+Desktop should reuse the existing top and side previews above the hardware fields.
+Focusing a field highlights its exact endpoints, extension lines, arrows and value
+in the relevant projection. Keep the existing preview visible while editing when
+the desktop viewport permits; do not add a second diagram panel. Use physical
+geometry/registered frames, never the bitmap canvas or its transparent margin.
+
+On mobile, tapping a dimension opens an accessible bottom-sheet dialog containing:
+
+1. The field name and appropriate top or side view with the measurement highlighted.
+2. A plain-language description of where to measure from and to.
+3. The numeric editor, units and existing validation.
+4. **Apply** and **Cancel**. Apply changes the settings draft; only the page's
+   existing Save action persists settings. Cancel discards the dialog's edit.
+
+The drawing and input must remain visible above the software keyboard, with a
+scrollable sheet on short screens. Trap focus, support Escape, and return focus
+to the originating field on close. Reuse the existing renderer; no new telemetry
+subscription or map rerasterization is needed.
+
+| Field | Projection | Measurement endpoints |
 | --- | --- | --- |
-| Chassis length / width / height | .600 / .450 / .190 | .660 / .460 / .180 |
-| Chassis centre X / bottom Z | .180 / -.050 | .180 / -.060 |
-| Drive wheel radius / width / centre track | .100 / .040 / .325 | .100 / .050 / .300 |
-| Caster radius / centre track / X | .030 / .300 / .400 | .040 / .280 / .390 |
-| GPS X / Y / Z | .150 / 0 / .148 | .160 / 0 / .130 |
-| LiDAR X / Y / Z | .310 / 0 / .139 | .320 / 0 / .131 |
-| IMU X / Y / Z | .040 / -.090 / .015 | .035 / -.090 / .005 |
+| Chassis length / width | Top | Registered physical front/rear or left/right edges |
+| Chassis height | Side | Shell bottom to top |
+| Chassis bottom offset | Side | Rear axle height to shell bottom, signed |
+| Chassis/caster front-back | Top or side | Rear axle line to chassis centre/caster axle |
+| Wheel track | Top | Left wheel centre to right wheel centre |
+| Wheel width | Top | Inner to outer tyre face |
+| Wheel/caster radius | Side | Axle centre to tyre edge |
+| Blade radius | Top | Disc centre to cutting envelope |
+| Tool width | Top | Planned cutting swath, clearly distinct from disc radius |
+| Dock length / width | Top | Complete registered footprint, including pedestal |
+| Dock Center X / Y | Top | Built-in artwork reference to adjusted reference, signed |
 
-All sensor yaw values are zero. Coordinates are relative to the rear axle;
-X is forward, Y left and Z up. GPS and LiDAR bases meet the local visible shell roof; the IMU
-is enclosed. Drive-wheel outer spans are 365 mm (500) and 350 mm (custom). Wheels and
-casters fit within the chassis plan bounds. The 500 retains the shipped chassis
-and drive-wheel dimensions, with example caster and sensor installation overrides.
-The custom values are screenshot fixtures only and do not alter default settings.
+A zero dock adjustment must still display the built-in alignment correctly.
+Changing numeric values updates the overlay immediately without saving or restarting
+ROS. Sensor-specific dimensions can reuse the same interaction later.
 
-Source shell contours are illustrative, not CAD. The Yardforce rear wheel recess
-still needs refinement; see the wheel enclosure audit and HARDWARE_REQUIRED
-measurement procedure in `gui/web/src/components/robot/README.md`.
+## Validation and limitations
 
-Validation on 2026-10-10: all 942 GUI unit tests in 116 files passed; GUI lint
-passed with 898 warnings and zero errors. Two screenshot tests, four Xacro tests,
-configuration drift and Go schema/template/model/generated-type parity passed.
-Earlier checks on this feature: GUI production build; 12 application Playwright
-cases and map projection checks. Full ROS workspace build/test and physical
-geometry acceptance have not been completed.
+Production code baseline: 051476543f761e7505b879daa04d2bf515fc7169.
+The accompanying screenshot commit changes only fixtures, captures and documentation.
 
+2026-10-11 checks:
+- TypeScript typecheck and 63 focused robot/model/preferences/locale unit tests passed.
+- 12 application/browser gallery and desktop/mobile map cases passed; captures reviewed.
+- Configuration drift check passed (three existing GNSS keys reported as uncategorized).
+- Production build and Go schema/default/generated-type parity passed on the production
+  baseline above. Known build chunk-size and AntD deprecation warnings remain.
+- Worx captures come from the shallow-layout browser check after b1352a42; the later
+  standard-dock-only offset change does not alter that appearance.
+- Full ROS workspace build and physical geometry acceptance are not claimed.
+  Browser mobile emulation is not a physical-phone performance measurement.
 
-## Chassis collection gallery
+Reproduce from gui/web using the repository's installed dependencies:
 
-`chassis-gallery.png` is a presentation fixture, not an additional application
-screen. It uses the production `LayeredMower` renderer with the same
-600 x 450 x 190 mm geometry for all five styles, 200 mm drive wheels,
-325 mm centre track, 40 mm tyre width and casters at X=390 mm / track=280 mm.
-RM1000 uses chassis centre X=150 mm and caster X=360 mm to align its rear
-wheel opening with the axle; the other gallery shells retain centre X=180 mm.
-Sensors are omitted to make the shell shapes easy to compare. Reproduce with:
+    npx tsc --noEmit
+    npx vitest run src/components/robot src/utils/robotModel.test.ts src/hooks/useMowerVisual.test.tsx src/i18n/locales.test.ts
+    npx playwright test tests/e2e/layered-pr-gallery.spec.ts tests/e2e/layered-app-map.spec.ts --workers=2
+    npx playwright test tests/e2e/layered-mower.spec.ts -g "Worx shallow" --workers=1
 
-```sh
-npx playwright test tests/e2e/layered-pr-gallery.spec.ts -g "chassis style gallery" --workers=1
-```
-
-The gallery capture test passed and the final screenshot was visually inspected.
-
-
-## Map views
-
-The map screenshots come from the real Map page with a plain local basemap and
-mock telemetry. `app-map-desktop-docked.png` and `app-map-mobile-docked.png`
-place the mower and dock at the same base-link pose/heading and show At base.
-`app-map-desktop.png` intentionally separates them by 0.8 m to reveal both
-assets and uses Idle status. This is not a live mower position report.
-
-The mock published URDF carries the same caster/sensor installation overrides
-as the 500 settings example; map geometry comes from that description.
-All four desktop/mobile docked/undocked Playwright cases passed, including
-coincident docked anchors, compact WebP asset budgets and unchanged artwork
-while the mower pose updates. Screenshots were visually inspected.
-
-Sensor-editor screenshots refreshed after the review fixes for independent drag/yaw targets and joint-relative visual origins.
-
-
-## Unified Hardware appearance update
-
-The gallery now includes five shells plus the shared paired dock. RM1000 was
-converted from a static map photo to the same independently scaled shell, wheels,
-casters, blade and sensors. Its side profile now follows the user-supplied RM1000 side photograph,
-restyled in graphite/mint. It remains an illustration, not a measured model. The model preset's numerical
-geometry remains empty. Hardware presets can declare a chassis/dock appearance
-pair independently of ROS parameters. Both separate map appearance selectors
-are replaced by a Hardware link; legacy dock overrides are no longer read.
-
-`rm1000-hardware.png` and `rm1000-sensors.png` use illustrative 570 Ã— 400 Ã— 190 mm
-geometry, chassis centre X=0.145 m and bottom Z=-0.05 m; wheels radius=0.10 m,
-width=0.04 m, track=0.30 m; casters radius=0.04 m, X=0.355 m, track=0.26 m.
-GPS is at (0.115, 0, 0.145), LiDAR (0.245, 0, 0.145), IMU (0.035, -0.09, 0.005).
-The sensor heights meet the visible shell roof in this illustration. They are
-not recommended physical RM1000 mounting settings.
-
-`app-map-rm1000-desktop-docked.png` uses the same mock URDF as the earlier 500 map
-fixture, deliberately demonstrating that choosing a different shell does not
-change robot dimensions or anchors. It seeds the appearance from a legacy
-RM1000 selection and verifies that the old static image is not loaded.
-
-Validation of this final update: 51 focused unit tests, 23 application/browser
-cases, TypeScript, production build and lint (0 errors, 898 existing warnings).
-The final RM1000 capture and gallery were refreshed and individually rechecked.
-The earlier merged baseline passed 949 unit tests before the RM1000 conversion;
-that number is not a claim about the later removal of obsolete static-menu tests.
-
-## Photo-based RM1000 side and console anchors
-
-The supplied side photograph replaces the previously inferred side silhouette.
-The approved top source PNG and compact top WebP are byte-for-byte unchanged.
-The screenshot example moves the chassis 35 mm rearward relative to the axle,
-with its roof sensors and front casters following the body; wheel radius and
-wheel-centre track are unchanged. These are illustrative fixture values only.
-
-The separate SVG stop-button overlay and console anchors have been removed.
-Future shell artwork can include a rear stop button directly, following the same
-scaling and transparency as the body. Robot controls and URDF geometry are unchanged.
-
-Validation: 16 renderer tests, TypeScript and targeted ESLint passed. All 22
-Hardware/Sensors/gallery/map browser cases passed after the side and anchor edits.
-Application screenshots use mocked telemetry; no robot was contacted.
-
-## Explicit caster position
-
-Caster front/back position is a normal numeric hardware field (metres from
-base_link, positive forwards). It stays fixed when chassis dimensions change.
-The model presets use these provisional starting positions:
-
-| Preset | Caster axle X |
-| --- | ---: |
-| YardForce 500 / 500B | 0.400 m |
-| YardForce SA650 / 900 ECO | 0.390 m |
-| LUV1000RI | 0.400 m |
-| Sabo | 0.590 m |
-| Biltema RM1000 | 0.350 m |
-
-These are layout estimates, not measured manufacturer dimensions. The presets
-with known envelopes put the front tyre roughly 50 mm inside the body nose.
-RM1000 uses the illustrative layout above; its other calibration remains untouched.
-Custom robots keep their values. The schema/ROS default is 0.400 m.
-
-Old explicit `-1` values are still understood by the URDF for compatibility.
-The GUI displays their resolved distance and materializes that distance before
-applying settings edits, so subsequent chassis edits cannot move the axle
-implicitly. An existing installation without this key takes the new default;
-record its old running caster position explicitly first if it must be preserved.
-The .118 test installation keeps its existing 0.420 m position.
-
-HARDWARE_REQUIRED for preset dimensional validation: with each target model
-powered off on level ground, measure from the rear drive-axle centre to each
-caster wheel axle with the casters facing forward. Record unit/model, configuration,
-firmware and PR revision with the result. Pass when configured positions agree
-within 5 mm; otherwise replace the estimate with the measurement. No drive or
-blade operation is needed for this check.
+**HARDWARE_REQUIRED:** preset caster positions and chassis vertical offsets are
+provisional physical geometry, not validated by artwork. Record the exact robot,
+wheel type, running configuration, repository/URDF revision and firmware image.
+With power off, blades removed and the mower stable on level ground, measure rear
+axle-to-caster axle with casters forward, wheel centres/widths, and shell bottom/top
+relative to the axle. Pass when configured geometry agrees within 5 mm; otherwise
+use measured overrides and correct the preset. No motion is needed for this check.
+See the component README for the existing Yardforce wheel-contour audit.

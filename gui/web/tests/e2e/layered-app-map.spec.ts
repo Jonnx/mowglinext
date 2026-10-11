@@ -28,7 +28,7 @@ for(const style of ["yardforce","rm1000"] as const)for(const docked of [false,tr
     const pose=(x:number)=>({pose:{pose:{position:{x,y:0,z:0}}},motion_heading:Math.PI/2});
     const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
     await installMockBackend(page,{...SCENARIOS[0],rest:{
-        "/api/settings/yaml":{datum_lat:48.1,datum_lon:11.5},
+        "/api/settings/yaml":{datum_lat:48.1,datum_lon:11.5,lidar_enabled:true,dock_visual_x_offset:0},
         // Exercise the retired persisted option on mobile as well as URDF on desktop.
         "/api/config/keys/get":{"gui.map.mower.appearance":style === "rm1000" ? "biltema-rm1000" : mobile ? "generic" : "urdf", "gui.map.dock.appearance":"marker"},
     },topics:{...SCENARIOS[0].topics,robotDescription:{data:exampleUrdf},
@@ -90,7 +90,7 @@ for(const style of ["yardforce","rm1000"] as const)for(const docked of [false,tr
         localStorage.setItem("mowgli.robot-visual.v1",JSON.stringify({style,transparent:true}));
         window.dispatchEvent(new Event("mowgli-robot-visual"));
     },{style});
-    await expect(marker.locator('[data-layer="shell"]')).toHaveAttribute("opacity","0.24");
+    await expect(marker.locator('[data-layer="shell"]')).toHaveAttribute("opacity","1");
     await page.evaluate(async()=>{
         await Promise.all([...document.querySelectorAll('image')].map(e=>{const img=new Image();img.src=e.getAttribute('href')!;return img.decode();}));
     });
