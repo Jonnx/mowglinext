@@ -215,3 +215,18 @@ Hardware/Sensors screenshots above have been refreshed. See the
 
 This artwork-only follow-up passed 10 registry tests, 43 robot-rendering unit tests,
 three focused browser captures (Worx setup and both galleries), and touched-file lint.
+
+
+### Side panel mask alignment
+
+Rounded now paints the complete upper/main side panel down to the bumper seam,
+excluding the lower skirt and control recesses. Yardforce's mask follows the lower
+panel seam and angled black brace, with a separate exclusion for the rear recess.
+This comparison uses the unchanged source PNGs and the production pixel pipeline:
+
+![Original versus corrected side masks](side-paint-registration.png)
+
+Reproduce with `playwright test tests/e2e/shell-colour.spec.ts`; the side review
+fixture uses the registered physical frame so image padding is not part of the
+comparison. All four colour browser cases passed; the colour-picker capture was
+rerun after removing a redundant scroll during the mobile layout remount.

@@ -67,7 +67,6 @@ test("colour picker edits a draft, saves only colour and can restore Original",a
     await expect(preview.locator('[data-paint-ready="true"]')).toHaveCount(2);
     await page.screenshot({path:"screenshots.local/layered-mower/pr/colour-hardware.png"});
     await page.setViewportSize({width:390,height:844});
-    await preview.scrollIntoViewIfNeeded();
     await expect(preview.locator('[data-paint-ready="true"]')).toHaveCount(2);
     await preview.evaluate(el=>{el.scrollIntoView({block:"start"});window.dispatchEvent(new Event("resize"));});
     await page.screenshot({path:"screenshots.local/layered-mower/pr/colour-picker-mobile.png"});
@@ -82,4 +81,12 @@ test("colour picker edits a draft, saves only colour and can restore Original",a
     await page.getByRole("button",{name:/Save \(/}).click();
     await expect(page.getByRole("button",{name:/Saved$/})).toBeDisabled();
     expect(writes).toEqual([{mower_visual_colour:"#e97822"},{mower_visual_colour:""}]);
+});
+
+
+test("side panel paint registration review",async({page})=>{
+    await page.setViewportSize({width:1500,height:1000});
+    await page.goto("/tests/e2e/fixtures/side-paint-review.html");
+    await expect(page.locator("main")).toHaveAttribute("data-ready","true");
+    await page.locator("main").screenshot({path:"screenshots.local/layered-mower/pr/side-paint-registration.png"});
 });
