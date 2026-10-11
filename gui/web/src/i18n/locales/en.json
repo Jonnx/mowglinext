@@ -3880,7 +3880,8 @@
       "drivePidUpdateFailed": "Settings saved, but live drive-PID update failed",
       "drivePidUpdateFailedDescription": "Restart ROS2 to apply the new drive-motor PID gains.",
       "saveFailed": "Failed to save settings",
-      "savedApplyingLive": "Saved. Applying the drive settings to the running robot…"
+      "savedApplyingLive": "Saved. Applying the drive settings to the running robot…",
+      "savedDisplaySettings": "Saved. Dock appearance updated; no robot restart is needed."
     }
   },
   "displayMode": {

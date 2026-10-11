@@ -570,7 +570,7 @@ export const useSettingsManager = () => {
                     message: t("settingsSections.toasts.saved"),
                     description: shouldRestartGps
                         ? t("settingsSections.toasts.savedGpsRestartDescription")
-                        : t(requiresRosRestart ? "settingsSections.toasts.savedDescription" : "settingsSections.toasts.savedApplyingLive"),
+                        : t(requiresRosRestart ? "settingsSections.toasts.savedDescription" : liveHardwareDirty ? "settingsSections.toasts.savedApplyingLive" : "settingsSections.toasts.savedDisplaySettings"),
                 });
             } else if (shouldRestartGps) {
                 notification.info({
