@@ -112,15 +112,16 @@ ROS. Sensor-specific dimensions can reuse the same interaction later. Mass and e
 ## Validation and limitations
 
 Validation on 2026-10-11:
-- Full frontend unit suite: 973 tests passed in 119 files. Final focused checks
-  cover physical measurement endpoints, rendering and locale parity.
+- Previous baseline a6c945e7: full frontend suite passed (973 tests, 119 files).
+  Shared-configuration update: 46 focused appearance/rendering/locale tests pass.
+  A broad rerun was stopped after excessive local runtime; no full-suite result is claimed for this update.
 - TypeScript and lint pass (zero lint errors; existing warnings remain).
 - 16 Hardware/Sensors/measurement/persistence browser cases and 9 map cases pass.
   Mobile checks cover Apply/Cancel/Escape, focus restoration, invalid input,
   viewport resizing and absence of automatic API writes.
 - Production build verified before deployment.
-- Earlier Go schema/default/generated-type parity and configuration drift checks
-  remain applicable: this editor changes no backend schema, template or URDF.
+- Current Go schema/default/generated-type and settings tests pass under Linux
+  as a non-root user; configuration-drift check passes.
 - Full ROS workspace build and physical geometry acceptance are not claimed.
   Browser mobile emulation is not a physical-phone/keyboard acceptance test.
 
@@ -128,7 +129,7 @@ Reproduce from gui/web using the repository's installed dependencies:
 
     npx tsc --noEmit
     npx vitest run src/components/robot src/utils/robotModel.test.ts src/hooks/useMowerVisual.test.tsx src/i18n/locales.test.ts
-    npx playwright test tests/e2e/measurement-editor.spec.ts tests/e2e/layered-mower.spec.ts tests/e2e/layered-app-map.spec.ts --workers=2
+    npx playwright test tests/e2e/measurement-editor.spec.ts tests/e2e/layered-mower.spec.ts tests/e2e/layered-app-map.spec.ts tests/e2e/saved-mower-appearance.spec.ts --workers=2
     npx playwright test tests/e2e/layered-mower.spec.ts -g "Worx shallow" --workers=1
 
 **HARDWARE_REQUIRED:** preset caster positions and chassis vertical offsets are
