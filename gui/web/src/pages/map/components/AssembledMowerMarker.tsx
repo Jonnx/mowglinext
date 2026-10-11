@@ -15,6 +15,7 @@ export function AssembledMowerMarker({robot,longitude,latitude,headingRad}: {
     if (!robot.fromUrdf) return null;
     return <MapPlaneMarker bounds={bounds} longitude={longitude} latitude={latitude}
         headingRad={headingRad} label={t("mowerVisual.mapAlt")} testId="assembled-mower-marker" zIndex={999}>
-        <LayeredMower artwork="map" robot={robot} {...visual} internalDetails={visual.transparent}/>
+        {/* Transparency helps layout editing only; navigation always shows the solid shell. */}
+        <LayeredMower artwork="map" robot={robot} style={visual.style} transparent={false} internalDetails={false}/>
     </MapPlaneMarker>;
 }
