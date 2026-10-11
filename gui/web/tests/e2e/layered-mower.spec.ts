@@ -23,7 +23,7 @@ test("five styles keep the same shell and sensor positions in transparent views"
     await page.goto("/#/settings?section=hardware");
     const preview=page.getByTestId("mower-preview");
     await expect(preview.locator('[data-layer="shell-art"]')).toHaveCount(2);
-    for(const [id,label] of [["rounded","Rounded"],["sculpted","Sculpted"],["utility","Utility"],["yardforce","Yardforce-inspired"],["rm1000","RM1000-inspired"]]){
+    for(const [id,label] of [["rounded","Rounded"],["sculpted","Sculpted"],["utility","Utility"],["yardforce","Yardforce-inspired"],["rm1000","RM1000-inspired"],["worx","Worx-inspired"]]){
         await page.getByRole("combobox",{name:"Body style"}).press("ArrowDown");
         await page.getByText(label,{exact:true}).last().click();
         await page.getByRole("combobox",{name:"Body style"}).press("Escape");
@@ -125,7 +125,7 @@ test("all shell dimensions describe opaque chassis edges, excluding atlas margin
     await expect(page.getByTestId("mower-top")).toBeVisible();
     const measured=await page.evaluate(async()=>{
         const result:Record<string,Record<string,number[]>>={};
-        for(const style of ["rounded","sculpted","utility","yardforce","rm1000"]){
+        for(const style of ["rounded","sculpted","utility","yardforce","rm1000","worx"]){
             result[style]={};
             const split = style === "rm1000" ? 740 : 768;
             for(const view of ["top","side"] as const){
@@ -194,7 +194,7 @@ test("full application hardware preset gallery on desktop and mobile",async({pag
         await page.getByText("Chassis & Geometry",{exact:true}).click();
         const selector=page.getByRole("radiogroup");
         expect(await selector.evaluate(node=>!!(node.compareDocumentPosition(document.querySelector('[data-testid="mower-preview"]')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
-        await expect(page.getByTestId("mower-preview").locator('[data-layer="styled-dock"]')).toHaveCount(0);
+        await expect(page.getByTestId("mower-preview").locator('[data-layer="styled-dock"]')).toHaveCount(2);
         for(const id of ["YardForce500B","YardForceSA650","LUV1000RI","Sabo","BiltemaRM1000"]){
             const preset=MOWER_MODELS.find(m=>m.value===id)!;
             const label=en.mowerModels[id as keyof typeof en.mowerModels].label;

@@ -91,3 +91,13 @@ it("map derivatives retain all physical bounds and axle transforms",()=>{
     expect(metricAttributes()).toEqual(before);
     for(const image of container.querySelectorAll("image"))expect(image.getAttribute("href")).toMatch(/\/map\/.*\.webp$/);
 });
+
+it("shows the complete external Worx side wheel without changing its scale or position", () => {
+    const {container, rerender} = render(<svg><LayeredMower robot={robot} style="yardforce" view="side" transparent={false}/></svg>);
+    const wheel = container.querySelector('[data-layer="wheels"]')!.outerHTML;
+    rerender(<svg><LayeredMower robot={robot} style="worx" view="side" transparent={false}/></svg>);
+    const shell = container.querySelector('[data-layer="shell"]')!;
+    const currentWheel = container.querySelector('[data-layer="wheels"]')!;
+    expect(currentWheel.outerHTML).toBe(wheel);
+    expect(shell.compareDocumentPosition(currentWheel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});

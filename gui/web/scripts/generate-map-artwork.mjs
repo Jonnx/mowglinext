@@ -13,7 +13,7 @@ try {
     const page=await browser.newPage();
     let total=0;
     for(const [name,asset] of Object.entries({...SHELLS,...PARTS})){
-        const maxSize=name in SHELLS || name === "dock" ? 384 : name === "blade" ? 256 : 128;
+        const maxSize=name in SHELLS || name.startsWith("dock") ? 384 : name === "blade" ? 256 : 128;
         for(const view of ["top","side"]){
             const png=(await readFile(new URL(asset.files?.[view] ?? name+".png",source))).toString("base64");
             const crop=Array.isArray(asset[view]) ? asset[view] : asset[view].crop;

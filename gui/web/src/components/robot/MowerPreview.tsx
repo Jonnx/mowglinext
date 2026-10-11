@@ -1,5 +1,6 @@
+import {resolveDockAppearance} from "../../constants/mowerAppearances";
 import {DockGraphic} from "./DockGraphic";
-import {dockedAssemblyBounds, previewDockOffsetY} from "./dockGeometry";
+import {dockedAssemblyBounds, previewDockOffsetY, dockVisualGeometry, SETUP_DOCK_OPACITY, type DockVisualGeometry} from "./dockGeometry";
 import {assemblyBounds} from "./assemblyBounds";
 import {Card, Flex, Select, Switch, Typography} from "antd";
 import {useTranslation} from "react-i18next";
@@ -24,16 +25,17 @@ export function MowerVisualControls({chooseStyle = false, transparent, onTranspa
         {!onTransparencyChange && <Typography.Text type="secondary" style={{fontSize:11}}>{t("mowerVisual.browserPreference")}</Typography.Text>}
     </Flex>;
 }
-export function MowerView({robot, view, maxHeight = 300, highlightSensors = false, transparent, showDock = false}: {robot: RobotGeometry; view: RobotView; maxHeight?: number; highlightSensors?: boolean; transparent?: boolean; showDock?: boolean}) {
+export function MowerView({robot, view, maxHeight = 300, highlightSensors = false, transparent, showDock = false, dockGeometry}: {robot: RobotGeometry; view: RobotView; maxHeight?: number; highlightSensors?: boolean; transparent?: boolean; showDock?: boolean; dockGeometry?: DockVisualGeometry}) {
     const {t} = useTranslation();
     const [preference] = useMowerVisual();
-    const b = showDock ? dockedAssemblyBounds(robot,view) : assemblyBounds(robot,view,.05);
+    const dockStyle = resolveDockAppearance(preference.dockAppearance).layered ?? "standard";
+    const b = showDock ? dockedAssemblyBounds(robot,view,.05,dockStyle,dockGeometry) : assemblyBounds(robot,view,.05);
     return <figure style={{margin:0,minWidth:0,flex:"1 1 200px"}}>
         <figcaption style={{fontSize:12,opacity:.7,marginBottom:8}}>{t("mowerVisual."+view)}</figcaption>
         <svg role="img" aria-label={t("mowerVisual."+view)} data-testid={`mower-${view}`}
             viewBox={[b.x,b.y,b.width,b.height].join(" ")} width="100%" style={{display:"block",height:maxHeight}}>
-            {showDock && <g opacity={(transparent ?? preference.transparent) ? .4 : 1} pointerEvents="none">
-                <DockGraphic view={view} offsetY={previewDockOffsetY(robot,view)}/>
+            {showDock && <g opacity={SETUP_DOCK_OPACITY} pointerEvents="none">
+                <DockGraphic geometry={dockGeometry} view={view} style={dockStyle} offsetY={previewDockOffsetY(robot,view)}/>
             </g>}
             <LayeredMower robot={robot} {...preference} transparent={transparent ?? preference.transparent} view={view} highlightSensors={highlightSensors}/>
             <g stroke="#80ae9d" strokeWidth={.001} opacity={.65}>
@@ -47,12 +49,13 @@ export function MowerPreview({values, compact = false}: {values: Record<string, 
     const {t} = useTranslation();
     const live = useRobotDescription();
     const robot = previewRobotGeometry(live,values);
+    const dockGeometry = dockVisualGeometry(values, robot.wheelXOffset);
     return <Card size="small" title={t("mowerVisual.title")} style={{marginBottom:16}} data-testid="mower-preview">
         {!compact && <MowerVisualControls chooseStyle/>}
         {!live.fromUrdf ? <Typography.Text type="secondary">{t("mowerVisual.waiting")}</Typography.Text> : <>
             <Flex wrap gap={16}>
-                <MowerView robot={robot} view="top" showDock={!compact} maxHeight={compact ? 210 : 300}/>
-                {!compact && <MowerView robot={robot} view="side" showDock maxHeight={300}/>}
+                <MowerView dockGeometry={dockGeometry} robot={robot} view="top" showDock={!compact} maxHeight={compact ? 210 : 300}/>
+                {!compact && <MowerView dockGeometry={dockGeometry} robot={robot} view="side" showDock maxHeight={300}/>}
             </Flex>
             <Typography.Text style={{display:"block",marginTop:12}}>
                 {(robot.baseLength*100).toFixed(1)} × {(robot.baseWidth*100).toFixed(1)} × {(robot.baseHeight*100).toFixed(1)} cm

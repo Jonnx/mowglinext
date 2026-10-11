@@ -1,5 +1,6 @@
+import {resolveDockAppearance} from "../constants/mowerAppearances";
 import {DockGraphic} from "./robot/DockGraphic";
-import {dockedAssemblyBounds} from "./robot/dockGeometry";
+import {dockedAssemblyBounds, dockVisualGeometry, SETUP_DOCK_OPACITY} from "./robot/dockGeometry";
 import {LayeredMower, SensorGraphic} from "./robot/LayeredMower";
 import {MowerVisualControls, MowerView} from "./robot/MowerPreview";
 import {previewRobotGeometry, type Bounds} from "../utils/robotModel";
@@ -330,8 +331,10 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
     const [visual] = useMowerVisual(values.mower_model);
     // Each sensor-layout session starts see-through, independently of Hardware.
     const [transparent, setTransparent] = useState(true);
+    const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? "standard";
+    const dockGeometry = dockVisualGeometry(values, robot.wheelXOffset);
     const [dragBounds, setDragBounds] = useState<Bounds | null>(null);
-    const bounds = dragBounds ?? dockedAssemblyBounds(robot, "top", .12);
+    const bounds = dragBounds ?? dockedAssemblyBounds(robot, "top", .12,dockStyle,dockGeometry);
     const svgWidth = isMobile ? 340 : 520;
     const svgHeight = isMobile ? 380 : 480;
     const [svgUnitsPerPixel, setSvgUnitsPerPixel] = useState(1);
@@ -473,7 +476,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
     }, [cx, cy, SCALE, mode, toSvg]);
 
     const robotBody = liveRobot.fromUrdf ? <g transform={`translate(${cx} ${cy}) scale(${SCALE})`}>
-        <g opacity={transparent ? .4 : 1} pointerEvents="none"><DockGraphic/></g>
+        <g opacity={SETUP_DOCK_OPACITY} pointerEvents="none"><DockGraphic geometry={dockGeometry} style={dockStyle}/></g>
         <LayeredMower robot={robot} {...visual} transparent={transparent} sensors={false}/>
         <path d="M -.01 0 H .01 M 0 -.01 V .01" stroke="#a8ccbe" strokeWidth={.002}/>
     </g> : null;
@@ -676,7 +679,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
                             {liveRobot.fromUrdf && [...SENSORS].reverse().map(renderSensor)}
                         </svg>
                     </div>
-                    {liveRobot.fromUrdf && <MowerView robot={robot} view="side" showDock transparent={transparent} highlightSensors maxHeight={190}/>}
+                    {liveRobot.fromUrdf && <MowerView dockGeometry={dockGeometry} robot={robot} view="side" showDock transparent={transparent} highlightSensors maxHeight={190}/>}
                 </Col>
 
                 <Col xs={24} lg={10}>

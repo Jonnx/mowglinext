@@ -1,12 +1,12 @@
 import {PartSprite} from "./PartSprite";
 import type {RobotView} from "../../utils/robotModel";
 
-import {dockBounds} from "./dockGeometry";
+import {dockBounds, type DockVisualGeometry, type LayeredDockStyle} from "./dockGeometry";
 
-export function DockGraphic({view="top",artwork="full",offsetY=0}:{view?:RobotView;artwork?:"full"|"map";offsetY?:number}) {
-    const b=dockBounds(view);
-    return <g data-layer="styled-dock" transform={`translate(${b.x+b.width/2} ${b.y+b.height/2+offsetY})`}>
-        <PartSprite artwork={artwork} part="dock" view={view} width={b.width} height={b.height}
+export function DockGraphic({view="top",artwork="full",offsetY=0,style="standard",geometry}:{view?:RobotView;artwork?:"full"|"map";offsetY?:number;style?:LayeredDockStyle;geometry?:DockVisualGeometry}) {
+    const b=dockBounds(view,style,geometry);
+    return <g data-layer="styled-dock" data-dock-style={style} transform={`translate(${b.x+b.width/2} ${b.y+b.height/2+offsetY})`}>
+        <PartSprite artwork={artwork} part={style === "worx" ? "dock-worx" : "dock"} view={view} width={b.width} height={b.height}
             fallback={<rect x={-b.width/2} y={-b.height/2} width={b.width} height={b.height} rx={.03} fill="#344740" stroke="#86bfaa" strokeWidth={.002}/>}/>
     </g>;
 }

@@ -2456,7 +2456,15 @@
     "wheelWidthTooltip": "Mesurez un pneu moteur de son flanc intérieur à son flanc extérieur, le long de l’essieu, sans inclure l’axe. Chaque pneu est centré sur sa position de voie : largeur extérieure totale = voie des roues + largeur d’un pneu. Définit l’épaisseur des roues dans le modèle et le dessin, et contribue à la taille des propositions de zones de patinage.",
     "casterRadiusTooltip": "Mesurez de l’axe de la roulette à la bande de roulement, ou divisez son diamètre extérieur par deux ; excluez la fourche. Définit la taille des roulettes et la hauteur de leurs axes dans le modèle et le dessin. La position avant/arrière se règle séparément.",
     "casterTrackTooltip": "Mesurez latéralement entre les centres des pneus/axes des roulettes gauche et droite, toutes deux orientées vers l’avant, et non entre les bords extérieurs ou les pivots des fourches. Les place à la moitié de cette distance de chaque côté de l’axe central dans le modèle et le dessin.",
-    "geometryMeasurementHelp": "Mesurez sur un sol horizontal, robot hors tension. Les distances sont en mètres ; X pointe vers l’avant et Z vers le haut depuis base_link, normalement le centre de l’essieu moteur arrière. L’aperçu change immédiatement ; enregistrez et redémarrez ROS pour appliquer la géométrie au robot et à la carte."
+    "geometryMeasurementHelp": "Mesurez sur un sol horizontal, robot hors tension. Les distances sont en mètres ; X pointe vers l’avant et Z vers le haut depuis base_link, normalement le centre de l’essieu moteur arrière. L’aperçu change immédiatement ; enregistrez et redémarrez ROS pour appliquer la géométrie au robot et à la carte.",
+    "dockVisualTitle": "Emprise de la station",
+    "dockVisualHelp": "Dimensionne l’illustration de la station dans Matériel, Capteurs et la carte. Ces réglages ne changent ni la calibration ni la navigation. Les valeurs par défaut sont indicatives ; mesurez votre station.",
+    "dock_visual_length": "Longueur de la station",
+    "dock_visual_width": "Largeur de la station",
+    "dock_visual_x_offset": "Position avant/arrière de la station",
+    "dock_visual_lengthTooltip": "Mesurez la station complète d’avant en arrière, tête de charge comprise, en mètres. Règle sa longueur affichée dans les aperçus et sur la carte sans déplacer la pose d’accostage.",
+    "dock_visual_widthTooltip": "Mesurez la station complète de gauche à droite, borne de charge latérale comprise, en mètres. Règle sa largeur affichée en vue de dessus et sur la carte.",
+    "dock_visual_x_offsetTooltip": "Robot stationné, mesurez de l’axe des roues arrière au centre de l’emprise de la station dans le sens de la longueur, en mètres. Positif vers l’avant ; négatif derrière l’axe. Déplace uniquement l’illustration, pas la pose d’accostage calibrée."
   },
   "settingsDriveMotor": {
     "savedLiveTitle": "Sauvegardé et appliqué en direct",
@@ -4708,6 +4716,8 @@
   "mowerVisual": {
     "title": "Votre tondeuse",
     "bodyStyle": "Style de carrosserie",
+    "worx": "Inspiré Worx",
+    "worxDock": "Station à recharge latérale",
     "rounded": "Arrondi",
     "sculpted": "Sculpté",
     "utility": "Utilitaire",

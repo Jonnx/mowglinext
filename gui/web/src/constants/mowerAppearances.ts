@@ -1,3 +1,5 @@
+import type {MowerStyle} from "../hooks/useMowerVisual";
+
 /** Display-only dock registry. Hardware appearance pairs reference these IDs;
  * image dimensions are visual metadata, never ROS/collision calibration.
  */
@@ -21,12 +23,13 @@ export interface MapImageAppearance {
     forwardOffsetM?: number;
 }
 
-export type DockAppearanceId = "marker" | "styled" | "generic" | "biltema-rm1000";
+export type DockAppearanceId = "marker" | "styled" | "worx" | "generic" | "biltema-rm1000";
 
 export interface DockAppearance {
     id: DockAppearanceId;
     labelKey: string;
     image?: MapImageAppearance;
+    layered?: "standard" | "worx";
     /** Optional foreground cutout for the dock's center tongue over the mower. */
     foregroundClipPath?: string;
 }
@@ -35,7 +38,8 @@ export const DOCK_FOREGROUND_CLIP_PATH = "polygon(43% 78%, 57% 78%, 68% 83%, 68%
 
 export const DOCK_APPEARANCES: Record<DockAppearanceId, DockAppearance> = {
     marker: {id: "marker", labelKey: "mapToolbar.dockAppearanceMarker"},
-    styled: {id: "styled", labelKey: "mowerVisual.dockStyle"},
+    styled: {id: "styled", labelKey: "mowerVisual.dockStyle", layered: "standard"},
+    worx: {id: "worx", labelKey: "mowerVisual.worxDock", layered: "worx"},
     generic: {
         id: "generic",
         labelKey: "mapToolbar.dockAppearanceGeneric",
@@ -87,3 +91,10 @@ export function shouldDisplayMapImage(
 ): boolean {
     return Boolean(image && loadedSrc === image.src && hasPose && hasHeading);
 }
+
+/** Explicit shell/dock pairs. Existing bodies share the basic dock artwork until
+ * their own matching station is available; no duplicate bitmap files needed. */
+export const MOWER_STYLE_DOCKS: Record<MowerStyle, DockAppearanceId> = {
+    rounded: "styled", sculpted: "styled", utility: "styled",
+    yardforce: "styled", rm1000: "styled", worx: "worx",
+};

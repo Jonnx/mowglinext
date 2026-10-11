@@ -1,8 +1,8 @@
 import {useEffect, useSyncExternalStore} from "react";
 import {MOWER_MODELS} from "../constants/mowerModels";
-import {DOCK_APPEARANCES, type DockAppearanceId} from "../constants/mowerAppearances";
+import {DOCK_APPEARANCES, MOWER_STYLE_DOCKS, type DockAppearanceId} from "../constants/mowerAppearances";
 
-export const MOWER_STYLES = ["rounded", "sculpted", "utility", "yardforce", "rm1000"] as const;
+export const MOWER_STYLES = ["rounded", "sculpted", "utility", "yardforce", "rm1000", "worx"] as const;
 export type MowerStyle = typeof MOWER_STYLES[number];
 /** Display-only pair that hardware presets can supply independently of physical geometry. */
 export type MowerVisualPreset = {style: MowerStyle; dockAppearance: DockAppearanceId};
@@ -23,7 +23,7 @@ function snapshot(): Preference {
             const data = parsed && typeof parsed === "object" ? parsed as Record<string, unknown> : {};
             const style = MOWER_STYLES.find(s => s === data.style) ?? fallback.style;
             const dockAppearance = Object.values(DOCK_APPEARANCES).find(d => d.id === data.dockAppearance)?.id
-                ?? DEFAULT_MOWER_VISUAL.dockAppearance;
+                ?? MOWER_STYLE_DOCKS[style];
             cached = {style, dockAppearance, transparent: data.transparent === true};
         } catch { cached = fallback; }
     }
@@ -53,7 +53,7 @@ export function useMowerVisual(model?: unknown, legacyMapAppearance?: unknown) {
     return [preference, (patch: Partial<Preference>) => {
         const pair = patch.style
             ? MOWER_MODELS.find(model => model.appearance?.style === patch.style)?.appearance
-                ?? {style: patch.style, dockAppearance: DEFAULT_MOWER_VISUAL.dockAppearance}
+                ?? {style: patch.style, dockAppearance: MOWER_STYLE_DOCKS[patch.style]}
             : {};
         const next = {...snapshot(), ...pair, ...patch};
         try {localStorage.setItem(KEY, JSON.stringify(next));} catch {cached = next;}

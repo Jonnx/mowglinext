@@ -11,6 +11,7 @@ type Shell = {
  * source projection, verified against decoded PNG pixels in Playwright.
  * Both opacity modes use these exact same atlas regions. */
 export const SHELLS: Record<MowerStyle, Shell> = {
+    worx: {files: {side: "worx-side.png"}, size: [1774,887], top: [102,67,586,698], side: [108,280,1559,380]},
     // Separate side source preserves the approved top atlas byte-for-byte.
     // Per-view sources use the same canvas dimensions as the default atlas.
     rm1000: {files: {side: "rm1000-side.png"}, size: [1774,887], top: [73,48,624,804], side: [44,162,1702,622]},

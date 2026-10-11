@@ -1,3 +1,4 @@
+import {dockVisualGeometry} from "../components/robot/dockGeometry";
 import {useMowerVisual} from "../hooks/useMowerVisual";
 import {StyledDockMarker} from "./map/components/StyledDockMarker";
 import {AssembledMowerMarker} from "./map/components/AssembledMowerMarker";
@@ -283,7 +284,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
         : undefined;
     const robotGeometry = useRobotDescription();
     const assembledMowerReady = !!robotGeometry.fromUrdf && mowerHasValidPose && mowerHeadingRad !== undefined;
-    const styledDockReady = dockAppearance.id === "styled" && dockHasValidPose && dockHeadingRad !== undefined;
+    const styledDockReady = !!dockAppearance.layered && dockHasValidPose && dockHeadingRad !== undefined;
     const dockImageReady = styledDockReady || shouldDisplayMapImage(
         dockImage,
         loadedDockImageSrc,
@@ -372,7 +373,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
             latitude={mowerFeature.geometry.coordinates[1]} headingRad={mowerHeadingRad}/>
         : null;
     const dockImageMarker = styledDockReady && dockFeature instanceof DockFeatureBase
-        ? <StyledDockMarker longitude={dockFeature.geometry.coordinates[0]} latitude={dockFeature.geometry.coordinates[1]} headingRad={dockHeadingRad}/>
+        ? <StyledDockMarker geometry={dockVisualGeometry(settings, robotGeometry.wheelXOffset)} style={dockAppearance.layered} longitude={dockFeature.geometry.coordinates[0]} latitude={dockFeature.geometry.coordinates[1]} headingRad={dockHeadingRad}/>
         : dockImage && dockFeature instanceof DockFeatureBase && dockHasValidPose && dockHeadingRad !== undefined
         ? <MapImageMarker
             image={dockImage}

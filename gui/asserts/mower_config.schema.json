@@ -83,6 +83,30 @@
           "default": 0.19,
           "description": "Chassis height in metres."
         },
+        "dock_visual_length": {
+          "type": "number",
+          "title": "Dock Length",
+          "default": 0.67,
+          "minimum": 0.1,
+          "maximum": 3,
+          "description": "Measure the full dock from front to back, including the charging head, in metres. Scales its visible length in previews and on the map; does not move the docking pose."
+        },
+        "dock_visual_width": {
+          "type": "number",
+          "title": "Dock Width",
+          "default": 0.46,
+          "minimum": 0.1,
+          "maximum": 3,
+          "description": "Measure the full dock from left to right, including a side charging pedestal, in metres. Scales its visible width in top views and on the map."
+        },
+        "dock_visual_x_offset": {
+          "type": "number",
+          "title": "Dock Front/Back Position",
+          "default": 0.235,
+          "minimum": -2,
+          "maximum": 2,
+          "description": "With the mower parked, measure from its rear wheel axle to the centre of the dock footprint along the mower’s length, in metres. Positive is towards the nose; negative is behind the axle. Moves only the dock illustration, not the calibrated docking pose."
+        },
         "chassis_mass_kg": {
           "type": "number",
           "title": "Chassis Mass",

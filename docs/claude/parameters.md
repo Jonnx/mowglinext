@@ -36,6 +36,10 @@ Operator-facing rule of thumb: **the GUI only ever writes `mowgli_robot.yaml`.**
 
 All 202 template keys. `L###` = line in `ros2/src/mowgli_bringup/config/mowgli_robot.yaml`. **GUI** = present in `mower_config.schema.json` (section name), or `no` — a `no` key still shows up in Settings → *Advanced* once it exists in the installed file (`gui/web/src/hooks/useSettingsManager.ts:679` `advancedKeys`). **Life** = `launch` (injected at launch, restart to apply), `dynamic` (also honoured live via `ros2 param set`), `INERT` (never injected — node compiled default wins), `sidecar` (consumed outside ROS2).
 
+### Dock illustration (GUI only)
+
+`dock_visual_length` (0.67 m), `dock_visual_width` (0.46 m), and `dock_visual_x_offset` (0.235 m forward of the parked rear axle) size and position the dock artwork in Hardware, Sensors and the map. They live in the robot template and Hardware schema, persist in the sparse robot YAML, and apply without a ROS restart. Defaults are nominal illustration dimensions. These keys do not affect dock calibration, navigation or collision geometry.
+
 ### Dig obstacle proposals
 
 | Key | Default | Consumer · where read | GUI | Life |

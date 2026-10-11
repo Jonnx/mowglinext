@@ -50,3 +50,18 @@ it("seeds an existing RM1000 hardware installation when it has no saved appearan
     const {result} = renderHook(() => useMowerVisual("BiltemaRM1000"));
     expect(result.current[0].style).toBe("rm1000");
 });
+
+it("pairs the Worx shell with its side-charging dock and restores the basic pair on style change", () => {
+    const {result} = renderHook(() => useMowerVisual());
+    act(() => result.current[1]({style: "worx"}));
+    expect(result.current[0].dockAppearance).toBe("worx");
+    const reloaded = renderHook(() => useMowerVisual());
+    expect(reloaded.result.current[0].dockAppearance).toBe("worx");
+    act(() => result.current[1]({style: "yardforce"}));
+    expect(result.current[0].dockAppearance).toBe("styled");
+});
+it("supplies the matching dock for a stored shell with no dock preference", () => {
+    saved.set(key, JSON.stringify({style: "worx"}));
+    const {result} = renderHook(() => useMowerVisual());
+    expect(result.current[0].dockAppearance).toBe("worx");
+});
