@@ -20,7 +20,7 @@ export const MEASUREMENTS = {
     wheel_width: dimension("wheelWidth", "top", .005),
     wheel_x_offset: {...dimension("wheelXOffset"), min: undefined},
     caster_radius: dimension("casterRadius", "side", .005),
-    caster_track: dimension("casterTrack"),
+    caster_track: {...dimension("casterTrack"), min: 0},
     caster_x_offset: {...dimension("casterXOffset"), min: -.99, max: 2},
     dock_visual_length: {...dimension("dock_visual_length"), min: .1, max: 3},
     dock_visual_width: {...dimension("dock_visual_width"), min: .1, max: 3},
