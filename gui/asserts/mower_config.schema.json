@@ -87,10 +87,10 @@
         "chassis_z_offset": {
           "type": "number",
           "title": "Chassis Vertical Offset",
-          "default": -0.05,
+          "default": 0.0,
           "minimum": -0.3,
           "maximum": 0.3,
-          "description": "Body bottom relative to rear axle in metres. Negative lowers the shell; zero puts its bottom at axle height. The -0.05 YardForce 500/500B default is a provisional estimate from photos. Does not move wheel or sensor frames. Restart ROS after saving."
+          "description": "Chassis bottom height relative to the rear axle, in metres. Zero preserves the legacy chassis height; model presets may supply a measured or provisional offset."
         },
         "chassis_height": {
           "type": "number",
@@ -151,10 +151,10 @@
         "caster_x_offset": {
           "type": "number",
           "title": "Caster X Offset",
-          "default": 0.40,
-          "minimum": -0.99,
+          "default": -1.0,
+          "minimum": -1.0,
           "maximum": 2,
-          "description": "Fixed caster axle position from base_link in metres; positive forward. Provisional 0.40 m starting point for YardForce 500; measure the actual robot. Changes apply to the URDF after restarting ROS."
+          "description": "Fixed caster axle position from base_link in metres; positive forward. The compatibility default -1 preserves the legacy chassis-derived position, shown numerically in Hardware. Applying a model preset supplies an explicit position."
         },
         "ticks_per_meter": {
           "type": "number",

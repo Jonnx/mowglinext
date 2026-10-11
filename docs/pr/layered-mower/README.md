@@ -271,3 +271,28 @@ removed, measure the blade rotation centre from the chassis centre; check the si
 retain the previous transform and that wheel/sensor transforms are unchanged. Navigation acceptance
 for an asymmetric cutting tool requires a separate supervised field run; software tests alone do not
 establish its coverage or edge-clearance behaviour.
+
+
+## Upgrade compatibility review fixes
+
+Existing sparse configs retain their previous geometry: the package/schema/launch
+chassis-bottom default is zero, and the internal caster sentinel retains
+`chassis_center_x + chassis_length / 2 - caster_radius`. Hardware still displays
+an ordinary numeric caster position; editing freezes that position, and selecting
+a model preset explicitly proposes its model-specific geometry. Explicit saved
+caster and chassis offsets continue to win. This avoids moving visual/collision
+geometry simply by upgrading.
+
+An old `gui.map.mower.appearance=biltema-rm1000` preference selects the **new
+assembled RM1000 shell**, including for a Custom Robot. No static mower image is
+restored. Reading settings does not rewrite config; the next ordinary save stores
+`mower_visual_style`. An explicit new style, including the empty model-default
+choice, takes precedence. Empty style is intentionally retained during sparse
+pruning so a reset or Advanced removal cannot resurrect the old DB preference.
+
+Validation: full Go API suite, 91 ROS/xacro and configuration-loader tests,
+configuration-drift check, 36 focused frontend tests, registry validation and
+TypeScript/production build passed. New regressions cover sparse-template geometry,
+explicit overrides, read-only migration, unrelated saves, new choices and repeated
+reset/removal. These checks run locally; they do not claim physical validation or
+installation on .118.

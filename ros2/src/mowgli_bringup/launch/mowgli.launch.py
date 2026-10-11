@@ -126,7 +126,7 @@ def generate_launch_description() -> LaunchDescription:
     chassis_length   = float(robot_params.get("chassis_length", 0.54))
     chassis_width    = float(robot_params.get("chassis_width", 0.40))
     chassis_height   = float(robot_params.get("chassis_height", 0.19))
-    chassis_z_offset = float(robot_params.get("chassis_z_offset", -0.05))
+    chassis_z_offset = float(robot_params.get("chassis_z_offset", 0.0))
     chassis_mass_kg  = float(robot_params.get("chassis_mass_kg", 8.76))
     chassis_center_x = float(robot_params.get("chassis_center_x", 0.18))
     # 0.1 m: keep this fallback equal to the mowgli_robot.yaml template default
@@ -138,7 +138,7 @@ def generate_launch_description() -> LaunchDescription:
     wheel_x_offset   = float(robot_params.get("wheel_x_offset", 0.0))
     caster_radius    = float(robot_params.get("caster_radius", 0.03))
     caster_track     = float(robot_params.get("caster_track", 0.36))
-    caster_x_offset  = float(robot_params.get("caster_x_offset", 0.40))
+    caster_x_offset  = float(robot_params.get("caster_x_offset", -1.0))
     blade_radius     = float(robot_params.get("blade_radius", 0.09))
     blade_x_offset   = float(robot_params.get("blade_x_offset", 0.0))
     blade_y_offset   = float(robot_params.get("blade_y_offset", 0.0))
