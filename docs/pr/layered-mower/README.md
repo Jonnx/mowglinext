@@ -289,6 +289,6 @@ image fallback, special RM1000 save/reset handling or migration state.
 
 Validation: full Go API suite, 91 ROS/xacro and configuration-loader tests,
 configuration-drift check, 36 focused frontend tests, registry validation and
-TypeScript/production build passed before removing the migration. The geometry
-regressions cover sparse-template geometry and explicit overrides. These checks
+TypeScript/production build passed. The full Go API suite also passed after
+removing the migration. The geometry regressions cover sparse-template geometry and explicit overrides. These checks
 run locally; they do not claim physical validation or installation on .118.
