@@ -1,3 +1,4 @@
+import {artworkUrl} from "./artworkUrl";
 import {useState, type ReactNode} from "react";
 import type {RobotView} from "../../utils/robotModel";
 import {PARTS, partBounds, type PartId} from "./partAssets";
@@ -16,7 +17,7 @@ export function PartSprite({part,view,width,height,fallback,artwork="full"}: {
         {!loaded && fallback}
         <svg {...bounds}
             viewBox={[x,y,w,h].join(" ")} preserveAspectRatio="none" overflow="hidden">
-            <image href={artwork === "map" ? `/assets/robots/layered/map/${part}-${view}.webp` : `/assets/robots/layered/${asset.files[view]}`}
+            <image href={artworkUrl(artwork === "map" ? `map/${part}-${view}.webp` : asset.files[view])}
                 x={artwork === "map" ? x : 0} y={artwork === "map" ? y : 0}
                 width={artwork === "map" ? w : sourceSize[0]} height={artwork === "map" ? h : sourceSize[1]}
                 onLoad={()=>setLoaded(true)} onError={()=>setLoaded(false)}/>

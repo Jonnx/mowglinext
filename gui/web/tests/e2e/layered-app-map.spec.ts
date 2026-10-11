@@ -65,7 +65,7 @@ for(const style of ["yardforce","rm1000"] as const)for(const docked of [false,tr
         frames.sort((a,b)=>a-b);
         const assets=performance.getEntriesByType("resource").filter(e=>e.name.includes("/assets/robots/layered/")) as PerformanceResourceTiming[];
         return {durationMs:3000,artworkMutations:mutations,distinctPlacements:transforms.size,frameMedianMs:frames[Math.floor(frames.length*.5)],frameP95Ms:frames[Math.floor(frames.length*.95)],artworkElements:artwork.querySelectorAll("*").length,
-            assetEncodedBytes:assets.reduce((sum,e)=>sum+e.encodedBodySize,0),assetFiles:[...new Set(assets.map(e=>e.name.split("/").pop()))]};
+            assetEncodedBytes:assets.reduce((sum,e)=>sum+e.encodedBodySize,0),assetFiles:[...new Set(assets.map(e=>new URL(e.name).pathname.split("/").pop()))]};
     });
     writeFileSync(`${shots}/map-${suffix}-metrics.json`,JSON.stringify({baseline:`${process.env.E2E_PRODUCTION ? "production" : "development"} app, local empty Mapbox basemap, mocked 20 Hz pose/status, efficient display mode`,cpuThrottle:mobile?4:1,...metrics},null,2));
     if(!docked)expect(metrics.distinctPlacements).toBeGreaterThan(2);

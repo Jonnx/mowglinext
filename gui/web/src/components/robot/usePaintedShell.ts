@@ -1,3 +1,4 @@
+import {artworkUrl} from "./artworkUrl";
 import {useEffect, useState} from "react";
 import {SHELLS, shellProjectionFrame, type MowerStyle} from "./shellAssets";
 import {normalizeShellColour, paintCoverage, recolourShellPixels} from "./shellPaint";
@@ -30,11 +31,10 @@ function prepare(style: MowerStyle, view: RobotView, artwork: Artwork): Promise<
     return cached(prepared, `${style}:${view}:${artwork}`, 8, async () => {
         const asset = SHELLS[style];
         if (!asset.paint) throw new Error("Shell has no paint mask");
-        const base = "/assets/robots/layered/";
         const compact = artwork === "map";
         const [source, mask] = await Promise.all([
-            image(base + (compact ? `map/${style}-${view}.webp` : asset.files?.[view] ?? `${style}.png`)),
-            image(base + (compact ? `map/${style}-${view}-paint.png` : asset.paint.masks[view])),
+            image(artworkUrl(compact ? `map/${style}-${view}.webp` : asset.files?.[view] ?? `${style}.png`)),
+            image(artworkUrl(compact ? `map/${style}-${view}-paint.png` : asset.paint.masks[view])),
         ]);
         const frame = shellProjectionFrame(style, view);
         const [x, y, w, h] = compact ? [0, 0, source.width, source.height] : frame;

@@ -8,6 +8,9 @@ import {ROBOT_URDF} from "../../src/test/robotUrdf";
 
 test("all shell paint masks render both views with the production canvas pipeline",async({page})=>{
     await page.setViewportSize({width:1600,height:1150});
+    // Simulate old immutable asset URLs being unusable: every rendered source,
+    // mask and compact derivative must request this build's versioned URL.
+    await page.route("**/assets/robots/layered/**",route=>new URL(route.request().url()).searchParams.get("v") ? route.continue() : route.abort());
     await page.goto("/tests/e2e/fixtures/chassis-gallery.html?paint=1");
     const shells=page.locator('[data-layer="shell-art"]');
     await expect(shells).toHaveCount(Object.keys(APPEARANCE_REGISTRY.shells).length*2);
@@ -21,13 +24,13 @@ test("all shell paint masks render both views with the production canvas pipelin
 
 test("missing paint masks preserve the original shell",async({page})=>{
     let failed=0;
-    await page.route("**/*-paint.svg",route=>{failed++;return route.abort();});
+    await page.route("**/*-paint.svg*",route=>{failed++;return route.abort();});
     await page.goto("/tests/e2e/fixtures/chassis-gallery.html?paint=1");
     await expect(page.locator('[data-layer="shell-art"]')).toHaveCount(12);
     await expect.poll(()=>failed).toBe(12);
     expect(await page.locator('[data-paint-ready="true"]').count()).toBe(0);
     for(const shell of await page.locator('[data-layer="shell-art"]').all()) {
-        await expect(shell.locator("image")).toHaveAttribute("href",/assets\/robots\/layered\/.*\.png$/);
+        await expect(shell.locator("image")).toHaveAttribute("href",/assets\/robots\/layered\/.*\.png\?v=/);
     }
 });
 

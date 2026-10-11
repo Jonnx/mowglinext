@@ -507,3 +507,11 @@ uses `dock-worx-side.png`, with a broad charging housing midway along the tray
 and two contacts at one height. Part entries may declare per-view `sizes` when
 separate source images differ; crops always use that view's native pixel coordinates.
 Registration and dock footprint settings are unchanged by an artwork correction.
+
+
+All layered artwork URLs go through `artworkUrl.ts`, which appends the web build
+ID to the filename. The GUI serves `/assets` with a year-long immutable cache;
+without this build identity an updated mask or sprite can remain stale after a
+normal reload. Use the helper for full-size sources, SVG masks and compact map
+assets alike. Pose changes do not alter the URL. Rebuild/deploy the web bundle
+when replacing artwork; copying a changed image under an old build ID is insufficient.

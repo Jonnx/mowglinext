@@ -230,3 +230,19 @@ Reproduce with `playwright test tests/e2e/shell-colour.spec.ts`; the side review
 fixture uses the registered physical frame so image padding is not part of the
 comparison. All four colour browser cases passed; the colour-picker capture was
 rerun after removing a redundant scroll during the mobile layout remount.
+
+
+### Artwork updates and CI runner isolation
+
+Artwork sources, paint masks and compact map assets now include the web-build ID
+in their URLs. The GUI serves `/assets/` with a one-year immutable cache, so stable
+filenames previously left browsers displaying older masks after a deployment.
+A normal page reload now requests artwork belonging to the loaded web build.
+
+The Node registry suite runs through `test:appearances` and is excluded from
+Vitest discovery, avoiding Vite attempting to bundle `node:test`. The full local
+CI test command passed 10 registry tests and 977 frontend tests after that fix;
+both GitHub GUI CI jobs passed on commit `718595fb`. The subsequent artwork URL
+change passed 45 focused unit tests, 13 browser cases and touched-file lint.
+Browser coverage rejects unversioned artwork requests and verifies painting,
+missing-mask fallback, shared appearance settings and desktop/mobile map views.

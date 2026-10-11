@@ -1,3 +1,4 @@
+import {artworkUrl} from "./artworkUrl";
 import {usePaintedShell} from "./usePaintedShell";
 import {PartSprite} from "./PartSprite";
 import {sensorArtworkProjection} from "./sensorArtworkProjection";
@@ -22,7 +23,7 @@ function ShellSprite({style, view, x, y, width, height, artwork, colour}: {
         data-paint-colour={colour || "original"} data-paint-ready={!!painted}
         viewBox={[sx,sy,sw,sh].join(" ")} preserveAspectRatio="none" overflow="hidden">
         <rect data-shell-bounds x={sx} y={sy} width={sw} height={sh} fill="none"/>
-        <image onLoad={()=>setLoaded(true)} onError={()=>setLoaded(false)} href={painted ?? (artwork === "map" ? `/assets/robots/layered/map/${style}-${view}.webp` : `/assets/robots/layered/${shell.files?.[view] ?? `${style}.png`}`)}
+        <image onLoad={()=>setLoaded(true)} onError={()=>setLoaded(false)} href={painted ?? artworkUrl(artwork === "map" ? `map/${style}-${view}.webp` : shell.files?.[view] ?? `${style}.png`)}
             x={cropped ? sx : 0} y={cropped ? sy : 0}
             width={cropped ? sw : sourceSize[0]} height={cropped ? sh : sourceSize[1]}/>
     </svg></>;

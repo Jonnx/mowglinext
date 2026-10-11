@@ -89,7 +89,7 @@ it("map derivatives retain all physical bounds and axle transforms",()=>{
     const before=metricAttributes();
     rerender(<svg><LayeredMower robot={robot} style="yardforce" transparent artwork="map"/></svg>);
     expect(metricAttributes()).toEqual(before);
-    for(const image of container.querySelectorAll("image"))expect(image.getAttribute("href")).toMatch(/\/map\/.*\.webp$/);
+    for(const image of container.querySelectorAll("image"))expect(new URL(image.getAttribute("href")!,"http://localhost").pathname).toMatch(/\/map\/.*\.webp$/);
 });
 
 it("shows the complete external Worx side wheel without changing its scale or position", () => {
