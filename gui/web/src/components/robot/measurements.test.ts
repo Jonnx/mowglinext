@@ -52,6 +52,7 @@ describe("physical measurement endpoints", () => {
         for(const value of [null,"",NaN,Infinity,-.2])
             expect(measurementGeometry("wheel_radius",live,{wheel_radius:value},"standard")).toBeNull();
         expect(validMeasurement("chassis_z_offset",-.07)).toBe(true);
+        expect(validMeasurement("caster_track",0)).toBe(true);
         expect(validMeasurement("dock_visual_width",4)).toBe(false);
     });
 });
