@@ -154,6 +154,24 @@ export const MOWER_MODELS: MowerModel[] = [
         },
     },
     {
+        value: "Worx500MPlus",
+        label: "mowerModels.Worx500MPlus.label",
+        description: "mowerModels.Worx500MPlus.description",
+        appearance: {style: "worx", dockAppearance: "worx"},
+        // Contributor configuration screenshot (2026-10-11), not factory specifications.
+        // Blade centre confirmed at (0.195, -0.0575) m from base_link, NOT the axle.
+        // No battery, sensor or firmware calibration is inferred from this body model.
+        defaults: {
+            wheel_radius: 0.1, wheel_track: 0.36, wheel_x_offset: -0.005,
+            wheel_width: 0.04, chassis_height: 0.23, chassis_mass_kg: 8.76,
+            // Provisional front caster position: 50 mm tyre clearance from the front edge.
+            caster_x_offset: 0.405, caster_radius: 0.03, caster_track: 0.0,
+            blade_radius: 0.1, tool_width: 0.20, ticks_per_meter: 343,
+            chassis_length: 0.58, chassis_width: 0.395, chassis_center_x: 0.195,
+            blade_x_offset: 0.0, blade_y_offset: -0.0575,
+        },
+    },
+    {
         value: "CUSTOM",
         label: "mowerModels.CUSTOM.label",
         description: "mowerModels.CUSTOM.description",

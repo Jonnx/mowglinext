@@ -1,4 +1,4 @@
-# Drive-wheel and caster preset corrections
+# Mower dimensions and preset corrections
 
 ## Values and evidence
 
@@ -60,3 +60,47 @@ preset for a physical mower, record:
   actual sensor heights after applying the model change.
 
 This PR is independent of the layered-artwork and dashboard-illustration PRs.
+
+
+## WORX 500M Plus preset
+
+Added on top of #966, which provides configurable blade offsets and the paired WORX shell/dock.
+Source: contributor configuration screenshot and coordinate clarification, 2026-10-11.
+These are reported configuration values for their mower, **not manufacturer specifications**.
+The robot serial, controller conversion, firmware, tyre variant and measuring method were not supplied.
+
+| Setting | Preset value | Source |
+| --- | ---: | --- |
+| Rear-wheel radius / width / centre track | 100 / 40 / 360 mm | Supplied screenshot |
+| Rear-wheel X offset | −5 mm | Supplied screenshot |
+| Caster radius / track | 30 / 0 mm | Supplied screenshot; central caster |
+| Caster X position | 405 mm | Provisional: places the tyre 50 mm inside the front edge, consistent with the other built-in presets; not measured |
+| Chassis length / width / height | 580 / 395 / 230 mm | Supplied screenshot |
+| Chassis centre X | 195 mm | Supplied screenshot |
+| Mass | 8.76 kg | Screenshot value; not independently weighed |
+| Blade radius / tool width | 100 / 200 mm | Supplied screenshot |
+| Encoder ticks per metre | 343 | Screenshot calibration; must be checked for the installed encoder/controller |
+| Blade centre from base_link | X = 195 mm, Y = −57.5 mm | Contributor explicitly confirmed base_link, right of centre |
+| Blade offsets from chassis centre | X = 0, Y = −57.5 mm | Conversion to #966 offset settings |
+
+With `wheel_x_offset = -0.005`, the blade is 200 mm ahead of the rear-wheel axle;
+195 mm is the distance from **base_link**, not the axle. Positive Y is left, so right
+uses a negative value. Four decimal places preserve `-0.0575` exactly.
+
+The preset deliberately does not replace battery voltages, sensor mounts, chassis vertical offset,
+or firmware selection. They were not established by the supplied data;
+review those retained/defaulted values and the provisional caster X on the installed conversion. Selecting a body preset does not
+establish stock WORX mainboard compatibility. The matching appearance is the registered WORX shell
+and side-charging dock, without a separate artwork mapping.
+
+Unlike the four radius-only corrections, **applying this new preset also proposes the screenshot's
+encoder and chassis values**. No settings are automatically migrated or written without Save.
+
+Physical acceptance remains **HARDWARE_REQUIRED**. Record the exact #970 commit, robot unit,
+controller/encoder, firmware and ROS image. With power isolated and blades removed, measure wheel
+radii and centre track, chassis dimensions and blade rotation centre; verify the blade URDF transform
+is `(0.195, -0.0575)` relative to base_link and both caster links share Y = 0. Check sensor heights and
+caster X on the actual robot. Then, blades removed and in a supervised clear test area with an
+accessible cutoff, validate ticks-per-metre against a measured travel distance using the drive
+calibration procedure before autonomous operation. The asymmetric cutting-tool clearance and
+coverage require a supervised field test; these software tests do not establish that behaviour.
