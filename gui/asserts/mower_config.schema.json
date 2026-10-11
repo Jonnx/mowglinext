@@ -104,10 +104,10 @@
         "caster_x_offset": {
           "type": "number",
           "title": "Caster X Offset",
-          "default": -1.0,
-          "minimum": -1,
+          "default": 0.40,
+          "minimum": -0.99,
           "maximum": 2,
-          "description": "Caster axle position forward from base_link in metres. -1 keeps the automatic chassis-front placement. Changes apply to the URDF after restarting ROS."
+          "description": "Fixed caster axle position from base_link in metres; positive forward. Provisional 0.40 m starting point for YardForce 500; measure the actual robot. Changes apply to the URDF after restarting ROS."
         },
         "ticks_per_meter": {
           "type": "number",

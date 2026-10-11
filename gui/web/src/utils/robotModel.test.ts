@@ -15,7 +15,7 @@ describe("shared robot geometry",()=>{
     it("overlays edited geometry without resizing wheels/sensors or mutating the live model",()=>{
         const live=parseRobotUrdf(ROBOT_URDF)!;
         const r=previewRobotGeometry(live,{chassis_length:.9,chassis_width:.6,chassis_center_x:.3,gps_x:.4});
-        expect([r.baseLength,r.baseWidth,r.casterXOffset]).toEqual([.9,.6,.72]);
+        expect([r.baseLength,r.baseWidth,r.casterXOffset]).toEqual([.9,.6,live.casterXOffset]);
         expect(r.wheelRadius).toBe(live.wheelRadius);
         expect(r.sensors?.find(s=>s.id==="gps")).toMatchObject({x:.4,width:.05});
         expect(live.sensors?.find(s=>s.id==="gps")?.x).toBe(.3);
@@ -40,7 +40,7 @@ describe("shared robot geometry",()=>{
     });
 });
 
-it("uses explicit caster axle placement and retains automatic geometry when reset",()=>{
+it("uses fixed caster placement and reads legacy automatic configurations",()=>{
     const live=parseRobotUrdf(ROBOT_URDF)!;
     expect(previewRobotGeometry(live,{caster_x_offset:.32,chassis_length:.8}).casterXOffset).toBe(.32);
     expect(previewRobotGeometry(live,{caster_x_offset:0}).casterXOffset).toBe(0);

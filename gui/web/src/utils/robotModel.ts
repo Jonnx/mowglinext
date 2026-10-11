@@ -121,7 +121,7 @@ export function previewRobotGeometry(live: RobotGeometry, values: Record<string,
     // These derived relationships are the ones in mowgli.urdf.xacro.
     const configuredCasterX = read("caster_x_offset");
     if (configuredCasterX !== undefined && configuredCasterX !== -1) next.casterXOffset = configuredCasterX;
-    else if (configuredCasterX === -1 || next.baseLength !== live.baseLength || next.chassisCenterX !== live.chassisCenterX || next.casterRadius !== live.casterRadius)
+    else if (configuredCasterX === -1)
         next.casterXOffset = next.chassisCenterX + next.baseLength/2 - next.casterRadius;
     const shellOffset = read("chassis_z_offset");
     // An omitted setting retains the running URDF's bottom position, including

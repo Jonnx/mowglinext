@@ -84,3 +84,16 @@ def test_chassis_offset_moves_body_only_and_retains_dimensions() -> None:
         snapshots.append({j.attrib["name"]: ET.tostring(j) for j in robot.findall("joint")})
     # Changing shell Z must not relocate base_link, axles, blade or sensors.
     assert snapshots[0] == snapshots[1]
+
+
+def test_default_caster_position_is_fixed_when_chassis_length_changes() -> None:
+    for length in (0.54, 0.8):
+        result = subprocess.run(
+            ["xacro", str(_XACRO_FILE), f"chassis_length:={length}"],
+            check=True, capture_output=True, text=True,
+        )
+        robot = ET.fromstring(result.stdout)
+        for side in ("left", "right"):
+            origin = robot.find(f"./joint[@name='front_{side}_caster_joint']/origin")
+            assert origin is not None
+            assert float(origin.attrib["xyz"].split()[0]) == 0.4

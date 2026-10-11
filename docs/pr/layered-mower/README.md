@@ -113,3 +113,36 @@ modes retain the same anchor. They do not change URDF geometry or robot controls
 Validation: 16 renderer tests, TypeScript and targeted ESLint passed. All 22
 Hardware/Sensors/gallery/map browser cases passed after the side and anchor edits.
 Application screenshots use mocked telemetry; no robot was contacted.
+
+## Explicit caster position
+
+Caster front/back position is a normal numeric hardware field (metres from
+base_link, positive forwards). It stays fixed when chassis dimensions change.
+The model presets use these provisional starting positions:
+
+| Preset | Caster axle X |
+| --- | ---: |
+| YardForce 500 / 500B | 0.400 m |
+| YardForce SA650 / 900 ECO | 0.390 m |
+| LUV1000RI | 0.400 m |
+| Sabo | 0.590 m |
+| Biltema RM1000 | 0.350 m |
+
+These are layout estimates, not measured manufacturer dimensions. The presets
+with known envelopes put the front tyre roughly 50 mm inside the body nose.
+RM1000 uses the illustrative layout above; its other calibration remains untouched.
+Custom robots keep their values. The schema/ROS default is 0.400 m.
+
+Old explicit `-1` values are still understood by the URDF for compatibility.
+The GUI displays their resolved distance and materializes that distance before
+applying settings edits, so subsequent chassis edits cannot move the axle
+implicitly. An existing installation without this key takes the new default;
+record its old running caster position explicitly first if it must be preserved.
+The .118 test installation keeps its existing 0.420 m position.
+
+HARDWARE_REQUIRED for preset dimensional validation: with each target model
+powered off on level ground, measure from the rear drive-axle centre to each
+caster wheel axle with the casters facing forward. Record unit/model, configuration,
+firmware and PR revision with the result. Pass when configured positions agree
+within 5 mm; otherwise replace the estimate with the measurement. No drive or
+blade operation is needed for this check.

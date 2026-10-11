@@ -1,3 +1,4 @@
+import {materializeLegacyCasterPosition} from "../utils/casterPosition";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApi } from "./useApi.ts";
@@ -401,11 +402,11 @@ export const useSettingsManager = () => {
     }, []);
 
     const handleChange = useCallback((key: string, value: any) => {
-        setLocalValues((prev) => ({ ...prev, [key]: value }));
+        setLocalValues((prev) => ({ ...materializeLegacyCasterPosition(prev), [key]: value }));
     }, []);
 
     const handleBulkChange = useCallback((changes: Record<string, any>) => {
-        setLocalValues((prev) => ({ ...prev, ...changes }));
+        setLocalValues((prev) => ({ ...materializeLegacyCasterPosition(prev), ...changes }));
     }, []);
 
     // hasDefault: the schema knows a default for this key (so a reset is
@@ -438,7 +439,7 @@ export const useSettingsManager = () => {
     const resetToDefault = useCallback(
         (key: string) => {
             if (!(key in defaults)) return;
-            setLocalValues((prev) => ({ ...prev, [key]: defaults[key] }));
+            setLocalValues((prev) => ({ ...materializeLegacyCasterPosition(prev), [key]: defaults[key] }));
         },
         [defaults]
     );

@@ -138,7 +138,7 @@ def generate_launch_description() -> LaunchDescription:
     wheel_x_offset   = float(robot_params.get("wheel_x_offset", 0.0))
     caster_radius    = float(robot_params.get("caster_radius", 0.03))
     caster_track     = float(robot_params.get("caster_track", 0.36))
-    caster_x_offset  = float(robot_params.get("caster_x_offset", -1.0))
+    caster_x_offset  = float(robot_params.get("caster_x_offset", 0.40))
     blade_radius     = float(robot_params.get("blade_radius", 0.09))
 
     # Sensor positions from config

@@ -35,6 +35,9 @@ export type MowerModel = {
     defaults: Record<string, number>;
 };
 
+// Caster X positions are fixed, provisional starting points inferred from the
+// preset body envelope (roughly 50 mm tyre clearance from the front edge),
+// not measured wheelbases. Measure the actual axle position on each robot.
 export const MOWER_MODELS: MowerModel[] = [
     {
         value: "YardForce500",
@@ -45,7 +48,7 @@ export const MOWER_MODELS: MowerModel[] = [
         defaults: {
             wheel_radius: 0.1, wheel_track: 0.325, wheel_x_offset: 0.0,
             wheel_width: 0.04, chassis_height: 0.19, chassis_z_offset: -0.05, chassis_mass_kg: 8.76,
-            caster_x_offset: -1, caster_radius: 0.03, caster_track: 0.36,
+            caster_x_offset: 0.40, caster_radius: 0.03, caster_track: 0.36,
             blade_radius: 0.09, tool_width: 0.18, ticks_per_meter: 300,
             battery_full_voltage: 28.5, battery_empty_voltage: 24.0,
             battery_critical_voltage: 23.0,
@@ -63,7 +66,7 @@ export const MOWER_MODELS: MowerModel[] = [
         defaults: {
             wheel_radius: 0.1, wheel_track: 0.325, wheel_x_offset: 0.0,
             wheel_width: 0.04, chassis_height: 0.19, chassis_z_offset: -0.05, chassis_mass_kg: 8.76,
-            caster_x_offset: -1, caster_radius: 0.03, caster_track: 0.36,
+            caster_x_offset: 0.40, caster_radius: 0.03, caster_track: 0.36,
             blade_radius: 0.09, tool_width: 0.18, ticks_per_meter: 300,
             battery_full_voltage: 28.5, battery_empty_voltage: 24.0,
             battery_critical_voltage: 23.0,
@@ -80,7 +83,7 @@ export const MOWER_MODELS: MowerModel[] = [
         defaults: {
             wheel_radius: 0.04475, wheel_track: 0.325, wheel_x_offset: 0.0,
             wheel_width: 0.04, chassis_height: 0.26, chassis_z_offset: 0, chassis_mass_kg: 9.5,
-            caster_x_offset: -1, caster_radius: 0.03, caster_track: 0.36,
+            caster_x_offset: 0.39, caster_radius: 0.03, caster_track: 0.36,
             blade_radius: 0.09, tool_width: 0.18, ticks_per_meter: 1050,
             battery_full_voltage: 28.5, battery_empty_voltage: 24.0,
             battery_critical_voltage: 23.0,
@@ -94,9 +97,9 @@ export const MOWER_MODELS: MowerModel[] = [
         label: "mowerModels.BiltemaRM1000.label",
         description: "mowerModels.BiltemaRM1000.description",
         appearance: {style: "rm1000", dockAppearance: "styled"},
-        // RM1000-specific geometry has not been measured for this preset.
-        // Keep it selectable without copying a different mower's calibration.
-        defaults: {},
+        // Provisional caster position only; retain the user's other dimensions
+        // and calibration until RM1000 hardware measurements are available.
+        defaults: {caster_x_offset: 0.35},
     },
     {
         value: "YardForce900ECO",
@@ -105,7 +108,7 @@ export const MOWER_MODELS: MowerModel[] = [
         defaults: {
             wheel_radius: 0.04475, wheel_track: 0.325, wheel_x_offset: 0.0,
             wheel_width: 0.04, chassis_height: 0.26, chassis_z_offset: 0, chassis_mass_kg: 10.0,
-            caster_x_offset: -1, caster_radius: 0.03, caster_track: 0.36,
+            caster_x_offset: 0.39, caster_radius: 0.03, caster_track: 0.36,
             blade_radius: 0.09, tool_width: 0.18, ticks_per_meter: 1050,
             battery_full_voltage: 28.5, battery_empty_voltage: 24.0,
             battery_critical_voltage: 23.0,
@@ -121,7 +124,7 @@ export const MOWER_MODELS: MowerModel[] = [
         defaults: {
             wheel_radius: 0.04475, wheel_track: 0.285, wheel_x_offset: 0.0,
             wheel_width: 0.04, chassis_height: 0.282, chassis_z_offset: 0, chassis_mass_kg: 9.0,
-            caster_x_offset: -1, caster_radius: 0.03, caster_track: 0.36,
+            caster_x_offset: 0.40, caster_radius: 0.03, caster_track: 0.36,
             blade_radius: 0.09, tool_width: 0.18, ticks_per_meter: 1050,
             battery_full_voltage: 28.5, battery_empty_voltage: 24.0,
             battery_critical_voltage: 23.0,
@@ -137,7 +140,7 @@ export const MOWER_MODELS: MowerModel[] = [
         defaults: {
             wheel_radius: 0.04475, wheel_track: 0.45, wheel_x_offset: 0.0,
             wheel_width: 0.05, chassis_height: 0.36, chassis_z_offset: 0, chassis_mass_kg: 14.0,
-            caster_x_offset: -1, caster_radius: 0.035, caster_track: 0.45,
+            caster_x_offset: 0.59, caster_radius: 0.035, caster_track: 0.45,
             blade_radius: 0.16, tool_width: 0.32, ticks_per_meter: 1050,
             battery_full_voltage: 28.5, battery_empty_voltage: 21.0,
             battery_critical_voltage: 20.0,
