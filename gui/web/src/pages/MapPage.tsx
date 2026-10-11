@@ -1,3 +1,4 @@
+import {visibleRobotGeometry} from "../utils/robotModel";
 import {dockVisualGeometry} from "../components/robot/dockGeometry";
 import {useMowerVisual} from "../hooks/useMowerVisual";
 import {StyledDockMarker} from "./map/components/StyledDockMarker";
@@ -282,7 +283,10 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
         ? getMowerHeadingRad(mowerHeadingFeature.geometry.coordinates, (lng, lat) =>
             itranspose(offsetX, offsetY, datum, lat, lng))
         : undefined;
-    const robotGeometry = useRobotDescription();
+    const liveRobotGeometry = useRobotDescription();
+    const lidarEnabled = settings.lidar_enabled;
+    const robotGeometry = useMemo(() => visibleRobotGeometry(liveRobotGeometry, {lidar_enabled: lidarEnabled}),
+        [liveRobotGeometry, lidarEnabled]);
     const assembledMowerReady = !!robotGeometry.fromUrdf && mowerHasValidPose && mowerHeadingRad !== undefined;
     const styledDockReady = !!dockAppearance.layered && dockHasValidPose && dockHeadingRad !== undefined;
     const dockImageReady = styledDockReady || shouldDisplayMapImage(

@@ -8,7 +8,7 @@ import en from "../../src/i18n/locales/en.json" with {type:"json"};
 import {ROBOT_URDF} from "../../src/test/robotUrdf";
 const base=SCENARIOS[0];
 const shots="screenshots.local/layered-mower";
-const settings={mower_model:"YardForce500",chassis_length:.6,chassis_width:.45,chassis_height:.19,chassis_z_offset:-.05,
+const settings={lidar_enabled:true,mower_model:"YardForce500",chassis_length:.6,chassis_width:.45,chassis_height:.19,chassis_z_offset:-.05,
     chassis_center_x:.18,wheel_radius:.1,wheel_width:.04,wheel_track:.325,wheel_x_offset:0,
     caster_radius:.03,caster_track:.36,blade_radius:.09,gps_x:.3,gps_y:0,gps_z:.2,
     lidar_x:0,lidar_y:.024,lidar_z:.3,lidar_yaw:3.1408,imu_x:.18,imu_y:-.195,imu_z:.095};
@@ -236,4 +236,31 @@ test("chassis height preserves the bottom offset and wheel spacing is the preset
     expect(Number(await side.getAttribute("y"))).toBeCloseTo(-.20);
     const positions=await page.getByTestId("mower-top").locator('[data-layer="wheels"] > g').evaluateAll(nodes=>nodes.map(n=>Number(n.getAttribute("transform")!.match(/translate\(([^ ]+)/)![1])));
     expect(positions[1]-positions[0]).toBeCloseTo(.325);
+});
+
+
+// Photo-proportioned demonstration only; never applied by a style selection.
+test("Worx shallow chassis preview and disabled scanner artwork", async ({page}) => {
+    const example = {...settings, mower_model: "custom", chassis_length: .54, chassis_width: .36,
+        chassis_height: .14, chassis_z_offset: -.07, chassis_center_x: .16,
+        wheel_radius: .11, wheel_width: .04, wheel_track: .32, caster_radius: .025,
+        caster_track: .22, caster_x_offset: .34, gps_x: .20, gps_y: 0, gps_z: .08,
+        lidar_enabled: false, lidar_x: .24, lidar_y: 0, lidar_z: .1};
+    await page.route("**/api/settings/yaml", route => route.fulfill({json: example}));
+    await page.addInitScript(() => localStorage.setItem("mowgli.robot-visual.v1",
+        JSON.stringify({style: "worx", dockAppearance: "worx", transparent: false})));
+    await page.goto("/#/settings?section=hardware");
+    const preview = page.getByTestId("mower-preview");
+    await expect(preview.locator('[data-layer="shell-art"]').last()).toHaveAttribute("height", "0.14");
+    expect(Number(await preview.locator('[data-layer="shell-art"]').last().getAttribute("y"))).toBeCloseTo(-.07);
+    await expect(preview.locator('[data-sensor="lidar"]')).toHaveCount(0);
+    await preview.scrollIntoViewIfNeeded();
+    await page.evaluate(async () => Promise.all([...document.querySelectorAll('image')].map(e => {
+        const img = new Image(); img.src = e.getAttribute('href')!; return img.decode();
+    })));
+    await preview.screenshot({path: shots + "/worx-shallow-hardware.png"});
+    await page.goto("/#/settings?section=sensors");
+    await expect(page.locator('[data-sensor-control="gps"]')).toBeVisible();
+    await expect(page.locator('[data-sensor="lidar"], [data-sensor-control="lidar"]')).toHaveCount(0);
+    await page.screenshot({path: shots + "/worx-shallow-sensors.png", fullPage: true});
 });

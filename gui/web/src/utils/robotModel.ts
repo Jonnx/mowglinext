@@ -1,3 +1,4 @@
+import {parseBoolish} from "./settingsValues";
 import type {RobotGeometry} from "../hooks/useRobotDescription";
 
 export type SensorId = "gps" | "lidar" | "imu";
@@ -149,7 +150,7 @@ export function previewRobotGeometry(live: RobotGeometry, values: Record<string,
         if (sensor.mount) s.mount=mount;
         return s;
     });
-    return next;
+    return visibleRobotGeometry(next, values);
 }
 
 export function projectPoint(x: number, y: number, z: number, view: RobotView): [number, number] {
@@ -186,4 +187,13 @@ export function robotBounds(r: RobotGeometry, view: RobotView, padding = 0.04): 
     for (const sensor of r.sensors ?? []) points.push(...sensorCorners(sensor, view));
     const x = Math.min(...points.map(p=>p[0]))-padding, y = Math.min(...points.map(p=>p[1]))-padding;
     return {x, y, width: Math.max(...points.map(p=>p[0]))+padding-x, height: Math.max(...points.map(p=>p[1]))+padding-y};
+}
+
+/** Presentation only: URDF may retain a scanner link while LiDAR is disabled.
+ * Missing YAML keys use the Sensors/schema default (false), including sparse saves.
+ * Keep the source geometry intact so enabling the scanner restores its mount.
+ */
+export function visibleRobotGeometry(robot: RobotGeometry, values: Record<string, unknown>): RobotGeometry {
+    if (parseBoolish(values.lidar_enabled) === true || !robot.sensors?.some(s => s.id === "lidar")) return robot;
+    return {...robot, sensors: robot.sensors.filter(s => s.id !== "lidar")};
 }

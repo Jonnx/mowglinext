@@ -676,7 +676,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
                             {gridLines}
                             {scaleLabels}
                             {robotBody}
-                            {liveRobot.fromUrdf && [...SENSORS].reverse().map(renderSensor)}
+                            {liveRobot.fromUrdf && [...SENSORS].reverse().filter(meta => robot.sensors?.some(sensor => sensor.id === meta.id)).map(renderSensor)}
                         </svg>
                     </div>
                     {liveRobot.fromUrdf && <MowerView dockGeometry={dockGeometry} robot={robot} view="side" showDock transparent={transparent} highlightSensors maxHeight={190}/>}

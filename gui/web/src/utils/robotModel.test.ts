@@ -1,5 +1,5 @@
 import {describe,expect,it} from "vitest";
-import {parseRobotUrdf,previewRobotGeometry,robotBounds,sensorCorners} from "./robotModel";
+import {parseRobotUrdf,previewRobotGeometry,visibleRobotGeometry,robotBounds,sensorCorners} from "./robotModel";
 import {ROBOT_URDF} from "../test/robotUrdf";
 describe("shared robot geometry",()=>{
     it("reads visual geometry and mounts without doubling the GPS/IMU footprint",()=>{
@@ -23,7 +23,7 @@ describe("shared robot geometry",()=>{
     });
     it("ignores empty, negative and nonfinite dimension edits",()=>{
         const r=parseRobotUrdf(ROBOT_URDF)!;
-        expect(previewRobotGeometry(r,{chassis_length:"",chassis_width:-1,wheel_radius:"Infinity",gps_x:null})).toEqual(r);
+        expect(previewRobotGeometry(r,{lidar_enabled:true,chassis_length:"",chassis_width:-1,wheel_radius:"Infinity",gps_x:null})).toEqual(r);
     });
     it.each(["<broken", "<robot/>", ROBOT_URDF.replace('0.60 0.45 0.19','NaN 0.45 0.19'),
         ROBOT_URDF.replace('radius="0.1"','radius="-1"')])("rejects malformed geometry",xml=>{
@@ -49,7 +49,7 @@ it("uses fixed caster placement and reads legacy automatic configurations",()=>{
 
 it("moves only the shell when editing vertical offset and preserves that offset on height edits",()=>{
     const live=parseRobotUrdf(ROBOT_URDF)!;
-    const next=previewRobotGeometry(live,{chassis_z_offset:-.06});
+    const next=previewRobotGeometry(live,{lidar_enabled:true,chassis_z_offset:-.06});
     expect(next.chassisCenterZ).toBeCloseTo(.035);
     expect(next.baseHeight).toBe(.19);
     expect(next.wheelZ).toBe(live.wheelZ);
@@ -58,7 +58,7 @@ it("moves only the shell when editing vertical offset and preserves that offset 
     expect(next.sensors).toEqual(live.sensors);
     const taller=previewRobotGeometry(live,{chassis_height:.24});
     expect(taller.chassisCenterZ!-.24/2).toBeCloseTo(-.05);
-    expect(previewRobotGeometry(live,{chassis_z_offset:0}).chassisCenterZ).toBeCloseTo(.095);
+    expect(previewRobotGeometry(live,{lidar_enabled:true,chassis_z_offset:0}).chassisCenterZ).toBeCloseTo(.095);
 });
 
 
@@ -83,4 +83,19 @@ it("rotates visual offsets about the edited joint and matches the resulting URDF
     // Feeding a preview through a second edit must not accumulate the offset.
     expect(previewRobotGeometry(preview,edited)).toEqual(preview);
     expect(live.sensors!.find(s=>s.id==="imu")!.mount).toEqual({x:.18,y:-.195,z:.095});
+});
+
+// The URDF contains all mounting frames even when no scanner is installed.
+describe("sensor artwork visibility", () => {
+    const live = parseRobotUrdf(ROBOT_URDF)!;
+    for (const disabled of [false, "false", 0, "0", undefined]) it(`hides disabled LiDAR (${disabled}) without losing its saved mount`, () => {
+        const values = {lidar_enabled: disabled, lidar_x: .25};
+        expect(visibleRobotGeometry(live, values).sensors?.map(s => s.id)).toEqual(["gps", "imu"]);
+        expect(previewRobotGeometry(live, values).sensors?.some(s => s.id === "lidar")).toBe(false);
+        expect(live.sensors?.some(s => s.id === "lidar")).toBe(true);
+        expect(previewRobotGeometry(live, {...values, lidar_enabled: true}).sensors?.find(s => s.id === "lidar")?.mount?.x).toBe(.25);
+    });
+    for (const enabled of [true, "true", 1, "1"]) it(`preserves the enabled scanner (${enabled})`, () => {
+        expect(visibleRobotGeometry(live, {lidar_enabled: enabled})).toBe(live);
+    });
 });

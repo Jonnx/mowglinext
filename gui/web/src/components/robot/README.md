@@ -352,3 +352,19 @@ Generated with the built-in image tool using the supplied real side photograph a
 The approved top image is unchanged. The separate side PNG is 1254 × 1254 pixels. Its tight alpha >220 envelope is `(44,487,793,295)`. Its physical projection frame is `(44,487,1167,295)`: the real rear registration at x=1211 is retained from the full side reference before the hidden rear apron was removed. Thus the visible front panel occupies 68% of the configured chassis length; it is never enlarged to fill the whole chassis. Per-view dimensions and projection frames are also used by the compact WebP generator. The left elevation contains no right-side charging contacts.
 
 This is a photo-proportioned illustration, not a measured CAD model. The configured chassis length/height, chassis centre and independent drive-wheel radius/axle position still determine the actual metre-scale assembly. Selecting Worx artwork must not rewrite those hardware settings to force a visual fit.
+
+
+### Disabled sensor artwork
+
+Hardware and Sensors filter the draft geometry with `lidar_enabled`; the map
+filters its running URDF geometry with the saved setting. Omitted keys mean false,
+matching sparse YAML and the Sensors switch. The source mounting geometry is not
+modified; enabling LiDAR restores its image and editor handles at the saved mount.
+
+### Worx preview proportions
+
+The example fixture uses a 540 × 360 × 140 mm chassis, its bottom 70 mm below the
+rear axle, with 220 mm drive wheels. This puts the shell top 70 mm above the axle
+and the bottom 40 mm above ground. These are photo-proportioned illustration
+values, not verified manufacturer dimensions or a hardware preset. Shell selection
+must never apply them to a real mower configuration.
