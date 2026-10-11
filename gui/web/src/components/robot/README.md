@@ -8,6 +8,11 @@ It is a scaled illustration, not CAD or collision geometry.
 - Style and Hardware transparency are display preferences saved in this browser.
 - Sensors starts transparent each time it opens; its toggle affects only that
   editor session (both top and side). The map always remains opaque.
+- Hardware and Sensors show a stationary docked illustration in top and side
+  views. The shared nominal dock keeps the map anchor in top view; the side tray
+  meets the tyre contact plane. Framing includes both without changing robot
+  dimensions or sensor coordinates. The dock fades in transparent mode to keep
+  internal components legible. This illustration does not report live dock status.
 - All top views face up; all side views face left. There is no separate stop-button
   layer; future shell artwork can include a rear stop button if appropriate.
 - Transparent mode changes the opacity of the same shell art; it reveals the
