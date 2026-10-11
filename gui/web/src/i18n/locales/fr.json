@@ -4753,6 +4753,10 @@
   },
 
   "mowerVisual": {
+    "bodyColour": "Couleur de coque",
+    "chooseColour": "Choisir la couleur de coque",
+    "originalColour": "Originale",
+    "suggestedColour": "Suggestion",
     "title": "Votre tondeuse",
     "bodyStyle": "Style de carrosserie",
     "worx": "Inspiré Worx",

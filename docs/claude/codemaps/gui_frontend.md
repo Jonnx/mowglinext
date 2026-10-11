@@ -242,3 +242,11 @@ The asset wrappers and `constants/mowerAppearances.ts` derive their IDs/catalogs
 `web/scripts/appearance-registry.mjs` validates files/metadata and generates the
 backend shell enum; `npm run generate:appearances` also refreshes compact map assets.
 See `web/src/components/robot/README.md` for the contributor workflow.
+
+
+Shell colours: `components/robot/shellPaint.ts` supplies deterministic masked
+pigment/shading, `usePaintedShell.ts` caches preview/map rasters, and shell `paint`
+metadata in `appearanceRegistry.ts` declares both SVG masks and a suggested colour.
+Hardware saves `mower_visual_colour` (empty = original) through the existing YAML
+settings writer; Sensors and Map consume it. New-shell mask instructions are in
+`components/robot/README.md`; generated compact masks share the PNG crop/frame.

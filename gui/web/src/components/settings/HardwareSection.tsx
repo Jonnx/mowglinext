@@ -154,7 +154,7 @@ export const HardwareSection: React.FC<Props> = ({
                 </Space>
             </Card>
 
-            <MowerPreview values={values} editor={measurementEditor} onStyleChange={style => onChange("mower_visual_style", style)}/>
+            <MowerPreview values={values} editor={measurementEditor} onStyleChange={style => onChange("mower_visual_style", style)} onColourChange={colour => onChange("mower_visual_colour", colour)}/>
 
             {/* Essential parameters (always visible) */}
             <Card

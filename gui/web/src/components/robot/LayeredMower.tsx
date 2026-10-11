@@ -1,3 +1,4 @@
+import {usePaintedShell} from "./usePaintedShell";
 import {PartSprite} from "./PartSprite";
 import {sensorArtworkProjection} from "./sensorArtworkProjection";
 import {SHELLS, shellProjectionFrame} from "./shellAssets";
@@ -6,21 +7,24 @@ import type {RobotGeometry} from "../../hooks/useRobotDescription";
 import type {MowerStyle} from "../../hooks/useMowerVisual";
 import {sensorCorners, type RobotView, type SensorGeometry} from "../../utils/robotModel";
 
-function ShellSprite({style, view, x, y, width, height, artwork}: {
-    style: MowerStyle; view: RobotView; x: number; y: number; width: number; height: number; artwork:"full"|"map";
+function ShellSprite({style, view, x, y, width, height, artwork, colour}: {
+    style: MowerStyle; view: RobotView; x: number; y: number; width: number; height: number; artwork:"full"|"map"; colour?: string;
 }) {
     const [loaded, setLoaded] = useState(false);
     const shell = SHELLS[style];
     const [sx, sy, sw, sh] = shellProjectionFrame(style, view);
     const sourceSize = shell.sizes?.[view] ?? shell.size;
+    const painted = usePaintedShell(style, view, artwork, colour);
+    const cropped = artwork === "map" || !!painted;
     return <>
         {!loaded && <rect x={x} y={y} width={width} height={height} rx={Math.min(width,height)*.18} fill="#343e40"/>}
         <svg data-layer="shell-art" x={x} y={y} width={width} height={height}
+        data-paint-colour={colour || "original"} data-paint-ready={!!painted}
         viewBox={[sx,sy,sw,sh].join(" ")} preserveAspectRatio="none" overflow="hidden">
         <rect data-shell-bounds x={sx} y={sy} width={sw} height={sh} fill="none"/>
-        <image onLoad={()=>setLoaded(true)} onError={()=>setLoaded(false)} href={artwork === "map" ? `/assets/robots/layered/map/${style}-${view}.webp` : `/assets/robots/layered/${shell.files?.[view] ?? `${style}.png`}`}
-            x={artwork === "map" ? sx : 0} y={artwork === "map" ? sy : 0}
-            width={artwork === "map" ? sw : sourceSize[0]} height={artwork === "map" ? sh : sourceSize[1]}/>
+        <image onLoad={()=>setLoaded(true)} onError={()=>setLoaded(false)} href={painted ?? (artwork === "map" ? `/assets/robots/layered/map/${style}-${view}.webp` : `/assets/robots/layered/${shell.files?.[view] ?? `${style}.png`}`)}
+            x={cropped ? sx : 0} y={cropped ? sy : 0}
+            width={cropped ? sw : sourceSize[0]} height={cropped ? sh : sourceSize[1]}/>
     </svg></>;
 }
 
@@ -61,8 +65,8 @@ function Wheel({x, y, radius, width, view, caster = false, artwork}: {x: number;
 
 // Pose updates move the map wrapper; unchanged geometry must not rebuild artwork.
 /** Map mode omits layout details entirely, avoiding hidden underbody artwork downloads. */
-export const LayeredMower = memo(function LayeredMower({robot: r, style, transparent, view = "top", sensors = true, highlightSensors = false, layoutDetails = true, artwork = "full"}: {
-    robot: RobotGeometry; style: MowerStyle; transparent: boolean; view?: RobotView; sensors?: boolean; highlightSensors?: boolean; layoutDetails?: boolean; artwork?:"full"|"map";
+export const LayeredMower = memo(function LayeredMower({robot: r, style, colour, transparent, view = "top", sensors = true, highlightSensors = false, layoutDetails = true, artwork = "full"}: {
+    robot: RobotGeometry; style: MowerStyle; colour?: string; transparent: boolean; view?: RobotView; sensors?: boolean; highlightSensors?: boolean; layoutDetails?: boolean; artwork?:"full"|"map";
 }) {
     const bodyZ = r.chassisCenterZ ?? r.baseHeight/2;
     const bladeX = r.bladeX ?? r.chassisCenterX;
@@ -87,7 +91,7 @@ export const LayeredMower = memo(function LayeredMower({robot: r, style, transpa
         </g>}
         {layoutDetails && sensors && (r.sensors ?? []).filter(s=>s.id === "imu").map(s=><SensorGraphic artwork={artwork} key={s.id} sensor={s} view={view} highlight={highlightSensors}/>)}
         <g data-layer="shell" opacity={transparent ? .24 : 1}>
-            <ShellSprite artwork={artwork} key={style} style={style} view={view}
+            <ShellSprite colour={colour} artwork={artwork} key={style} style={style} view={view}
                 x={view === "top" ? -r.baseWidth/2 : -r.chassisCenterX-r.baseLength/2}
                 y={view === "top" ? -r.chassisCenterX-r.baseLength/2 : -bodyZ-r.baseHeight/2}
                 width={view === "top" ? r.baseWidth : r.baseLength} height={view === "top" ? r.baseLength : r.baseHeight}/>

@@ -28,6 +28,19 @@ try {
                 // Alpha is preserved by the WebP encoder, including antialias edges.
                 return canvas.toDataURL("image/webp",.85).split(",")[1];
             },{png,crop,maxSize});
+            if (name in SHELLS && asset.paint) {
+                const mask=(await readFile(new URL(asset.paint.masks[view],source))).toString("base64");
+                const maskData=await page.evaluate(async({mask,crop,maxSize})=>{
+                    const img=new Image();img.src="data:image/svg+xml;base64,"+mask;await img.decode();
+                    const [x,y,w,h]=crop,scale=Math.min(1,maxSize/Math.max(w,h));
+                    const canvas=document.createElement("canvas");
+                    canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale));
+                    const ctx=canvas.getContext("2d");ctx.imageSmoothingQuality="high";
+                    ctx.drawImage(img,x,y,w,h,0,0,canvas.width,canvas.height);
+                    return canvas.toDataURL("image/png").split(",")[1];
+                },{mask,crop,maxSize});
+                await writeFile(new URL(`map/${name}-${view}-paint.png`,source),Buffer.from(maskData,"base64"));
+            }
             const bytes=Buffer.from(data,"base64");total+=bytes.length;
             await writeFile(new URL(`map/${name}-${view}.webp`,source),bytes);
         }

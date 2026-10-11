@@ -28,6 +28,13 @@ export const APPEARANCE_REGISTRY = {
             "cells": {
                 "top": [0, 0, 768, 887],
                 "side": [768, 0, 1006, 887]
+            },
+            "paint": {
+                "masks": {
+                    "top": "rounded-top-paint.svg",
+                    "side": "rounded-side-paint.svg"
+                },
+                "suggestedColour": "#3f8e79"
             }
         },
         "sculpted": {
@@ -51,6 +58,13 @@ export const APPEARANCE_REGISTRY = {
             "cells": {
                 "top": [0, 0, 768, 887],
                 "side": [768, 0, 1006, 887]
+            },
+            "paint": {
+                "masks": {
+                    "top": "sculpted-top-paint.svg",
+                    "side": "sculpted-side-paint.svg"
+                },
+                "suggestedColour": "#3f8e79"
             }
         },
         "utility": {
@@ -74,6 +88,13 @@ export const APPEARANCE_REGISTRY = {
             "cells": {
                 "top": [0, 0, 768, 887],
                 "side": [768, 0, 1006, 887]
+            },
+            "paint": {
+                "masks": {
+                    "top": "utility-top-paint.svg",
+                    "side": "utility-side-paint.svg"
+                },
+                "suggestedColour": "#3f8e79"
             }
         },
         "yardforce": {
@@ -97,6 +118,13 @@ export const APPEARANCE_REGISTRY = {
             "cells": {
                 "top": [0, 0, 768, 887],
                 "side": [768, 0, 1006, 887]
+            },
+            "paint": {
+                "masks": {
+                    "top": "yardforce-top-paint.svg",
+                    "side": "yardforce-side-paint.svg"
+                },
+                "suggestedColour": "#e97822"
             }
         },
         "rm1000": {
@@ -120,6 +148,13 @@ export const APPEARANCE_REGISTRY = {
             "cells": {
                 "top": [0, 0, 740, 887],
                 "side": [0, 0, 1774, 887]
+            },
+            "paint": {
+                "masks": {
+                    "top": "rm1000-top-paint.svg",
+                    "side": "rm1000-side-paint.svg"
+                },
+                "suggestedColour": "#167bc1"
             }
         },
         "worx": {
@@ -149,6 +184,13 @@ export const APPEARANCE_REGISTRY = {
             "cells": {
                 "top": [0, 0, 768, 887],
                 "side": [0, 0, 1254, 1254]
+            },
+            "paint": {
+                "masks": {
+                    "top": "worx-top-paint.svg",
+                    "side": "worx-side-paint.svg"
+                },
+                "suggestedColour": "#e97822"
             }
         }
     },

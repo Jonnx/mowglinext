@@ -14,7 +14,7 @@ afterEach(() => {cleanup(); vi.unstubAllGlobals();});
 it("reads the saved mower choice regardless of old browser choices", () => {
     saved.set(key, JSON.stringify({style: "utility", dockAppearance: "generic", transparent: true}));
     const {result} = renderHook(() => useMowerVisual({mower_visual_style:"worx"}));
-    expect(result.current[0]).toEqual({style:"worx",dockAppearance:"worx",transparent:true});
+    expect(result.current[0]).toEqual({style:"worx",dockAppearance:"worx",colour:"",transparent:true});
 });
 it("keeps draft appearance isolated from another consumer of saved settings", () => {
     const first = renderHook(({style}) => useMowerVisual({mower_visual_style:style}),{initialProps:{style:"yardforce"}});
@@ -40,4 +40,9 @@ it("follows the hardware model for unset or invalid values without writing confi
 });
 it("pairs explicit styles even when they differ from the hardware model", () => {
     expect(resolveMowerVisual({mower_model:"BiltemaRM1000",mower_visual_style:"worx"})).toEqual({style:"worx",dockAppearance:"worx"});
+});
+
+it("shares configured pigment and safely falls back for invalid colours", () => {
+    expect(renderHook(() => useMowerVisual({mower_visual_colour:"#AB1234"})).result.current[0].colour).toBe("#ab1234");
+    expect(renderHook(() => useMowerVisual({mower_visual_colour:"url(https://example.com)"})).result.current[0].colour).toBe("");
 });

@@ -49,6 +49,14 @@ export async function validateRegistry(registry) {
             const size=asset.sizes?.[view] ?? asset.size;
             assert.deepEqual(size,[bytes.readUInt32BE(16),bytes.readUInt32BE(20)],`${file}: canvas dimensions differ`);
             if(shell) rect(asset.cells?.[view],size,`${id}/${view} source cell`);
+            if(shell && asset.paint) {
+                assert.match(asset.paint.suggestedColour,/^#[0-9a-f]{6}$/i,`${id}: invalid suggested paint`);
+                const maskFile=asset.paint.masks?.[view];
+                assert.match(maskFile ?? '',/^[a-zA-Z0-9_-]+\.svg$/,`${id}/${view}: expected local SVG mask`);
+                const mask=await readFile(new URL(maskFile,assets),'utf8');
+                assert.ok(mask.includes(`viewBox="0 0 ${size[0]} ${size[1]}"`),`${id}/${view}: mask canvas differs`);
+                assert.ok(!/<(?:script|image|foreignObject)\b|\bhref\s*=|\bon\w+\s*=/i.test(mask),`${id}/${view}: mask must be self-contained paths`);
+            }
             rect(shell ? asset[view] : asset[view].crop,size,`${id}/${view}`);
             const reference=shell ? asset.frames?.[view] : asset[view].reference;
             if(reference) rect(reference,size,`${id}/${view} reference`);
@@ -73,6 +81,8 @@ if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
     else {
         for(const id of [...Object.keys(APPEARANCE_REGISTRY.shells),...Object.keys(APPEARANCE_REGISTRY.parts)])
             for(const view of views) await access(new URL(`map/${id}-${view}.webp`,assets));
+        for(const [id,shell] of Object.entries(APPEARANCE_REGISTRY.shells))
+            if(shell.paint) for(const view of views) await access(new URL(`map/${id}-${view}-paint.png`,assets));
         if(process.argv.includes('--check-schema')) await syncSchema(APPEARANCE_REGISTRY);
     }
     console.log('Appearance registry and artwork validated.');

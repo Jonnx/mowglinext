@@ -4753,6 +4753,10 @@
   },
 
   "mowerVisual": {
+    "bodyColour": "Body colour",
+    "chooseColour": "Choose body colour",
+    "originalColour": "Original",
+    "suggestedColour": "Suggested",
     "title": "Your mower",
     "bodyStyle": "Body style",
     "worx": "Worx-inspired",

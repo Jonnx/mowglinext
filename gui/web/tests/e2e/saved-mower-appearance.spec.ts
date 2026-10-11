@@ -40,9 +40,10 @@ test("shell is a draft until Save, then shared across fresh browsers, Sensors an
     await page.getByRole("combobox",{name:"Body style"}).press("ArrowDown");
     await page.getByText("Worx-inspired",{exact:true}).last().click();
     await page.getByRole("combobox",{name:"Body style"}).press("Escape");
+    await page.getByRole("button",{name:"Suggested",exact:true}).click();
     await page.getByRole("button",{name:/Save \(/}).click();
     await expect(page.getByRole("button",{name:/Saved$/})).toBeDisabled();
-    expect(writes).toEqual([{mower_visual_style:"worx"}]);
+    expect(writes).toEqual([{mower_visual_style:"worx",mower_visual_colour:"#e97822"}]);
     expect(forbidden).toEqual([]);
     expect(await page.evaluate(()=>sessionStorage.getItem("mowgli.pendingRosRestart"))).not.toBe("true");
     const context=await browser.newContext();
@@ -56,5 +57,10 @@ test("shell is a draft until Save, then shared across fresh browsers, Sensors an
         const marker=other.getByTestId("assembled-mower-marker");
         await expect(marker.locator("[data-mower-style]")).toHaveAttribute("data-mower-style","worx");
         await expect(marker.locator('[data-layer="shell"]')).toHaveAttribute("opacity","1");
+        const art=marker.locator('[data-layer="shell-art"]');
+        await expect(art).toHaveAttribute("data-paint-colour","#e97822");
+        await expect(art).toHaveAttribute("data-paint-ready","true");
+        const size=await art.locator("image").evaluate(async el=>{const img=new Image();img.src=el.getAttribute("href")!;await img.decode();return Math.max(img.width,img.height);});
+        expect(size).toBeLessThanOrEqual(384);
     } finally {await context.close();}
 });

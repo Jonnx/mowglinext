@@ -3,6 +3,8 @@ export type MowerStyle = keyof typeof APPEARANCE_REGISTRY.shells;
 export const MOWER_STYLES = Object.keys(APPEARANCE_REGISTRY.shells) as MowerStyle[];
 
 export type Shell = {
+    /** Optional registered paint mask per view; omit to retain original artwork only. */
+    paint?: {masks: Record<"top" | "side", string>; suggestedColour: string};
     label: {en: string; fr: string};
     dock: string;
     mapMaxSize: number;

@@ -40,6 +40,8 @@ All 202 template keys. `L###` = line in `ros2/src/mowgli_bringup/config/mowgli_r
 
 `mower_visual_style` (empty string) selects the shared shell and matching dock artwork. Empty follows the hardware model. Hardware edits are drafts until Settings Save; Sensors and Map read the mower configuration. Legacy browser shell choices are ignored. This display-only key needs no ROS restart.
 
+`mower_visual_colour` (empty string) selects paint for the shell body panels. Empty preserves original artwork; otherwise use a six-digit hex colour (`#RRGGBB`). Hardware edits and Settings Save behave like the shell choice. Shared with Sensors and Map, display only, no ROS restart.
+
 `dock_visual_length` (0.67 m), `dock_visual_width` (0.46 m), `dock_visual_x_offset` and `dock_visual_y_offset` (both 0 m adjustments from the registered artwork alignment) size and position the dock artwork in Hardware, Sensors and the map. They live in the robot template and Hardware schema, persist in the sparse robot YAML, and apply without a ROS restart. Defaults are nominal illustration dimensions. These keys do not affect dock calibration, navigation or collision geometry.
 
 ### Dig obstacle proposals

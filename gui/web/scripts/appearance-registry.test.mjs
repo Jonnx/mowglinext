@@ -13,6 +13,9 @@ test('adding a shell and dock requires only metadata and artwork, not a new list
     assert.ok(shellEnum(registry).includes('test-shell'));
 });
 for(const [name,mutate] of [
+    ['invalid suggested colour',r=>{r.shells.rounded.paint.suggestedColour='red';}],
+    ['missing paint mask',r=>{r.shells.rounded.paint.masks.top='missing.svg';}],
+    ['wrong mask canvas',r=>{r.shells.rounded.paint.masks.top='worx-side-paint.svg';}],
     ['unknown dock',r=>{r.shells.rounded.dock='missing';}],
     ['missing label',r=>{delete r.shells.rounded.label.fr;}],
     ['bad image frame',r=>{r.shells.rounded.frames={side:[0,0,9999,10]};}],

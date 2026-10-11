@@ -17,6 +17,6 @@ export function AssembledMowerMarker({values,robot,longitude,latitude,headingRad
         headingRad={headingRad} label={t("mowerVisual.mapAlt")} testId="assembled-mower-marker" zIndex={999}>
         {/* Navigation shows only the solid shell, drive wheels and external sensors.
             Underbody parts and console details belong in the layout editor. */}
-        <LayeredMower artwork="map" robot={robot} style={visual.style} transparent={false} layoutDetails={false}/>
+        <LayeredMower artwork="map" robot={robot} style={visual.style} colour={visual.colour} transparent={false} layoutDetails={false}/>
     </MapPlaneMarker>;
 }

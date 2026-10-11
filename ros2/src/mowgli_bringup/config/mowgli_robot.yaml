@@ -18,6 +18,8 @@ mowgli:
     mower_model: "YardForce500"
     # Shared GUI shell/dock illustration; blank follows mower_model. No physical effect.
     mower_visual_style: ""
+    # GUI-only painted shell panels. Empty keeps the original artwork.
+    mower_visual_colour: ""
     # Robot identity. Shown in the GUI and used by the fleet view to tell
     # several mowers apart (docs/MULTI_ROBOT.md). Choose a name that is unique
     # within your fleet; the GUI onboarding wizard sets it. The generated

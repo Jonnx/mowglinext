@@ -169,3 +169,37 @@ Registry cleanup validation: 7 registry/schema tests and 53 focused frontend
 checks pass. All 29 browser checks (including four gallery captures) pass;
 TypeScript and lint pass with zero errors and the unchanged warning baseline.
 Existing compact assets regenerate byte-for-byte unchanged.
+
+
+### Shared body colour
+
+Hardware now offers a body-colour picker, each shell's suggested colour, and
+**Original** to restore the grey artwork. All six shells have separate top/side
+panel masks. The source shading, neutral highlights, black trim, controls and
+mint details remain visible. `mower_visual_colour` is saved with Settings and
+shared across browsers, Sensors and Map; it does not change geometry or request
+ROS restart. Original remains the default.
+
+![All six shells using the production masked-paint renderer](chassis-colours.png)
+![Hardware colour controls](colour-hardware.png)
+![Coloured shell in the transparent sensor editor](colour-sensors.png)
+<img src="colour-picker-mobile.png" alt="Mobile hardware colour controls" width="390"/>
+
+These are Chromium captures of the production renderer with mock telemetry.
+The colour Hardware/Sensors example uses Yardforce 500 preset geometry, caster
+X 0.40 m / track 0.30 m, GPS (0.15, 0, 0.148) m, and LiDAR disabled. The collection
+uses the illustrative dimensions described above. Images are not physical-fit
+validation. To reproduce: `playwright test tests/e2e/shell-colour.spec.ts` from
+`gui/web`; files appear under `screenshots.local/layered-mower/pr/`.
+
+Paint masks, suggested colours and filenames live in the appearance registry.
+[New-shell and paint-mask instructions](../../../gui/web/src/components/robot/README.md#paintable-body-panels)
+cover full-source coordinate registration, excluded panels and compact asset
+generation. The twelve compact masks total about 100 KB. Map painting is cached
+per appearance/colour at its existing 384 px limit; pose updates do not repaint.
+
+Colour validation: 10 registry/schema tests, 53 focused frontend tests, and 32
+browser cases passed, including saved colour across fresh browsers, draft reload,
+Original reset, missing-mask fallback and compact map raster size. TypeScript and
+lint pass (0 errors, the existing 900-warning ratchet unchanged). Go schema/default,
+generated-type and settings tests pass in the non-root Linux build environment.

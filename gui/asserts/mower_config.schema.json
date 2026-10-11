@@ -29,6 +29,13 @@
           "default": "",
           "description": "Shared shell and matching dock illustration. Empty follows the mower model. Display only; does not change robot geometry."
         },
+        "mower_visual_colour": {
+          "type": "string",
+          "title": "Body Colour",
+          "default": "",
+          "pattern": "^(|#[0-9a-fA-F]{6})$",
+          "description": "Shared body panel colour. Empty preserves original artwork. Display only; no ROS restart."
+        },
         "robot_name": {
           "type": "string",
           "title": "Robot Name",

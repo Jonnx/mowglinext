@@ -8,6 +8,7 @@ import {LayeredMower} from "../../../src/components/robot/LayeredMower";
 import {parseRobotUrdf, previewRobotGeometry} from "../../../src/utils/robotModel";
 import {ROBOT_URDF} from "../../../src/test/robotUrdf";
 
+const paint = new URLSearchParams(location.search).has("paint");
 // Presentation gallery using the production renderer; not an extra app screen.
 const robot=previewRobotGeometry(parseRobotUrdf(ROBOT_URDF)!,{
     chassis_length:.60,chassis_width:.45,chassis_height:.19,chassis_z_offset:-.05,
@@ -31,15 +32,15 @@ createRoot(document.getElementById("root")!).render(<main>
         footer{display:flex;justify-content:space-between;color:#85a995;font-size:13px;margin-top:25px}
     `}</style>
     <header><div><div className="eyebrow">MOWGLINEXT / CHASSIS COLLECTION</div><h1>{MOWER_STYLES.length} styles. One robot model.</h1></div>
-        <p>Graphite shells · mint details · paired docks<br/>600 × 450 × 190 mm examples; shallow Worx 540 × 360 × 140 mm</p></header>
+        <p>{paint ? "Masked body colours · preserved trim · original shading" : "Graphite shells · mint details · paired docks"}<br/>600 × 450 × 190 mm examples; shallow Worx 540 × 360 × 140 mm</p></header>
     <div className="grid">{MOWER_STYLES.map((style,i)=><article key={style}>
         <div className="title"><span className="number">0{i+1}</span><h2>{SHELLS[style].label.en}</h2></div><p>Shared dimensions · matching dock</p>
         <div className="views"><div className="view"><svg viewBox="-.255 -.51 .51 .66" aria-label={SHELLS[style].label.en+" top"}>
-            <LayeredMower robot={style === "rm1000" ? rm1000Robot : style === "worx" ? worxRobot : robot} style={style} transparent={false} view="top" sensors={false}/>
+            <LayeredMower robot={style === "rm1000" ? rm1000Robot : style === "worx" ? worxRobot : robot} style={style} colour={paint ? SHELLS[style].paint?.suggestedColour : undefined} transparent={false} view="top" sensors={false}/>
         </svg><div className="caption">TOP · FRONT ↑</div></div>
         <div className="view"><svg viewBox="-.51 -.28 .66 .48" aria-label={SHELLS[style].label.en+" side"}>
             <path d="M -.49 .102 H .14" stroke="#476c59" strokeWidth=".001" strokeDasharray=".012 .012"/>
-            <LayeredMower robot={style === "rm1000" ? rm1000Robot : style === "worx" ? worxRobot : robot} style={style} transparent={false} view="side" sensors={false}/>
+            <LayeredMower robot={style === "rm1000" ? rm1000Robot : style === "worx" ? worxRobot : robot} style={style} colour={paint ? SHELLS[style].paint?.suggestedColour : undefined} transparent={false} view="side" sensors={false}/>
         </svg><div className="caption">SIDE · FRONT ←</div></div></div>
     </article>)}{(Object.keys(DOCK_ARTWORK) as LayeredDockStyle[]).map((dock,i)=><article key={dock}>
         <div className="title"><span className="number">0{i+MOWER_STYLES.length+1}</span><h2>{APPEARANCE_REGISTRY.docks[dock].label.en}</h2></div>

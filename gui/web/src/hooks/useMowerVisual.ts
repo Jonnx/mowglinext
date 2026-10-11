@@ -1,3 +1,4 @@
+import {normalizeShellColour} from "../components/robot/shellPaint";
 import {useSyncExternalStore} from "react";
 import {MOWER_MODELS} from "../constants/mowerModels";
 import {MOWER_STYLE_DOCKS, type DockAppearanceId} from "../constants/mowerAppearances";
@@ -34,7 +35,7 @@ function subscribe(listener: () => void) {
 }
 export function useMowerVisual(values: Record<string, unknown> = {}) {
     const transparent = useSyncExternalStore(subscribe, snapshot, () => false);
-    return [{...resolveMowerVisual(values), transparent}, (patch: {transparent: boolean}) => {
+    return [{...resolveMowerVisual(values), colour: normalizeShellColour(values.mower_visual_colour), transparent}, (patch: {transparent: boolean}) => {
         try {localStorage.setItem(KEY, JSON.stringify(patch));} catch { /* Storage unavailable. */ }
         window.dispatchEvent(new Event(EVENT));
     }] as const;

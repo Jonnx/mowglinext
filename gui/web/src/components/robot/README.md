@@ -436,7 +436,7 @@ from it. Renderers contain no shell-name conditionals.
    appearance ID, labels, part reference, origin, built-in offset and top/side anchors.
    Reuse an existing dock ID when its artwork is suitable.
 4. Run `npm run generate:appearances` from `gui/web`. This generates the backend
-   `mower_visual_style` enum and compact map WebPs. Commit these derived files.
+   `mower_visual_style` enum and compact map WebPs and registered paint-mask PNGs. Commit these derived files.
 5. Run `npm run test:appearances` and the renderer/browser checks. Normal build
    validates artwork files, dimensions, bounds and pairings; normal tests also
    enforce backend enum parity. No selector, renderer or separate ID list needs editing.
@@ -444,3 +444,59 @@ from it. Renderers contain no shell-name conditionals.
 Physical model presets remain independent: selecting new artwork does not alter
 chassis dimensions, sensor positions or control configuration. An optional preset
 association belongs to that model's metadata, not a renderer branch.
+
+
+## Paintable body panels
+
+All six current shells include hand-traced top/side paint masks. The Hardware
+colour picker edits `mower_visual_colour` alongside the shell choice. Save writes
+it to the shared mower YAML; Sensors, measurement previews and Map read that same
+value. Empty means **Original**, preserving the source artwork. A colour-only
+save requires no ROS restart and changes no physical geometry or control settings.
+
+For every new paintable shell:
+
+1. Keep the original transparent PNGs. Add `{id}-top-paint.svg` and
+   `{id}-side-paint.svg` in the same asset directory. Use transparent SVG canvases
+   with **exactly the source PNG dimensions**, including atlas padding, and
+   `viewBox="0 0 WIDTH HEIGHT"`. Do not crop/reposition the mask independently.
+2. Trace white filled paths over the paintable body panels. Transparent holes
+   exclude tyres, black bumpers/trim, controls, display windows, metallic fittings
+   and green accent lights. Use an even-odd fill for holes. Keep vector edges
+   tight to panel seams; antialiasing provides the edge blend. Masks use **alpha**,
+   so black opaque paths do not exclude paint: they must be transparent holes.
+3. Add only this metadata to the registry shell entry:
+
+   ```ts
+   paint: {
+       masks: {top: "example-top-paint.svg", side: "example-side-paint.svg"},
+       suggestedColour: "#167bc1",
+   },
+   ```
+
+   IDs and suggested colours are data, never renderer branches. A shell without
+   `paint` remains supported with original artwork and no colour control.
+4. Run `npm run generate:appearances`. It uses the same physical projection frame
+   and map resolution for the PNG and mask, including shells whose true rear
+   boundary extends beyond their visible side artwork. Commit the SVGs and the
+   generated `map/{id}-{view}-paint.png` files; do not hand-edit map derivatives.
+5. Run `npm run test:appearances`, the focused robot unit tests, and
+   `playwright test tests/e2e/shell-colour.spec.ts`. Inspect the production-renderer
+   gallery at `/tests/e2e/fixtures/chassis-gallery.html?paint=1`, checking both views
+   at full size and compact map size. Check a light and a dark colour, seam edges,
+   original trim, transparent-shell mode and side wheel openings. The fixture
+   reads new entries directly from the registry. Masks must contain self-contained
+   vector paths, no embedded images, scripts or external references.
+
+`shellPaint.ts` applies the chosen pigment only inside the mask, preserving source
+luminance for shadows and neutral highlights. A second coverage factor protects
+existing mint accents. Output alpha is copied unchanged: recolouring must not
+change the chassis footprint, padding registration or wheel openings. Invalid
+colour values and unavailable masks/canvas fall back to the original shell.
+
+`usePaintedShell.ts` rasterises once per style/view/resolution/colour, coalescing
+picker input by 60 ms. Full previews are capped at 768 px and map artwork at the
+registry's compact limit (currently 384 px). It retains up to eight prepared
+pixel/coverage buffers and sixteen painted images per browser, not an unbounded
+history of picker colours. Map pose updates only move the existing image; they
+never rerun pixel processing. No separate set of full-colour PNGs is shipped.
