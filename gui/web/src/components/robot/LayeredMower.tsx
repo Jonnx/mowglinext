@@ -59,8 +59,9 @@ function Wheel({x, y, radius, width, view, caster = false, artwork}: {x: number;
 }
 
 // Pose updates move the map wrapper; unchanged geometry must not rebuild artwork.
-export const LayeredMower = memo(function LayeredMower({robot: r, style, transparent, view = "top", sensors = true, highlightSensors = false, internalDetails = true, artwork = "full"}: {
-    robot: RobotGeometry; style: MowerStyle; transparent: boolean; view?: RobotView; sensors?: boolean; highlightSensors?: boolean; internalDetails?: boolean; artwork?:"full"|"map";
+/** Map mode omits layout details entirely, avoiding hidden underbody artwork downloads. */
+export const LayeredMower = memo(function LayeredMower({robot: r, style, transparent, view = "top", sensors = true, highlightSensors = false, layoutDetails = true, artwork = "full"}: {
+    robot: RobotGeometry; style: MowerStyle; transparent: boolean; view?: RobotView; sensors?: boolean; highlightSensors?: boolean; layoutDetails?: boolean; artwork?:"full"|"map";
 }) {
     const id = useId();
     const stopAnchor = SHELLS[style].stop;
@@ -75,13 +76,13 @@ export const LayeredMower = memo(function LayeredMower({robot: r, style, transpa
         <defs><linearGradient id={id} x2="0" y2="1">
             <stop stopColor="#fc796d"/><stop offset="1" stopColor="#b52828"/>
         </linearGradient></defs>
-        <g data-layer="casters">{(view === "top" ? [-1,1] : [1]).map(sign => <Wheel artwork={artwork} key={sign} view={view} caster
+        {layoutDetails && <g data-layer="casters">{(view === "top" ? [-1,1] : [1]).map(sign => <Wheel artwork={artwork} key={sign} view={view} caster
             x={view === "top" ? sign*r.casterTrack/2 : -r.casterXOffset}
             y={view === "top" ? -r.casterXOffset : -(r.casterZ ?? (-r.wheelRadius+r.casterRadius))}
-            radius={r.casterRadius} width={r.casterWidth ?? r.casterRadius}/>)}</g>
+            radius={r.casterRadius} width={r.casterWidth ?? r.casterRadius}/>)}</g>}
         {/* Wheels sit beneath the shell in both orthographic projections. */}
         <g data-layer="wheels">{wheels}</g>
-        {internalDetails && <g data-layer="blade" opacity={transparent ? 1 : 0}>
+        {layoutDetails && <g data-layer="blade" opacity={transparent ? 1 : 0}>
             <g transform={`translate(${view === "top" ? -(r.bladeY ?? 0) : -bladeX} ${view === "top" ? -bladeX : -(r.bladeZ ?? 0)})`}>
                 <PartSprite artwork={artwork} part="blade" view={view} width={r.bladeRadius*2}
                     height={view === "top" ? r.bladeRadius*2 : (r.bladeThickness ?? .01)}
@@ -89,19 +90,19 @@ export const LayeredMower = memo(function LayeredMower({robot: r, style, transpa
                         : <rect x={-r.bladeRadius} y={-.005} width={r.bladeRadius*2} height={.01} fill="#9ed9bd"/>}/>
             </g>
         </g>}
-        {internalDetails && sensors && (r.sensors ?? []).filter(s=>s.id === "imu").map(s=><SensorGraphic artwork={artwork} key={s.id} sensor={s} view={view} highlight={highlightSensors}/>)}
+        {layoutDetails && sensors && (r.sensors ?? []).filter(s=>s.id === "imu").map(s=><SensorGraphic artwork={artwork} key={s.id} sensor={s} view={view} highlight={highlightSensors}/>)}
         <g data-layer="shell" opacity={transparent ? .24 : 1}>
             <ShellSprite artwork={artwork} key={style} style={style} view={view}
                 x={view === "top" ? -r.baseWidth/2 : -r.chassisCenterX-r.baseLength/2}
                 y={view === "top" ? -r.chassisCenterX-r.baseLength/2 : -bodyZ-r.baseHeight/2}
                 width={view === "top" ? r.baseWidth : r.baseLength} height={view === "top" ? r.baseLength : r.baseHeight}/>
         </g>
-        <g data-layer="stop" data-robot-x={rearX}>
+        {layoutDetails && <g data-layer="stop" data-robot-x={rearX}>
             <rect x={view === "top" ? -buttonW/2 : -rearX-buttonD/2}
                 y={view === "top" ? -rearX-buttonD/2 : -bodyZ-r.baseHeight/2+r.baseHeight*stopAnchor.roofFromTop-.011}
                 width={view === "top" ? buttonW : buttonD} height={view === "top" ? buttonD : .014}
                 rx={.005} fill={`url(#${id})`} stroke="#872b2a" strokeWidth={.002}/>
-        </g>
+        </g>}
         {sensors && (r.sensors ?? []).filter(s=>s.id !== "imu").map(s=><SensorGraphic artwork={artwork} key={s.id} sensor={s} view={view} highlight={highlightSensors}/>)}
     </g>;
 });

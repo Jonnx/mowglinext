@@ -69,12 +69,19 @@ it("pose-only wrapper changes reuse sensor artwork, but geometry edits redraw",(
     spy.mockRestore();
 });
 
-it("solid map mode does not request concealed blade or IMU artwork",()=>{
-    const {container,rerender}=render(<svg><LayeredMower robot={robot} style="yardforce" transparent={false} internalDetails={false}/></svg>);
+it("map mode renders only shell, drive wheels, GPS and LiDAR",()=>{
+    const {container,rerender}=render(<svg><LayeredMower robot={robot} style="yardforce" transparent={false} layoutDetails={false}/></svg>);
     expect(container.querySelector('[data-part-art="blade"]')).toBeNull();
+    expect(container.querySelector('[data-layer="casters"]')).toBeNull();
+    expect(container.querySelector('[data-layer="stop"]')).toBeNull();
+    expect(container.querySelector('[data-layer="wheels"]')).not.toBeNull();
+    expect(container.querySelector('[data-layer="shell"]')).toHaveAttribute("opacity","1");
+    expect(Array.from(container.querySelectorAll("[data-sensor]")).map(e=>e.getAttribute("data-sensor")).sort()).toEqual(["gps","lidar"]);
     expect(container.querySelector('[data-sensor="imu"]')).toBeNull();
-    rerender(<svg><LayeredMower robot={robot} style="yardforce" transparent internalDetails/></svg>);
+    rerender(<svg><LayeredMower robot={robot} style="yardforce" transparent layoutDetails/></svg>);
     expect(container.querySelector('[data-part-art="blade"]')).not.toBeNull();
+    expect(container.querySelector('[data-layer="casters"]')).not.toBeNull();
+    expect(container.querySelector('[data-layer="stop"]')).not.toBeNull();
     expect(container.querySelector('[data-sensor="imu"]')).not.toBeNull();
 });
 
