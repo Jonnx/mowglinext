@@ -2,7 +2,7 @@ import {render} from "@testing-library/react";
 import {describe,it,expect,vi} from "vitest";
 import {LayeredMower} from "./LayeredMower";
 import * as projection from "./sensorArtworkProjection";
-import {SHELLS} from "./shellAssets";
+import {SHELLS, shellProjectionFrame} from "./shellAssets";
 import {MOWER_STYLES} from "../../hooks/useMowerVisual";
 import {parseRobotUrdf,previewRobotGeometry} from "../../utils/robotModel";
 import {ROBOT_URDF} from "../../test/robotUrdf";
@@ -100,4 +100,21 @@ it("shows the complete external Worx side wheel without changing its scale or po
     const currentWheel = container.querySelector('[data-layer="wheels"]')!;
     expect(currentWheel.outerHTML).toBe(wheel);
     expect(shell.compareDocumentPosition(currentWheel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
+it("registers the Worx side panel against the full chassis including its hidden rear", () => {
+    const visible = SHELLS.worx.side;
+    const frame = shellProjectionFrame("worx", "side");
+    expect(frame[0]).toBe(visible[0]);
+    expect(frame[2]).toBeGreaterThan(visible[2] * 1.25);
+    const {container, rerender} = render(<svg><LayeredMower robot={robot} style="worx" view="side" transparent={false}/></svg>);
+    const shell = container.querySelector('[data-layer="shell-art"]')!;
+    expect(shell).toHaveAttribute("viewBox", frame.join(" "));
+    expect(Number(shell.getAttribute("width"))).toBe(robot.baseLength);
+    expect(Number(shell.getAttribute("x"))).toBe(-robot.chassisCenterX - robot.baseLength / 2);
+    rerender(<svg><LayeredMower robot={robot} style="worx" view="side" transparent artwork="map"/></svg>);
+    const compact = container.querySelector('[data-layer="shell-art"]')!;
+    expect(compact).toHaveAttribute("viewBox", frame.join(" "));
+    expect(compact.querySelector("image")).toHaveAttribute("width", String(frame[2]));
+    expect(compact.querySelector("image")).toHaveAttribute("x", String(frame[0]));
 });

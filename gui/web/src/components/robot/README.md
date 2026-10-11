@@ -11,8 +11,8 @@ It is a scaled illustration, not CAD or collision geometry.
 - Hardware and Sensors show a stationary docked illustration in top and side
   views. The shared nominal dock keeps the map anchor in top view; the side tray
   meets the tyre contact plane. Framing includes both without changing robot
-  dimensions or sensor coordinates. The dock fades in transparent mode to keep
-  internal components legible. This illustration does not report live dock status.
+  dimensions or sensor coordinates. The dock stays faint in both shell modes to keep
+  components legible. This illustration does not report live dock status.
 - All top views face up; all side views face left. There is no separate stop-button
   layer; future shell artwork can include a rear stop button if appropriate.
 - Transparent mode changes the opacity of the same shell art; it reveals the
@@ -29,8 +29,8 @@ The parser reads visual sizes and origins from the processed robot description.
 Settings previews overlay the edited API values (which already include model/
 backend defaults). Chassis length, width, height and centre can therefore change
 without stretching the wheels or sensors. Automatic caster/blade positions follow
-mowgli.urdf.xacro. Hardware also exposes caster_x_offset (metres forward from
-base_link; -1 preserves automatic placement). Explicit placement flows through
+mowgli.urdf.xacro. Hardware also exposes a fixed caster_x_offset (metres forward from
+base_link; legacy -1 values are resolved for display and materialized on editing). Explicit placement flows through
 schema, settings, launch and xacro to both caster axles. It does not move other
 sensors or change wheel control. Map URDF mode uses only the running description, never drafts.
 A changed XML description is accepted; unsupported or malformed geometry clears
@@ -333,8 +333,22 @@ for the two open rear wheel bays and graphite/mint palette. The dock was generat
 from the supplied slatted station photographs. Source photos and branding are
 not shipped. Earlier rejected shell variants are not included.
 
-Dock setup previews use a fixed 18% opacity behind the robot in both shell modes. Map docks remain opaque. Hardware → Advanced exposes `dock_visual_length`, `dock_visual_width` and `dock_visual_x_offset`, persisted with robot settings and shared by Hardware, Sensors and the map without a ROS restart. Length/width scale the tight visible asset bounds, including a side pedestal. Front/back positions the footprint centre relative to the parked rear axle, positive forwards (the renderer accounts for `wheel_x_offset`). These display-only settings do not alter calibrated dock poses, navigation, keepouts or URDF geometry. Generic defaults are provisional illustration dimensions, not hardware measurements.
+Dock setup previews use a fixed 18% opacity behind the robot in both shell modes. Map docks remain opaque. Hardware → Advanced exposes `dock_visual_length`, `dock_visual_width` `dock_visual_x_offset` and `dock_visual_y_offset`, persisted with robot settings and shared by Hardware, Sensors and the map without a ROS restart. Length/width scale the tight visible asset bounds, including a side pedestal. Front/back positions the footprint centre relative to the parked rear axle, positive forwards (the renderer accounts for `wheel_x_offset`). These display-only settings do not alter calibrated dock poses, navigation, keepouts or URDF geometry. Generic defaults are provisional illustration dimensions, not hardware measurements.
 
 The Worx side projection uses `worx-side.png` with a round, open rear wheel arch; its approved top remains in `worx.png`. Wheels stay independently scaled and positioned by the configured robot geometry, so a shell choice never silently changes physical dimensions.
 
 Worx side drive wheels are drawn outside the body panels, matching the supplied photo and exposing the full wheel face at any configured size. Other styles retain shell-over-wheel layering.
+
+Dock Center X and Dock Center Y locate the centre of the full visible footprint, including any side pedestal. X is forward from the parked rear axle; Y is left from the mower centreline. The renderer has no additional per-style lateral offset. Existing saved X values retain their meaning.
+
+### Side projection registration
+
+`Shell.frames` separates the physical chassis projection from the opaque artwork bounds. If a wheel opening removes the visible rear of a side shell, its frame still extends to the actual chassis rear derived from the top reference. Both full-resolution SVG and generated map WebP use this same frame; transparent mode never changes it. Per-view source sizes allow a separate side image without resizing or changing the approved top source.
+
+### Worx left-side correction (2026-10-11)
+
+Generated with the built-in image tool using the supplied real side photograph as the shape reference and the top photograph to identify the hidden rear. The earlier raised fender was rejected. The final editing instruction was: preserve the existing canvas and panel placement, remove the opposite-side charging contacts, remove the detached rear apron, and leave a complete circular wheel clearance open through both upper and lower body edges. Do not crop or recenter the remaining panel.
+
+The approved top image is unchanged. The separate side PNG is 1254 × 1254 pixels. Its tight alpha >220 envelope is `(44,487,793,295)`. Its physical projection frame is `(44,487,1167,295)`: the real rear registration at x=1211 is retained from the full side reference before the hidden rear apron was removed. Thus the visible front panel occupies 68% of the configured chassis length; it is never enlarged to fill the whole chassis. Per-view dimensions and projection frames are also used by the compact WebP generator. The left elevation contains no right-side charging contacts.
+
+This is a photo-proportioned illustration, not a measured CAD model. The configured chassis length/height, chassis centre and independent drive-wheel radius/axle position still determine the actual metre-scale assembly. Selecting Worx artwork must not rewrite those hardware settings to force a visual fit.

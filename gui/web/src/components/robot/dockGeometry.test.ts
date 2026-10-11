@@ -14,8 +14,8 @@ describe("dock display geometry", () => {
         expect(side.x).toBe(top.y);
         expect(side.width).toBe(top.height);
     });
-    it("keeps the side-charging tower on the right and the tray centred", () => {
-        const bounds = dockBounds("top", "worx", {length: .68, width: .56, centerX: .17});
+    it("positions the full side-charging footprint using explicit centre coordinates", () => {
+        const bounds = dockBounds("top", "worx", {length: .68, width: .56, centerX: .17, centerY: -.04});
         expect(bounds.x).toBeCloseTo(-.24);
         expect(bounds.y).toBeCloseTo(-.51);
         expect(bounds.x + bounds.width).toBeCloseTo(.32);
@@ -28,7 +28,7 @@ describe("dock display geometry", () => {
     it("frames an oversized, rearward dock without moving any robot component", () => {
         const robot = parseRobotUrdf(ROBOT_URDF)!;
         const original = structuredClone(robot);
-        const geometry = {length: 1.2, width: .9, centerX: -.5};
+        const geometry = {length: 1.2, width: .9, centerX: -.5, centerY: .2};
         for (const view of ["top", "side"] as const) {
             const bounds = dockedAssemblyBounds(robot, view, .05, "standard", geometry);
             const dock = dockBounds(view, "standard", geometry);
@@ -41,4 +41,18 @@ describe("dock display geometry", () => {
         }
         expect(robot).toEqual(original);
     });
+});
+
+it("moves the top/map dock left for positive Y without altering the side projection", () => {
+    const baseline = dockVisualGeometry();
+    const shifted = dockVisualGeometry({dock_visual_y_offset: .12});
+    for (const style of ["standard", "worx"] as const) {
+        const before = dockBounds("top", style, baseline);
+        const after = dockBounds("top", style, shifted);
+        expect(after.x - before.x).toBeCloseTo(-.12);
+        expect(after.y).toBe(before.y);
+        expect(after.width).toBe(before.width);
+        expect(dockBounds("side", style, shifted)).toEqual(dockBounds("side", style, baseline));
+        expect(before.x + before.width / 2).toBeCloseTo(0);
+    }
 });

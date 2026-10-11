@@ -101,11 +101,19 @@
         },
         "dock_visual_x_offset": {
           "type": "number",
-          "title": "Dock Front/Back Position",
+          "title": "Dock Center X",
           "default": 0.235,
           "minimum": -2,
           "maximum": 2,
-          "description": "With the mower parked, measure from its rear wheel axle to the centre of the dock footprint along the mower’s length, in metres. Positive is towards the nose; negative is behind the axle. Moves only the dock illustration, not the calibrated docking pose."
+          "description": "With the mower parked, measure from the rear wheel axle to the centre of the full dock footprint along the mower’s length, in metres. Positive is forwards; negative is backwards. Moves only the illustration, not the calibrated docking pose."
+        },
+        "dock_visual_y_offset": {
+          "type": "number",
+          "title": "Dock Center Y",
+          "default": 0.0,
+          "minimum": -2,
+          "maximum": 2,
+          "description": "With the mower parked, measure from its centreline to the centre of the full dock footprint, including any side charging pedestal, in metres. Positive is to the mower’s left; negative is to its right. Moves the illustration sideways in top views and on the map; does not change docking calibration."
         },
         "chassis_mass_kg": {
           "type": "number",

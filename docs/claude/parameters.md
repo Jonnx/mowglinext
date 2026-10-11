@@ -38,7 +38,7 @@ All 202 template keys. `L###` = line in `ros2/src/mowgli_bringup/config/mowgli_r
 
 ### Dock illustration (GUI only)
 
-`dock_visual_length` (0.67 m), `dock_visual_width` (0.46 m), and `dock_visual_x_offset` (0.235 m forward of the parked rear axle) size and position the dock artwork in Hardware, Sensors and the map. They live in the robot template and Hardware schema, persist in the sparse robot YAML, and apply without a ROS restart. Defaults are nominal illustration dimensions. These keys do not affect dock calibration, navigation or collision geometry.
+`dock_visual_length` (0.67 m), `dock_visual_width` (0.46 m), `dock_visual_x_offset` and `dock_visual_y_offset` (0.235 m forward of the parked rear axle) size and position the dock artwork in Hardware, Sensors and the map. They live in the robot template and Hardware schema, persist in the sparse robot YAML, and apply without a ROS restart. Defaults are nominal illustration dimensions. These keys do not affect dock calibration, navigation or collision geometry.
 
 ### Dig obstacle proposals
 
@@ -550,3 +550,5 @@ Follow all six steps, in order. Skipping step 2 is the classic failure: the key 
 6. **Guards and docs.** Add an AST guard to `ros2/src/mowgli_bringup/test/test_launch_injection.py` if the injection has semantics a refactor could break (clamping, sentinel ranges, which node receives it); add a static pin to `test/test_nav2_params.py` if it lands in the merged Nav2 doc; extend `ros2/scripts/check_config_drift.py`'s field lists if it is structural or a calibration output. Then update this file, the relevant codemap, and — only if it changes an architecture rule — CLAUDE.md.
 
 **Removing** a parameter: delete it from the template *and* the schema, add it to `settings.go` `retiredParamKeys` so existing installed yamls get scrubbed on the next save, and add it to `useSettingsManager.ts` `HIDDEN_FROM_ADVANCED` (L654) so it stops rendering in the meantime.
+
+Dock Center X and Dock Center Y locate the centre of the full visible footprint, including any side pedestal. X is forward from the parked rear axle; Y is left from the mower centreline. The renderer has no additional per-style lateral offset. Existing saved X values retain their meaning.

@@ -8,9 +8,10 @@ export const DOCK_VISUAL_DEFAULTS = {
     dock_visual_length: .67,
     dock_visual_width: .46,
     dock_visual_x_offset: .235,
+    dock_visual_y_offset: 0,
 };
 export const DOCK_VISUAL_KEYS = Object.keys(DOCK_VISUAL_DEFAULTS);
-export type DockVisualGeometry = {length: number; width: number; centerX: number};
+export type DockVisualGeometry = {length: number; width: number; centerX: number; centerY: number};
 export type LayeredDockStyle = "standard" | "worx";
 export const SETUP_DOCK_OPACITY = .18;
 
@@ -22,16 +23,17 @@ export function dockVisualGeometry(values: Record<string, unknown> = {}, wheelXO
         return Number.isFinite(n) && n >= min && n <= max ? n : DOCK_VISUAL_DEFAULTS[key];
     };
     return {length: read("dock_visual_length", .1, 3), width: read("dock_visual_width", .1, 3),
-        centerX: read("dock_visual_x_offset", -2, 2) + wheelXOffset};
+        centerX: read("dock_visual_x_offset", -2, 2) + wheelXOffset,
+        centerY: read("dock_visual_y_offset", -2, 2)};
 }
 
 export function dockBounds(view: RobotView, style: LayeredDockStyle = "standard", geometry = dockVisualGeometry()): Bounds {
-    const {length, width, centerX} = geometry;
+    const {length, width, centerX, centerY} = geometry;
     const front = -centerX - length / 2;
     const height = style === "worx" ? .14 : .15;
-    // Side-charging pedestal extends right of the tray; retain the tray's centreline.
-    const lateralCenter = style === "worx" ? width * (.04 / .56) : 0;
-    return view === "top" ? {x: lateralCenter - width / 2, y: front, width, height: length}
+    // A true footprint centre, including side pedestals. Robot +Y is left,
+    // therefore it is negative screen X. No hidden style-specific offsets.
+    return view === "top" ? {x: -centerY - width / 2, y: front, width, height: length}
         : {x: front, y: -height, width: length, height};
 }
 

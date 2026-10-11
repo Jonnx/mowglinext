@@ -4,7 +4,7 @@
 import {readFile,writeFile,mkdir} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import {chromium} from "@playwright/test";
-import {SHELLS} from "../src/components/robot/shellAssets.ts";
+import {SHELLS, shellProjectionFrame} from "../src/components/robot/shellAssets.ts";
 import {PARTS} from "../src/components/robot/partAssets.ts";
 const source=new URL("../public/assets/robots/layered/",import.meta.url);
 await mkdir(new URL("map/",source),{recursive:true});
@@ -16,7 +16,8 @@ try {
         const maxSize=name in SHELLS || name.startsWith("dock") ? 384 : name === "blade" ? 256 : 128;
         for(const view of ["top","side"]){
             const png=(await readFile(new URL(asset.files?.[view] ?? name+".png",source))).toString("base64");
-            const crop=Array.isArray(asset[view]) ? asset[view] : asset[view].crop;
+            // Preserve registered transparent chassis extents in compact derivatives too.
+            const crop=name in SHELLS ? shellProjectionFrame(name,view) : asset[view].crop;
             const data=await page.evaluate(async({png,crop,maxSize})=>{
                 const img=new Image();img.src="data:image/png;base64,"+png;await img.decode();
                 const [x,y,w,h]=crop, scale=Math.min(1,maxSize/Math.max(w,h));

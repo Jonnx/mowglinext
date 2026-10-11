@@ -351,7 +351,7 @@ export const HardwareSection: React.FC<Props> = ({
                     <Typography.Title level={5}>{t("settingsHardware.dockVisualTitle")}</Typography.Title>
                     <Paragraph type="secondary">{t("settingsHardware.dockVisualHelp")}</Paragraph>
                     <Row gutter={[16, 0]}>
-                        {(["dock_visual_length", "dock_visual_width", "dock_visual_x_offset"] as const).map(key => (
+                        {(["dock_visual_length", "dock_visual_width", "dock_visual_x_offset", "dock_visual_y_offset"] as const).map(key => (
                             <Col xs={12} sm={8} lg={6} key={key}>
                                 <Form.Item htmlFor={`setting-${key}`} data-setting-key={key}
                                     label={fieldLabel(key, t(`settingsHardware.${key}`))}
@@ -359,8 +359,8 @@ export const HardwareSection: React.FC<Props> = ({
                                     <InputNumber id={`setting-${key}`} aria-label={t(`settingsHardware.${key}`) + ", m"}
                                         aria-description={t(`settingsHardware.${key}Tooltip`)}
                                         value={values[key] ?? DOCK_VISUAL_DEFAULTS[key]}
-                                        min={key === "dock_visual_x_offset" ? -2 : .1}
-                                        max={key === "dock_visual_x_offset" ? 2 : 3}
+                                        min={key.endsWith("_offset") ? -2 : .1}
+                                        max={key.endsWith("_offset") ? 2 : 3}
                                         step={.01} precision={3} style={{width:"100%"}} addonAfter="m"
                                         onChange={v => {if (v != null) onChange(key, v);}}/>
                                 </Form.Item>

@@ -58,6 +58,7 @@
     "dock_visual_length": "number",
     "dock_visual_width": "number",
     "dock_visual_x_offset": "number",
+    "dock_visual_y_offset": "number",
     "gnss_serial_baud": "integer",
     "gps_timeout_sec": "number",
     "gps_wait_after_undock_sec": "number",

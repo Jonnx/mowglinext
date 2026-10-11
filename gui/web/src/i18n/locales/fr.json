@@ -2461,10 +2461,12 @@
     "dockVisualHelp": "Dimensionne l’illustration de la station dans Matériel, Capteurs et la carte. Ces réglages ne changent ni la calibration ni la navigation. Les valeurs par défaut sont indicatives ; mesurez votre station.",
     "dock_visual_length": "Longueur de la station",
     "dock_visual_width": "Largeur de la station",
-    "dock_visual_x_offset": "Position avant/arrière de la station",
+    "dock_visual_x_offset": "Centre X de la station",
     "dock_visual_lengthTooltip": "Mesurez la station complète d’avant en arrière, tête de charge comprise, en mètres. Règle sa longueur affichée dans les aperçus et sur la carte sans déplacer la pose d’accostage.",
     "dock_visual_widthTooltip": "Mesurez la station complète de gauche à droite, borne de charge latérale comprise, en mètres. Règle sa largeur affichée en vue de dessus et sur la carte.",
-    "dock_visual_x_offsetTooltip": "Robot stationné, mesurez de l’axe des roues arrière au centre de l’emprise de la station dans le sens de la longueur, en mètres. Positif vers l’avant ; négatif derrière l’axe. Déplace uniquement l’illustration, pas la pose d’accostage calibrée."
+    "dock_visual_x_offsetTooltip": "Robot stationné, mesurez de l’axe des roues arrière au centre de l’emprise complète de la station dans le sens de la longueur, en mètres. Positif vers l’avant ; négatif vers l’arrière. Déplace uniquement l’illustration, pas la pose d’accostage calibrée.",
+    "dock_visual_y_offset": "Centre Y de la station",
+    "dock_visual_y_offsetTooltip": "Robot stationné, mesurez de son axe central au centre de l’emprise complète de la station, borne latérale comprise, en mètres. Positif vers la gauche du robot ; négatif vers sa droite. Déplace l’illustration latéralement en vue de dessus et sur la carte sans changer la calibration."
   },
   "settingsDriveMotor": {
     "savedLiveTitle": "Sauvegardé et appliqué en direct",

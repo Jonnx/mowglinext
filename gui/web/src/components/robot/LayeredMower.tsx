@@ -1,6 +1,6 @@
 import {PartSprite} from "./PartSprite";
 import {sensorArtworkProjection} from "./sensorArtworkProjection";
-import {SHELLS} from "./shellAssets";
+import {SHELLS, shellProjectionFrame} from "./shellAssets";
 import {memo, useId, useState} from "react";
 import type {RobotGeometry} from "../../hooks/useRobotDescription";
 import type {MowerStyle} from "../../hooks/useMowerVisual";
@@ -11,7 +11,8 @@ function ShellSprite({style, view, x, y, width, height, artwork}: {
 }) {
     const [loaded, setLoaded] = useState(false);
     const shell = SHELLS[style];
-    const [sx, sy, sw, sh] = shell[view];
+    const [sx, sy, sw, sh] = shellProjectionFrame(style, view);
+    const sourceSize = shell.sizes?.[view] ?? shell.size;
     return <>
         {!loaded && <rect x={x} y={y} width={width} height={height} rx={Math.min(width,height)*.18} fill="#343e40"/>}
         <svg data-layer="shell-art" x={x} y={y} width={width} height={height}
@@ -19,7 +20,7 @@ function ShellSprite({style, view, x, y, width, height, artwork}: {
         <rect data-shell-bounds x={sx} y={sy} width={sw} height={sh} fill="none"/>
         <image onLoad={()=>setLoaded(true)} onError={()=>setLoaded(false)} href={artwork === "map" ? `/assets/robots/layered/map/${style}-${view}.webp` : `/assets/robots/layered/${shell.files?.[view] ?? `${style}.png`}`}
             x={artwork === "map" ? sx : 0} y={artwork === "map" ? sy : 0}
-            width={artwork === "map" ? sw : shell.size[0]} height={artwork === "map" ? sh : shell.size[1]}/>
+            width={artwork === "map" ? sw : sourceSize[0]} height={artwork === "map" ? sh : sourceSize[1]}/>
     </svg></>;
 }
 

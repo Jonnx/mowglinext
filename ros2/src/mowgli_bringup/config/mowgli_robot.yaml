@@ -68,6 +68,8 @@ mowgli:
     dock_visual_width: 0.46
     # Footprint centre forward of the parked rear axle, metres.
     dock_visual_x_offset: 0.235
+    # Full footprint centre left of the parked mower centreline, metres.
+    dock_visual_y_offset: 0.0
 
     # Drive wheels (rear)
     # wheel_radius — 0.1 m, per the maintainer's physical measurement on the
