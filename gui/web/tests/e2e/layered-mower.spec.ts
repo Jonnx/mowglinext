@@ -204,8 +204,7 @@ test("full application hardware preset gallery on desktop and mobile",async({pag
             await expect(page.getByRole("radio",{name:label,exact:true})).toHaveAttribute("aria-checked","true");
             await expect(page.getByTestId("mower-top").locator("[data-mower-style]"))
                 .toHaveAttribute("data-mower-style", preset.appearance?.style ?? "sculpted");
-            expect(await page.evaluate(() => JSON.parse(localStorage.getItem("mowgli.robot-visual.v1")!).dockAppearance))
-                .toBe(preset.appearance?.dockAppearance ?? "styled");
+            await expect(page.getByTestId("mower-top").locator('[data-layer="styled-dock"]')).toHaveCount(1);
             const side=page.getByTestId("mower-side");
             if(preset.defaults.chassis_height !== undefined){
                 await expect(side.locator('[data-layer="shell-art"]')).toHaveAttribute("height",String(preset.defaults.chassis_height));
@@ -241,7 +240,7 @@ test("chassis height preserves the bottom offset and wheel spacing is the preset
 
 // Photo-proportioned demonstration only; never applied by a style selection.
 test("Worx shallow chassis preview and disabled scanner artwork", async ({page}) => {
-    const example = {...settings, mower_model: "custom", chassis_length: .54, chassis_width: .36,
+    const example = {...settings, mower_visual_style: "worx", mower_model: "custom", chassis_length: .54, chassis_width: .36,
         chassis_height: .14, chassis_z_offset: -.07, chassis_center_x: .16,
         wheel_radius: .11, wheel_width: .04, wheel_track: .32, caster_radius: .025,
         caster_track: .22, caster_x_offset: .34, gps_x: .20, gps_y: 0, gps_z: .08,

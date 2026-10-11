@@ -4,7 +4,7 @@ import {installMockBackend} from "./mock/mockBackend";
 import {SCENARIOS} from "./mock/scenarios";
 import {ROBOT_URDF} from "../../src/test/robotUrdf";
 const shots="screenshots.local/layered-mower/measurements";
-const settings={lidar_enabled:false,mower_model:"CUSTOM",chassis_length:.54,chassis_width:.36,chassis_height:.14,chassis_z_offset:-.07,
+const settings={mower_visual_style:"worx",lidar_enabled:false,mower_model:"CUSTOM",chassis_length:.54,chassis_width:.36,chassis_height:.14,chassis_z_offset:-.07,
     chassis_center_x:.16,wheel_radius:.11,wheel_width:.04,wheel_track:.32,wheel_x_offset:0,caster_radius:.025,
     caster_track:.22,caster_x_offset:.34,blade_radius:.09,tool_width:.21,dock_visual_length:.67,dock_visual_width:.46,
     dock_visual_x_offset:0,dock_visual_y_offset:0,gps_x:.20,gps_y:0,gps_z:.08,imu_x:.10,imu_y:0,imu_z:.01};

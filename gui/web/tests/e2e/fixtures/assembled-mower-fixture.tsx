@@ -15,7 +15,7 @@ function Fixture(){
     const {current:map}=useMap();
     const [heading,setHeading]=useState(Math.PI/2);
     if(map) window.assembledMowerTest={map:map.getMap(),setHeading};
-    return <><StyledDockMarker longitude={CENTER[0]} latitude={CENTER[1]} headingRad={heading}/><AssembledMowerMarker robot={parseRobotUrdf(ROBOT_URDF)!} longitude={CENTER[0]} latitude={CENTER[1]} headingRad={heading}/></>;
+    return <><StyledDockMarker longitude={CENTER[0]} latitude={CENTER[1]} headingRad={heading}/><AssembledMowerMarker values={{mower_visual_style:"yardforce"}} robot={parseRobotUrdf(ROBOT_URDF)!} longitude={CENTER[0]} latitude={CENTER[1]} headingRad={heading}/></>;
 }
 createRoot(document.getElementById("root")!).render(<Map initialViewState={{longitude:CENTER[0],latitude:CENTER[1],zoom:24}}
     maxZoom={24} style={{width:1000,height:700}} mapStyle={{version:8,sources:{},layers:[{id:"background",type:"background",paint:{"background-color":"#17352b"}}]}}

@@ -5,7 +5,7 @@ It is a scaled illustration, not CAD or collision geometry.
 
 - Configure the shell once in Hardware. Sensors and Map inherit the selection.
 - Six shells: Rounded, Sculpted, Utility, Yardforce-inspired, RM1000-inspired, Worx-inspired.
-- Style and Hardware transparency are display preferences saved in this browser.
+- Shell style is saved in mower configuration; Hardware transparency stays browser-local.
 - Sensors starts transparent each time it opens; its toggle affects only that
   editor session (both top and side). The map always remains opaque.
 - Hardware and Sensors show a stationary docked illustration in top and side
@@ -263,17 +263,13 @@ ROS. The 500/500B supply the Yardforce-inspired shell; RM1000 supplies its own
 layered shell. They currently share the illustrative styled dock, whose shape
 was already inspired by the RM1000 station. Neither choice measures a robot.
 
-The pair is stored with the existing browser-local visual preference. Existing
-preferences that only contain a shell style acquire the styled dock default.
-Hardware, Sensors and Map use the same preference. Changing the body style picks
-its registered hardware pair (or the generic styled dock); transparency remains
-independent. A confirmed model change applies that model's explicit pair.
-
-The map has one link to Hardware instead of independent mower/dock selectors.
-Old `gui.map.dock.appearance` settings no longer override the pair. Saved RM1000
-map choices seed the new RM1000 assembly when no explicit shell preference exists;
-existing RM1000 hardware installations likewise seed that style. The retired
-static generic mower becomes the shared assembly. No migration writes ROS config.
+The `mower_visual_style` setting selects the shared shell/dock pair. Hardware
+selection is a draft until Settings Save; Sensors use that settings draft and
+Map reads saved configuration. A confirmed model change drafts the model's pair.
+Empty or unknown styles follow the hardware model. Legacy localStorage shell and
+dock fields and retired map appearance overrides cannot overwrite configuration.
+Only transparency remains browser-local; Sensors starts transparent, Map is solid.
+Saving appearance alone does not request a ROS restart or change physical geometry.
 
 Future dock artwork belongs in `DOCK_APPEARANCES`; a model can pair its ID with a
 chassis style. Photo docks use the existing calibrated MapImageMarker; a new

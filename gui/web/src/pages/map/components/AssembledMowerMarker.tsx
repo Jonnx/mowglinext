@@ -6,11 +6,11 @@ import {assemblyBounds} from "../../../components/robot/assemblyBounds";
 import {LayeredMower} from "../../../components/robot/LayeredMower";
 import {MapPlaneMarker} from "./MapPlaneMarker";
 
-export function AssembledMowerMarker({robot,longitude,latitude,headingRad}: {
-    robot:RobotGeometry;longitude:number;latitude:number;headingRad:number;
+export function AssembledMowerMarker({values,robot,longitude,latitude,headingRad}: {
+    values:Record<string,unknown>;robot:RobotGeometry;longitude:number;latitude:number;headingRad:number;
 }) {
     const {t}=useTranslation();
-    const [visual]=useMowerVisual();
+    const [visual]=useMowerVisual(values);
     const bounds = useMemo(() => assemblyBounds(robot,"top",.005), [robot]);
     if (!robot.fromUrdf) return null;
     return <MapPlaneMarker bounds={bounds} longitude={longitude} latitude={latitude}

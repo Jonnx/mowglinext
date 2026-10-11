@@ -4764,7 +4764,7 @@
     "rm1000": "RM1000-inspired",
     "hardwareLink": "Mower & dock appearance → Hardware",
     "transparent": "Transparent shell",
-    "browserPreference": "Appearance · saved in this browser",
+    "browserPreference": "Shell and matching dock use Settings Save · transparency is local",
     "top": "Top · front ↑",
     "side": "Side · front ←",
     "waiting": "Waiting for the robot description to draw accurate geometry.",

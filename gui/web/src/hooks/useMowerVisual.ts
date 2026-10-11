@@ -1,62 +1,40 @@
-import {useEffect, useSyncExternalStore} from "react";
+import {useSyncExternalStore} from "react";
 import {MOWER_MODELS} from "../constants/mowerModels";
-import {DOCK_APPEARANCES, MOWER_STYLE_DOCKS, type DockAppearanceId} from "../constants/mowerAppearances";
+import {MOWER_STYLE_DOCKS, type DockAppearanceId} from "../constants/mowerAppearances";
 
 export const MOWER_STYLES = ["rounded", "sculpted", "utility", "yardforce", "rm1000", "worx"] as const;
 export type MowerStyle = typeof MOWER_STYLES[number];
-/** Display-only pair that hardware presets can supply independently of physical geometry. */
+/** Display-only pair, independent of physical geometry. */
 export type MowerVisualPreset = {style: MowerStyle; dockAppearance: DockAppearanceId};
 export const DEFAULT_MOWER_VISUAL: MowerVisualPreset = {style: "sculpted", dockAppearance: "styled"};
-type Preference = MowerVisualPreset & {transparent: boolean};
+
+/** Blank/unrecognised settings follow the model, without writing a browser's old
+ * preference to the mower. Explicit selections persist through Settings Save. */
+export function resolveMowerVisual(values: Record<string, unknown>): MowerVisualPreset {
+    const style = MOWER_STYLES.find(s => s === values.mower_visual_style);
+    return style ? {style, dockAppearance: MOWER_STYLE_DOCKS[style]}
+        : MOWER_MODELS.find(model => model.value === values.mower_model)?.appearance ?? DEFAULT_MOWER_VISUAL;
+}
+
+// Transparency is a local editing aid. Legacy stored shell/dock fields are ignored.
 const KEY = "mowgli.robot-visual.v1";
 const EVENT = "mowgli-robot-visual";
-const fallback: Preference = {...DEFAULT_MOWER_VISUAL, transparent: false};
-let cachedRaw: string | null | undefined;
-let cached = fallback;
-function snapshot(): Preference {
-    let raw: string | null = null;
-    try { raw = localStorage.getItem(KEY); } catch { /* private browsing */ }
-    if (raw !== cachedRaw) {
-        cachedRaw = raw;
-        try {
-            const parsed: unknown = JSON.parse(raw ?? "null");
-            const data = parsed && typeof parsed === "object" ? parsed as Record<string, unknown> : {};
-            const style = MOWER_STYLES.find(s => s === data.style) ?? fallback.style;
-            const dockAppearance = Object.values(DOCK_APPEARANCES).find(d => d.id === data.dockAppearance)?.id
-                ?? MOWER_STYLE_DOCKS[style];
-            cached = {style, dockAppearance, transparent: data.transparent === true};
-        } catch { cached = fallback; }
+function snapshot(): boolean {
+    try {
+        const data: unknown = JSON.parse(localStorage.getItem(KEY) ?? "null");
+        return !!data && typeof data === "object" && "transparent" in data && data.transparent === true;
     }
-    return cached;
+    catch { return false; }
 }
 function subscribe(listener: () => void) {
     window.addEventListener(EVENT, listener);
     window.addEventListener("storage", listener);
     return () => {window.removeEventListener(EVENT, listener); window.removeEventListener("storage", listener);};
 }
-export function useMowerVisual(model?: unknown, legacyMapAppearance?: unknown) {
-    // Seed old installations only once. Existing explicit shell choices win.
-    useEffect(() => {
-        if (typeof model !== "string" && legacyMapAppearance !== "biltema-rm1000") return;
-        try {
-            const raw: unknown = JSON.parse(localStorage.getItem(KEY) ?? "null");
-            const data = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
-            if (MOWER_STYLES.some(style => style === data.style)) return;
-            const pair = legacyMapAppearance === "biltema-rm1000"
-                ? {style: "rm1000", dockAppearance: "styled"}
-                : MOWER_MODELS.find(preset => preset.value === model)?.appearance ?? DEFAULT_MOWER_VISUAL;
-            localStorage.setItem(KEY, JSON.stringify({...pair, transparent: data.transparent === true}));
-            window.dispatchEvent(new Event(EVENT));
-        } catch { /* Keep the default preview when storage is unavailable. */ }
-    }, [model, legacyMapAppearance]);
-    const preference = useSyncExternalStore(subscribe, snapshot, () => fallback);
-    return [preference, (patch: Partial<Preference>) => {
-        const pair = patch.style
-            ? MOWER_MODELS.find(model => model.appearance?.style === patch.style)?.appearance
-                ?? {style: patch.style, dockAppearance: MOWER_STYLE_DOCKS[patch.style]}
-            : {};
-        const next = {...snapshot(), ...pair, ...patch};
-        try {localStorage.setItem(KEY, JSON.stringify(next));} catch {cached = next;}
+export function useMowerVisual(values: Record<string, unknown> = {}) {
+    const transparent = useSyncExternalStore(subscribe, snapshot, () => false);
+    return [{...resolveMowerVisual(values), transparent}, (patch: {transparent: boolean}) => {
+        try {localStorage.setItem(KEY, JSON.stringify(patch));} catch { /* Storage unavailable. */ }
         window.dispatchEvent(new Event(EVENT));
     }] as const;
 }

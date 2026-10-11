@@ -38,7 +38,7 @@ export function MeasurementDialog({session, live, values, onCancel, onApply}: {
     const key = session.key, spec = MEASUREMENTS[key];
     const draft = {...values, [key]: value};
     const robot = previewRobotGeometry(live,draft);
-    const [visual] = useMowerVisual();
+    const [visual] = useMowerVisual(values);
     const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? "standard";
     const geometry = dockVisualGeometry(draft,robot.wheelXOffset,dockStyle,robot.chassisCenterX);
     const valid = validMeasurement(key,value);
@@ -52,7 +52,7 @@ export function MeasurementDialog({session, live, values, onCancel, onApply}: {
         afterOpenChange={open => {if(open) input.current?.focus({preventScroll:true});}}
         footer={<div className="measurement-actions"><Button onClick={onCancel}>{t("measurementEditor.cancel")}</Button>
             <Button type="primary" disabled={!valid} onClick={confirm}>{t("measurementEditor.apply")}</Button></div>}>
-        {live.fromUrdf ? <MowerView robot={robot} view={spec.view} showDock dockGeometry={geometry}
+        {live.fromUrdf ? <MowerView values={values} robot={robot} view={spec.view} showDock dockGeometry={geometry}
             measurement={measurement ?? undefined} transparent={key === "blade_radius" ? true : undefined}
             maxHeight={Math.max(115,Math.min(spec.view === "side" ? 180 : 240,viewport.height*.29))}/>
             : <Typography.Paragraph>{t("mowerVisual.waiting")}</Typography.Paragraph>}

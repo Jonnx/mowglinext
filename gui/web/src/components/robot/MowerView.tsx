@@ -10,9 +10,9 @@ import {LayeredMower} from "./LayeredMower";
 import {measurementLayout, type Measurement} from "./measurements";
 import {MeasurementOverlay} from "./MeasurementOverlay";
 
-export function MowerView({robot, view, maxHeight = 300, highlightSensors = false, transparent, showDock = false, dockGeometry, measurement}: {robot: RobotGeometry; view: RobotView; maxHeight?: number; highlightSensors?: boolean; transparent?: boolean; showDock?: boolean; dockGeometry?: DockVisualGeometry; measurement?: Measurement}) {
+export function MowerView({values = {}, robot, view, maxHeight = 300, highlightSensors = false, transparent, showDock = false, dockGeometry, measurement}: {values?: Record<string, unknown>; robot: RobotGeometry; view: RobotView; maxHeight?: number; highlightSensors?: boolean; transparent?: boolean; showDock?: boolean; dockGeometry?: DockVisualGeometry; measurement?: Measurement}) {
     const {t} = useTranslation();
-    const [preference] = useMowerVisual();
+    const [preference] = useMowerVisual(values);
     const dockStyle = resolveDockAppearance(preference.dockAppearance).layered ?? "standard";
     const b = showDock ? dockedAssemblyBounds(robot,view,.05,dockStyle,dockGeometry) : assemblyBounds(robot,view,.05);
     const frame = measurement ? measurementLayout(measurement,b).bounds : b;

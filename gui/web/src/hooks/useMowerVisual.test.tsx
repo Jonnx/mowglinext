@@ -1,7 +1,6 @@
 import {act, cleanup, renderHook} from "@testing-library/react";
 import {afterEach, beforeEach, expect, it, vi} from "vitest";
-import {useMowerVisual} from "./useMowerVisual";
-
+import {useMowerVisual, resolveMowerVisual} from "./useMowerVisual";
 const key = "mowgli.robot-visual.v1";
 let saved: Map<string, string>;
 beforeEach(() => {
@@ -12,56 +11,33 @@ beforeEach(() => {
     });
 });
 afterEach(() => {cleanup(); vi.unstubAllGlobals();});
-
-it("keeps existing shell preferences and adds the new dock default", () => {
-    saved.set(key, JSON.stringify({style: "utility", transparent: true}));
-    const {result} = renderHook(() => useMowerVisual());
-    expect(result.current[0]).toEqual({style: "utility", transparent: true, dockAppearance: "styled"});
+it("reads the saved mower choice regardless of old browser choices", () => {
+    saved.set(key, JSON.stringify({style: "utility", dockAppearance: "generic", transparent: true}));
+    const {result} = renderHook(() => useMowerVisual({mower_visual_style:"worx"}));
+    expect(result.current[0]).toEqual({style:"worx",dockAppearance:"worx",transparent:true});
 });
-
-it("persists and shares a hardware chassis/dock pair without resetting transparency", () => {
-    saved.set(key, JSON.stringify({style: "rounded", transparent: true}));
-    const first = renderHook(() => useMowerVisual());
-    const second = renderHook(() => useMowerVisual());
-    act(() => first.result.current[1]({style: "yardforce", dockAppearance: "generic"}));
-    expect(second.result.current[0]).toEqual({style: "yardforce", dockAppearance: "generic", transparent: true});
-    expect(JSON.parse(saved.get(key)!)).toEqual(second.result.current[0]);
-    const reloaded = renderHook(() => useMowerVisual());
-    expect(reloaded.result.current[0]).toEqual(second.result.current[0]);
+it("keeps draft appearance isolated from another consumer of saved settings", () => {
+    const first = renderHook(({style}) => useMowerVisual({mower_visual_style:style}),{initialProps:{style:"yardforce"}});
+    const second = renderHook(() => useMowerVisual({mower_visual_style:"yardforce"}));
+    first.rerender({style:"worx"});
+    expect(first.result.current[0].dockAppearance).toBe("worx");
+    expect(second.result.current[0].style).toBe("yardforce");
+    expect(saved.has(key)).toBe(false);
 });
-
-it("uses safe defaults for retired chassis/dock identifiers", () => {
-    saved.set(key, JSON.stringify({style: "retired", dockAppearance: "constructor"}));
-    const {result} = renderHook(() => useMowerVisual());
-    expect(result.current[0]).toEqual({style: "sculpted", dockAppearance: "styled", transparent: false});
+it("shares only local transparency, never persists a shell to browser storage", () => {
+    const first = renderHook(() => useMowerVisual({mower_visual_style:"worx"}));
+    const second = renderHook(() => useMowerVisual({mower_visual_style:"yardforce"}));
+    act(() => first.result.current[1]({transparent:true}));
+    expect(second.result.current[0].transparent).toBe(true);
+    expect(second.result.current[0].style).toBe("yardforce");
+    expect(JSON.parse(saved.get(key)!)).toEqual({transparent:true});
 });
-
-it("migrates a saved RM1000 map selection into the shared assembly", () => {
-    const {result} = renderHook(() => useMowerVisual("YardForce500", "biltema-rm1000"));
-    expect(result.current[0].style).toBe("rm1000");
-    expect(result.current[0].dockAppearance).toBe("styled");
+it("follows the hardware model for unset or invalid values without writing configuration", () => {
+    expect(resolveMowerVisual({mower_model:"BiltemaRM1000",mower_visual_style:""}).style).toBe("rm1000");
+    expect(resolveMowerVisual({mower_model:"YardForce500",mower_visual_style:"retired"}).style).toBe("yardforce");
+    expect(resolveMowerVisual({}).style).toBe("sculpted");
+    expect(saved.size).toBe(0);
 });
-it("does not overwrite an explicit hardware appearance when legacy map settings load", () => {
-    saved.set(key, JSON.stringify({style: "utility", transparent: true}));
-    const {result} = renderHook(() => useMowerVisual("BiltemaRM1000", "biltema-rm1000"));
-    expect(result.current[0].style).toBe("utility");
-});
-it("seeds an existing RM1000 hardware installation when it has no saved appearance", () => {
-    const {result} = renderHook(() => useMowerVisual("BiltemaRM1000"));
-    expect(result.current[0].style).toBe("rm1000");
-});
-
-it("pairs the Worx shell with its side-charging dock and restores the basic pair on style change", () => {
-    const {result} = renderHook(() => useMowerVisual());
-    act(() => result.current[1]({style: "worx"}));
-    expect(result.current[0].dockAppearance).toBe("worx");
-    const reloaded = renderHook(() => useMowerVisual());
-    expect(reloaded.result.current[0].dockAppearance).toBe("worx");
-    act(() => result.current[1]({style: "yardforce"}));
-    expect(result.current[0].dockAppearance).toBe("styled");
-});
-it("supplies the matching dock for a stored shell with no dock preference", () => {
-    saved.set(key, JSON.stringify({style: "worx"}));
-    const {result} = renderHook(() => useMowerVisual());
-    expect(result.current[0].dockAppearance).toBe("worx");
+it("pairs explicit styles even when they differ from the hardware model", () => {
+    expect(resolveMowerVisual({mower_model:"BiltemaRM1000",mower_visual_style:"worx"})).toEqual({style:"worx",dockAppearance:"worx"});
 });

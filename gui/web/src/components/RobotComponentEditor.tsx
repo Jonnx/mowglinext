@@ -328,7 +328,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
 
     const liveRobot = useRobotDescription();
     const robot = useMemo(() => previewRobotGeometry(liveRobot, values), [liveRobot, values]);
-    const [visual] = useMowerVisual(values.mower_model);
+    const [visual] = useMowerVisual(values);
     // Each sensor-layout session starts see-through, independently of Hardware.
     const [transparent, setTransparent] = useState(true);
     const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? "standard";
@@ -679,7 +679,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
                             {liveRobot.fromUrdf && [...SENSORS].reverse().filter(meta => robot.sensors?.some(sensor => sensor.id === meta.id)).map(renderSensor)}
                         </svg>
                     </div>
-                    {liveRobot.fromUrdf && <MowerView dockGeometry={dockGeometry} robot={robot} view="side" showDock transparent={transparent} highlightSensors maxHeight={190}/>}
+                    {liveRobot.fromUrdf && <MowerView values={values} dockGeometry={dockGeometry} robot={robot} view="side" showDock transparent={transparent} highlightSensors maxHeight={190}/>}
                 </Col>
 
                 <Col xs={24} lg={10}>

@@ -146,7 +146,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
     // Same link for PENDING obstacle proposals (wheel-slip dig reports).
     const [selectedProposalId, setSelectedProposalId] = useState<number | null>(null);
     const [features, setFeatures] = useState<Record<string, MowingFeature>>({});
-    const [mowerVisual] = useMowerVisual(config["gui.map.mower.appearance"] === undefined ? undefined : settings.mower_model, config["gui.map.mower.appearance"]);
+    const [mowerVisual] = useMowerVisual(settings);
     const dockAppearance = resolveDockAppearance(mowerVisual.dockAppearance);
     const [loadedDockImageSrc, setLoadedDockImageSrc] = useState<string>();
     const dockImage = dockAppearance.image;
@@ -373,7 +373,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
     });
 
     const mowerImageMarker = assembledMowerReady && mowerFeature instanceof MowerFeatureBase
-        ? <AssembledMowerMarker robot={robotGeometry} longitude={mowerFeature.geometry.coordinates[0]}
+        ? <AssembledMowerMarker values={settings} robot={robotGeometry} longitude={mowerFeature.geometry.coordinates[0]}
             latitude={mowerFeature.geometry.coordinates[1]} headingRad={mowerHeadingRad}/>
         : null;
     const dockImageMarker = styledDockReady && dockFeature instanceof DockFeatureBase

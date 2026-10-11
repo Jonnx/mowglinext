@@ -33,7 +33,7 @@ for(const example of ["yardforce500","custom-angular","rm1000"] as const){
             localStorage.setItem("mowgli.robot-visual.v1",JSON.stringify({style,transparent:false}));
         },{style:example === "yardforce500" ? "yardforce" : example === "rm1000" ? "rm1000" : "utility"});
         await installMockBackend(page,{...SCENARIOS[0],topics:{...SCENARIOS[0].topics,robotDescription:{data:ROBOT_URDF}},
-            rest:{"/api/settings/yaml":values}},{liveStatusIntervalMs:1000});
+            rest:{"/api/settings/yaml":{...values,mower_visual_style:example === "yardforce500" ? "yardforce" : example === "rm1000" ? "rm1000" : "utility"}}},{liveStatusIntervalMs:1000});
         await page.goto("/#/settings?section=hardware");
         const preview=page.getByTestId("mower-preview");
         await expect(preview).toBeVisible();

@@ -1,7 +1,7 @@
 import {useMeasurementEditor} from "../robot/useMeasurementEditor";
 import {DOCK_VISUAL_DEFAULTS} from "../robot/dockGeometry";
 import {resolveCasterPosition} from "../../utils/casterPosition";
-import {DEFAULT_MOWER_VISUAL, useMowerVisual} from "../../hooks/useMowerVisual";
+import {DEFAULT_MOWER_VISUAL} from "../../hooks/useMowerVisual";
 import {MowerPreview} from "../robot/MowerPreview";
 import React, { useState } from "react";
 import { App, Card, Col, Form, Input, InputNumber, Row, Space, Tag, Typography } from "antd";
@@ -40,7 +40,6 @@ export const HardwareSection: React.FC<Props> = ({
     const { colors } = useThemeMode();
     const { modal } = App.useApp();
     const [showAdvanced, setShowAdvanced] = useState(false);
-    const [, setVisual] = useMowerVisual(values.mower_model);
     const measurementEditor = useMeasurementEditor(values,onChange);
     const selectedModel = values.mower_model || "YardForce500";
 
@@ -57,7 +56,7 @@ export const HardwareSection: React.FC<Props> = ({
     const applyModelPreset = (model: string) => {
         onChange("mower_model", model);
         const preset = MOWER_MODELS.find((m) => m.value === model);
-        setVisual(preset?.appearance ?? DEFAULT_MOWER_VISUAL);
+        onChange("mower_visual_style", (preset?.appearance ?? DEFAULT_MOWER_VISUAL).style);
         if (preset?.defaults && Object.keys(preset.defaults).length > 0) {
             onBulkChange(presetValuesForBackend(preset.defaults, backendDefaultOverrides));
         }
@@ -155,7 +154,7 @@ export const HardwareSection: React.FC<Props> = ({
                 </Space>
             </Card>
 
-            <MowerPreview values={values} editor={measurementEditor}/>
+            <MowerPreview values={values} editor={measurementEditor} onStyleChange={style => onChange("mower_visual_style", style)}/>
 
             {/* Essential parameters (always visible) */}
             <Card
