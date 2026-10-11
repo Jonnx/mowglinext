@@ -65,9 +65,7 @@ release_api_headers=(--header "Accept: application/vnd.github+json")
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
   release_api_headers+=(--header "Authorization: Bearer ${GITHUB_TOKEN}")
 fi
-release_json="$(curl --fail --silent --show-error --location \\
-  --retry 3 --retry-delay 2 \\
-  "${release_api_headers[@]}" "${release_api_url}")"
+release_json="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 2 "${release_api_headers[@]}" "${release_api_url}")"
 asset_url="$(
   jq -r \
     --arg package_name "${package_name}" \
