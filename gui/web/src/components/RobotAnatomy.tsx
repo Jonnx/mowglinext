@@ -1,3 +1,4 @@
+import {motorDisplayValue} from '../utils/motorTelemetry';
 import {useState} from "react";
 import type {ReactNode} from "react";
 import {useTranslation} from "react-i18next";
@@ -24,7 +25,7 @@ export interface AnatomyInputs {
   lidarOk?: boolean;
   wheelLeftRpm: number;
   wheelRightRpm: number;
-  bladeOn: boolean;
+  bladeOn?: boolean;
   rain: boolean;
   dockCharging: boolean;
 }
@@ -76,16 +77,16 @@ function partInfo(part: Part, inputs: AnatomyInputs, t: TFunction): PartInfo {
           : "unknown",
       };
     case 'blade':
-      return {label: t('robotAnatomy.blade'), value: inputs.bladeOn ? t('robotAnatomy.spinning') : t('robotAnatomy.off'), tone: boolTone(!inputs.bladeOn)};
+      return {label: t('robotAnatomy.blade'), value: inputs.bladeOn === undefined ? t('robotAnatomy.noData') : inputs.bladeOn ? t('robotAnatomy.spinning') : t('robotAnatomy.off'), tone: inputs.bladeOn === undefined ? 'unknown' : boolTone(!inputs.bladeOn)};
     case 'wheelL':
-      return {label: `${t('robotAnatomy.leftWheel')} (rpm)`, value: inputs.wheelLeftRpm.toFixed(0), tone: 'ok'};
+      return {label: `${t('robotAnatomy.leftWheel')} (rpm)`, value: motorDisplayValue(inputs.wheelLeftRpm), tone: Number.isFinite(inputs.wheelLeftRpm) ? 'ok' : 'unknown'};
     case 'wheelR':
-      return {label: `${t('robotAnatomy.rightWheel')} (rpm)`, value: inputs.wheelRightRpm.toFixed(0), tone: 'ok'};
+      return {label: `${t('robotAnatomy.rightWheel')} (rpm)`, value: motorDisplayValue(inputs.wheelRightRpm), tone: Number.isFinite(inputs.wheelRightRpm) ? 'ok' : 'unknown'};
     case 'motor':
       return {
         label: `${t('robotAnatomy.motors')} (°C)`,
-        value: t('robotAnatomy.motorTemps', {motor: inputs.motorTempC.toFixed(0), esc: inputs.escTempC.toFixed(0)}),
-        tone: boolTone(inputs.motorTempC < 55),
+        value: t('robotAnatomy.motorTemps', {motor: motorDisplayValue(inputs.motorTempC), esc: motorDisplayValue(inputs.escTempC)}),
+        tone: Number.isFinite(inputs.motorTempC) ? boolTone(inputs.motorTempC < 55) : 'unknown',
       };
     case 'dock':
       return {label: t('robotAnatomy.dock'), value: inputs.dockCharging ? t('robotAnatomy.charging') : t('robotAnatomy.offDock'), tone: 'ok'};

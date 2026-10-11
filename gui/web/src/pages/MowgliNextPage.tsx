@@ -1,3 +1,5 @@
+import {useBladeTelemetry} from '../hooks/useBladeTelemetry';
+import {motorDisplayValue} from '../utils/motorTelemetry';
 import {liveAreaLabel} from "../utils/areaLabel.ts";
 import type {ReactNode} from "react";
 import {useMemo} from "react";
@@ -58,12 +60,13 @@ import {staggerParent, riseFade, popIn, springSnap} from "../concept/motion.ts";
  * provides the side-rail + header chrome.
  */
 
-function useMowerData() {
+function useMowerData(backend?: string) {
   const {t} = useTranslation();
   const {highLevelStatus} = useHighLevelStatus();
   const coverageSession = useCoverageSession();
   const power = usePower();
   const status = useStatus();
+  const blade = useBladeTelemetry(backend);
   const gnss = useGnssStatus();
   const emergency = useEmergency();
   const {settings} = useSettings();
@@ -103,10 +106,10 @@ function useMowerData() {
     // separate so the Blades tile doesn't read the charger.
     current: typeof power.charge_current === "number" && Number.isFinite(power.charge_current)
       ? power.charge_current : undefined,
-    bladeCurrent: status.mower_esc_current ?? 0,
-    rpm: status.mower_motor_rpm ?? 0,
-    escTemp: status.mower_esc_temperature ?? 0,
-    motorTemp: status.mower_motor_temperature ?? 0,
+    bladeCurrent: blade.current,
+    rpm: blade.rpm,
+    escTemp: blade.escTemp,
+    motorTemp: blade.motorTemp,
     rain: status.rain_detected ?? false,
     isMoving,
     scanPaused,
@@ -133,8 +136,8 @@ export const MowgliNextPage = () => {
   const navigate = useNavigate();
   const {modal, notification} = App.useApp();
   const mowerAction = useMowerAction();
-  const data = useMowerData();
   const hardware = useHardwareBackend();
+  const data = useMowerData(hardware.loading ? undefined : hardware.backend);
   const mavros = useMavrosInfo(!hardware.loading && hardware.backend === "mavros");
   const {snapshot} = useDiagnosticsSnapshot();
   const map = useMowingMap();
@@ -618,11 +621,11 @@ function TilesRow({data}: {data: ReturnType<typeof useMowerData>}) {
     <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10}}>
       <StatTile label="GPS" value={`${Math.round(data.gps)}`} unit="%"
                 hint={data.gpsLabel} accent="cyan" icon={<Wifi size={14}/>}/>
-      <StatTile label={t('mowgliNextPage.blades')} value={data.rpm > 0 ? Math.round(data.rpm).toString() : t('mowgliNextPage.bladesOff')}
-                unit={data.rpm > 0 ? 'rpm' : ''} hint={<>{data.bladeCurrent.toFixed(1)} A · <BladeDirectionDisplay compact/></>}
+      <StatTile label={t('mowgliNextPage.blades')} value={!Number.isFinite(data.rpm) ? "—" : data.rpm > 0 ? Math.round(data.rpm).toString() : t('mowgliNextPage.bladesOff')}
+                unit={data.rpm > 0 ? 'rpm' : ''} hint={<>{motorDisplayValue(data.bladeCurrent, 1)} A · <BladeDirectionDisplay compact/></>}
                 accent="amber" icon={<Sparkles size={14}/>}/>
-      <StatTile label={t('mowgliNextPage.motor')} value={data.motorTemp.toFixed(0)} unit="°c"
-                hint={`ESC ${data.escTemp.toFixed(0)} °C`}
+      <StatTile label={t('mowgliNextPage.motor')} value={motorDisplayValue(data.motorTemp)} unit="°c"
+                hint={`ESC ${motorDisplayValue(data.escTemp)} °C`}
                 accent={data.motorTemp > 55 ? "amber" : "lime"}
                 icon={<Thermometer size={14}/>}/>
       <StatTile label={t('mowgliNextPage.rain')} value={data.rain ? t('mowgliNextPage.rainDetected') : t('mowgliNextPage.dry')} unit=""
@@ -706,8 +709,8 @@ export function HealthCard({data, hardware, mavros}: {
                               ok: !data.rain,             note: data.rain ? t('mowgliNextPage.mowingPausedShort') : t('mowgliNextPage.conditionsOk')},
     {k: data.emergency ? t('mowgliNextPage.alertActive') : t('mowgliNextPage.noAlerts'),
                               ok: !data.emergency,        note: data.emergency ? t('mowgliNextPage.toRearm') : t('mowgliNextPage.allClear')},
-    {k: t('mowgliNextPage.motorTemp', {temp: data.motorTemp.toFixed(0)}),
-                              ok: data.motorTemp < 55,    note: data.motorTemp >= 55 ? t('mowgliNextPage.runningHot') : t('mowgliNextPage.nominal')},
+    ...(Number.isFinite(data.motorTemp) ? [{k: t('mowgliNextPage.motorTemp', {temp: motorDisplayValue(data.motorTemp)}),
+                              ok: data.motorTemp < 55,    note: data.motorTemp >= 55 ? t('mowgliNextPage.runningHot') : t('mowgliNextPage.nominal')}] : []),
   ];
   // STM32 firmware compatibility belongs exclusively to the native Mowgli
   // backend. MAVROS leaves those Status fields unset/false, which must never

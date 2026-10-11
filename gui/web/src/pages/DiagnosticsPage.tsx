@@ -1,3 +1,6 @@
+import {useBladeTelemetry} from '../hooks/useBladeTelemetry';
+import {useHardwareBackend} from '../hooks/useHardwareBackend';
+import {motorDisplayValue} from '../utils/motorTelemetry';
 import {
     Alert,
     Button,
@@ -191,6 +194,9 @@ export const DiagnosticsPage = () => {
     const emergency = useEmergency();
     const power = usePower();
     const status = useStatus();
+    const hardware = useHardwareBackend();
+    const blade = useBladeTelemetry(hardware.loading ? undefined : hardware.backend);
+    const bladeEscStatus = blade.fresh ? status.mower_esc_status : undefined;
     const gps = useGPS();
     const gnssStatus = useGnssStatus();
     const pose = useFusionOdom();
@@ -461,8 +467,8 @@ export const DiagnosticsPage = () => {
     const anatomyInputs = {
         batteryPct: batteryKnown ? batteryPercent : Number.NaN,
         vBattery: batteryKnown ? (power.v_battery ?? Number.NaN) : Number.NaN,
-        motorTempC: status.mower_motor_temperature ?? 0,
-        escTempC: status.mower_esc_temperature ?? 0,
+        motorTempC: blade.motorTemp,
+        escTempC: blade.escTemp,
         gpsLabel: anatomyGps.label,
         gpsOk: anatomyGps.percent >= 50,
         imuYawDeg: yaw,
@@ -472,7 +478,7 @@ export const DiagnosticsPage = () => {
         // fronts are unencoded casters whose RPM is always 0).
         wheelLeftRpm: wheelRpm.rl,
         wheelRightRpm: wheelRpm.rr,
-        bladeOn: (status.mower_motor_rpm ?? 0) > 0,
+        bladeOn: Number.isFinite(blade.rpm) ? blade.rpm > 0 : undefined,
         rain: status.rain_detected ?? false,
         dockCharging: status.is_charging ?? false,
     };
@@ -1828,10 +1834,10 @@ export const DiagnosticsPage = () => {
                                     <Statistic
                                         className="diagnostics-sign-statistic"
                                         title={w.label}
-                                        value={valid ? w.rpm : undefined}
+                                        value={valid && Number.isFinite(w.rpm) ? w.rpm : "—"}
                                         precision={0}
                                         valueStyle={{
-                                            color: !valid ? colors.muted :
+                                            color: !valid || !Number.isFinite(w.rpm) ? colors.muted :
                                                    Math.abs(w.rpm) > 5 ? colors.success : undefined,
                                         }}
                                     />
@@ -1855,7 +1861,7 @@ export const DiagnosticsPage = () => {
                         {t('diagnosticsPage.tickFactorUnit')}
                         {" "}
                         {t('diagnosticsPage.bodyOmegaLabel')}{" "}
-                        <Typography.Text code>{wheelRpm.bodyOmega.toFixed(3)}</Typography.Text>{" "}
+                        <Typography.Text code>{motorDisplayValue(wheelRpm.bodyOmega, 3)}</Typography.Text>{" "}
                         rad/s.
                         <br/>
                             {t('diagnosticsPage.perWheelTempNote')}
@@ -1883,24 +1889,24 @@ export const DiagnosticsPage = () => {
                         <Col xs={12} lg={4}>
                             <Statistic
                                 title={t('diagnosticsPage.escStatus')}
-                                value={ESC_STATUS[status.mower_esc_status ?? 0]
-                                    ? t(ESC_STATUS[status.mower_esc_status ?? 0].labelKey)
-                                    : t('diagnosticsPage.escUnknown', {code: status.mower_esc_status})}
+                                value={ESC_STATUS[bladeEscStatus ?? -1]
+                                    ? t(ESC_STATUS[bladeEscStatus ?? -1].labelKey)
+                                    : t('diagnosticsPage.escUnknown', {code: bladeEscStatus ?? "—"})}
                                 valueStyle={{
-                                    color: ESC_STATUS[status.mower_esc_status ?? 0]?.color === "error" ? colors.danger
-                                        : ESC_STATUS[status.mower_esc_status ?? 0]?.color === "warning" ? colors.warning
+                                    color: ESC_STATUS[bladeEscStatus ?? -1]?.color === "error" ? colors.danger
+                                        : ESC_STATUS[bladeEscStatus ?? -1]?.color === "warning" ? colors.warning
                                         : undefined,
                                 }}
                             />
                         </Col>
                         <Col xs={12} lg={4}>
-                            <Statistic title={`${t('diagnosticsPage.escTemp')} (°C)`} value={status.mower_esc_temperature} precision={1}/>
+                            <Statistic title={`${t('diagnosticsPage.escTemp')} (°C)`} value={Number.isFinite(blade.escTemp) ? blade.escTemp : "—"} precision={1}/>
                         </Col>
                         <Col xs={12} lg={4}>
-                            <Statistic title={`${t('diagnosticsPage.motorTemp')} (°C)`} value={status.mower_motor_temperature} precision={1}/>
+                            <Statistic title={`${t('diagnosticsPage.motorTemp')} (°C)`} value={Number.isFinite(blade.motorTemp) ? blade.motorTemp : "—"} precision={1}/>
                         </Col>
                         <Col xs={12} lg={4}>
-                            <Statistic title={t('diagnosticsPage.motorRpm')} value={status.mower_motor_rpm} precision={0}/>
+                            <Statistic title={t('diagnosticsPage.motorRpm')} value={Number.isFinite(blade.rpm) ? blade.rpm : "—"} precision={0}/>
                         </Col>
                         <Col xs={24} lg={8}>
                             <BladeDirectionDisplay/>
