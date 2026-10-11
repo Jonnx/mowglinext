@@ -9,15 +9,12 @@ import {ROBOT_URDF} from "../../test/robotUrdf";
 const robot=parseRobotUrdf(ROBOT_URDF)!;
 describe("layered mower",()=>{
     for(const style of MOWER_STYLES) for(const view of ["top","side"] as const) {
-        it(style+" "+view+" retains asset, dimensions, sensors and rear stop in transparent mode",()=>{
+        it(style+" "+view+" retains asset, dimensions and sensors in transparent mode",()=>{
             const {container,rerender}=render(<svg><LayeredMower robot={robot} style={style} view={view} transparent={false}/></svg>);
             const art=container.querySelector('[data-layer="shell-art"]')!.outerHTML;
             const wheels=container.querySelector('[data-layer="wheels"]')!.outerHTML;
             const sensors=Array.from(container.querySelectorAll("[data-sensor]")).map(s=>s.outerHTML);
-            const stop=container.querySelector('[data-layer="stop"]')!;
-            // A rear console may be ahead of the drive axle but must stay in the rear half.
-            expect(Number(stop.getAttribute("data-robot-x"))).toBeLessThan(robot.chassisCenterX);
-            expect(Number(stop.getAttribute("data-robot-x"))).toBeGreaterThan(robot.chassisCenterX-robot.baseLength/2);
+            expect(container.querySelector('[data-layer="stop"]')).toBeNull();
             expect(SHELLS[style].top[2]).toBeLessThan(SHELLS[style].size[0]);
             rerender(<svg><LayeredMower robot={robot} style={style} view={view} transparent/></svg>);
             expect(container.querySelector('[data-layer="shell"]')).toHaveAttribute("opacity","0.24");
@@ -81,7 +78,7 @@ it("map mode renders only shell, drive wheels, GPS and LiDAR",()=>{
     rerender(<svg><LayeredMower robot={robot} style="yardforce" transparent layoutDetails/></svg>);
     expect(container.querySelector('[data-part-art="blade"]')).not.toBeNull();
     expect(container.querySelector('[data-layer="casters"]')).not.toBeNull();
-    expect(container.querySelector('[data-layer="stop"]')).not.toBeNull();
+    expect(container.querySelector('[data-layer="stop"]')).toBeNull();
     expect(container.querySelector('[data-sensor="imu"]')).not.toBeNull();
 });
 

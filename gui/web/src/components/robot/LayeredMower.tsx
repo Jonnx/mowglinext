@@ -63,19 +63,12 @@ function Wheel({x, y, radius, width, view, caster = false, artwork}: {x: number;
 export const LayeredMower = memo(function LayeredMower({robot: r, style, transparent, view = "top", sensors = true, highlightSensors = false, layoutDetails = true, artwork = "full"}: {
     robot: RobotGeometry; style: MowerStyle; transparent: boolean; view?: RobotView; sensors?: boolean; highlightSensors?: boolean; layoutDetails?: boolean; artwork?:"full"|"map";
 }) {
-    const id = useId();
-    const stopAnchor = SHELLS[style].stop;
-    const rearX = r.chassisCenterX+r.baseLength*(.5-stopAnchor.fromFront);
-    const buttonW = Math.min(.095,r.baseWidth*.30), buttonD = Math.min(.04,r.baseLength*.08);
     const bodyZ = r.chassisCenterZ ?? r.baseHeight/2;
     const bladeX = r.bladeX ?? r.chassisCenterX;
     const wheels = view === "top" ? [-1,1].map(sign => <Wheel artwork={artwork} key={sign} view={view}
         x={sign*r.wheelTrack/2} y={-r.wheelXOffset} radius={r.wheelRadius} width={r.wheelWidth}/>)
         : <Wheel artwork={artwork} view={view} x={-r.wheelXOffset} y={-(r.wheelZ ?? 0)} radius={r.wheelRadius} width={r.wheelWidth}/>;
     return <g data-mower-style={style} data-view={view} data-transparent={transparent}>
-        <defs><linearGradient id={id} x2="0" y2="1">
-            <stop stopColor="#fc796d"/><stop offset="1" stopColor="#b52828"/>
-        </linearGradient></defs>
         {layoutDetails && <g data-layer="casters">{(view === "top" ? [-1,1] : [1]).map(sign => <Wheel artwork={artwork} key={sign} view={view} caster
             x={view === "top" ? sign*r.casterTrack/2 : -r.casterXOffset}
             y={view === "top" ? -r.casterXOffset : -(r.casterZ ?? (-r.wheelRadius+r.casterRadius))}
@@ -97,12 +90,6 @@ export const LayeredMower = memo(function LayeredMower({robot: r, style, transpa
                 y={view === "top" ? -r.chassisCenterX-r.baseLength/2 : -bodyZ-r.baseHeight/2}
                 width={view === "top" ? r.baseWidth : r.baseLength} height={view === "top" ? r.baseLength : r.baseHeight}/>
         </g>
-        {layoutDetails && <g data-layer="stop" data-robot-x={rearX}>
-            <rect x={view === "top" ? -buttonW/2 : -rearX-buttonD/2}
-                y={view === "top" ? -rearX-buttonD/2 : -bodyZ-r.baseHeight/2+r.baseHeight*stopAnchor.roofFromTop-.011}
-                width={view === "top" ? buttonW : buttonD} height={view === "top" ? buttonD : .014}
-                rx={.005} fill={`url(#${id})`} stroke="#872b2a" strokeWidth={.002}/>
-        </g>}
         {sensors && (r.sensors ?? []).filter(s=>s.id !== "imu").map(s=><SensorGraphic artwork={artwork} key={s.id} sensor={s} view={view} highlight={highlightSensors}/>)}
     </g>;
 });

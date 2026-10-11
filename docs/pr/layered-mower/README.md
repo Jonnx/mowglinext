@@ -105,10 +105,9 @@ The screenshot example moves the chassis 35 mm rearward relative to the axle,
 with its roof sensors and front casters following the body; wheel radius and
 wheel-centre track are unchanged. These are illustrative fixture values only.
 
-Stop buttons are SVG layers, not generated into the shell images. Each style now
-specifies its own rear-console position and local roof height, in visible-shell
-fractions. Top and side share the same fore/aft position; solid and transparent
-modes retain the same anchor. They do not change URDF geometry or robot controls.
+The separate SVG stop-button overlay and console anchors have been removed.
+Future shell artwork can include a rear stop button directly, following the same
+scaling and transparency as the body. Robot controls and URDF geometry are unchanged.
 
 Validation: 16 renderer tests, TypeScript and targeted ESLint passed. All 22
 Hardware/Sensors/gallery/map browser cases passed after the side and anchor edits.
