@@ -9,6 +9,8 @@ export const MEASUREMENTS = {
     wheel_radius: {...dimension("wheelRadius", "side", .001), precision: 5, min: .00001},
     wheel_track: dimension("wheelTrack", "top", .005),
     blade_radius: dimension("bladeRadius"),
+    blade_x_offset: {...dimension("bladeXOffset", "top", .001), precision: 4, min: undefined},
+    blade_y_offset: {...dimension("bladeYOffset", "top", .001), precision: 4, min: undefined},
     tool_width: dimension("toolWidth"),
     chassis_length: dimension("chassisLength"),
     chassis_width: dimension("chassisWidth"),
@@ -66,9 +68,13 @@ export function measurementGeometry(key: MeasurementKey, r: RobotGeometry, value
         case "wheel_width": return result([-r.wheelTrack/2+r.wheelWidth/2, -r.wheelXOffset], [-r.wheelTrack/2-r.wheelWidth/2, -r.wheelXOffset], "innerTyre", "outerTyre", "x");
         case "wheel_radius": return result(wheel, [wheel[0], wheel[1]+r.wheelRadius], "driveAxle", "tyreEdge", "y");
         case "caster_radius": return result(caster, [caster[0], caster[1]+r.casterRadius], "casterAxle", "tyreEdge", "y");
+        case "blade_x_offset": return result([-(r.bladeY ?? 0), -r.chassisCenterX],
+            [-(r.bladeY ?? 0), -(r.bladeX ?? r.chassisCenterX)], "bodyCentreLine", "bladeCentre", "y");
+        case "blade_y_offset": return result([0, -(r.bladeX ?? r.chassisCenterX)],
+            [-(r.bladeY ?? 0), -(r.bladeX ?? r.chassisCenterX)], "bodyCentreLine", "bladeCentre", "x");
         case "blade_radius": return result([-(r.bladeY ?? 0), -(r.bladeX ?? r.chassisCenterX)],
             [-(r.bladeY ?? 0)+r.bladeRadius, -(r.bladeX ?? r.chassisCenterX)], "bladeCentre", "cuttingEdge", "x");
-        case "tool_width": return result([-value/2, -(r.bladeX ?? r.chassisCenterX)], [value/2, -(r.bladeX ?? r.chassisCenterX)], "swathLeft", "swathRight", "x");
+        case "tool_width": return result([-(r.bladeY ?? 0)-value/2, -(r.bladeX ?? r.chassisCenterX)], [-(r.bladeY ?? 0)+value/2, -(r.bladeX ?? r.chassisCenterX)], "swathLeft", "swathRight", "x");
         case "dock_visual_length": return result([db.x+db.width/2, db.y+db.height], [db.x+db.width/2, db.y], "dockRear", "dockFront", "y");
         case "dock_visual_width": return result([db.x, db.y+db.height/2], [db.x+db.width, db.y+db.height/2], "dockLeft", "dockRight", "x");
         case "dock_visual_x_offset": return result([-dock.centerY, -nominal.centerX], [-dock.centerY, -dock.centerX], "builtInAlignment", "adjustedAlignment", "y");

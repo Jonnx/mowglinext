@@ -99,3 +99,24 @@ describe("sensor artwork visibility", () => {
         expect(visibleRobotGeometry(live, {lidar_enabled: enabled})).toBe(live);
     });
 });
+
+
+describe("offset cutting tool previews", () => {
+    it("places a right-offset blade independently of the wheel axle and retains single-caster layout", () => {
+        const live = parseRobotUrdf(ROBOT_URDF)!;
+        const r = previewRobotGeometry(live, {chassis_center_x:.195,wheel_x_offset:-.005,
+            blade_x_offset:0,blade_y_offset:-.0575,caster_track:0});
+        expect(r.bladeX).toBe(.195);
+        expect(r.bladeY).toBe(-.0575);
+        expect(r.casterTrack).toBe(0);
+        expect(r.wheelXOffset).toBe(-.005);
+        expect(live.bladeY).toBe(0);
+    });
+    it("retains the running blade offset if omitted and follows a moved chassis centre", () => {
+        const live = {...parseRobotUrdf(ROBOT_URDF)!,bladeX:.21,bladeY:-.0575};
+        const r = previewRobotGeometry(live,{chassis_center_x:.3});
+        expect(r.bladeX).toBeCloseTo(.33);
+        expect(r.bladeY).toBe(-.0575);
+        expect(previewRobotGeometry(live,{blade_x_offset:0,blade_y_offset:0})).toMatchObject({bladeX:.18,bladeY:0});
+    });
+});

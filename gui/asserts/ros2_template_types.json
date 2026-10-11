@@ -17,6 +17,8 @@
     "blade_load_rpm_full": "number",
     "blade_load_rpm_min": "number",
     "blade_radius": "number",
+    "blade_x_offset": "number",
+    "blade_y_offset": "number",
     "both_wheels_lift_emergency_ms": "integer",
     "boundary_inner_margin_m": "number",
     "caster_radius": "number",

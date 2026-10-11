@@ -140,6 +140,8 @@ def generate_launch_description() -> LaunchDescription:
     caster_track     = float(robot_params.get("caster_track", 0.36))
     caster_x_offset  = float(robot_params.get("caster_x_offset", 0.40))
     blade_radius     = float(robot_params.get("blade_radius", 0.09))
+    blade_x_offset   = float(robot_params.get("blade_x_offset", 0.0))
+    blade_y_offset   = float(robot_params.get("blade_y_offset", 0.0))
 
     # Sensor positions from config
     lidar_x   = str(robot_params.get("lidar_x", 0.38))
@@ -188,6 +190,8 @@ def generate_launch_description() -> LaunchDescription:
             " caster_track:=", str(caster_track),
             " caster_x_offset:=", str(caster_x_offset),
             " blade_radius:=", str(blade_radius),
+            " blade_x_offset:=", str(blade_x_offset),
+            " blade_y_offset:=", str(blade_y_offset),
             " lidar_x:=", lidar_x,
             " lidar_y:=", lidar_y,
             " lidar_z:=", lidar_z,

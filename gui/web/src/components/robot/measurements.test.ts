@@ -38,7 +38,7 @@ describe("physical measurement endpoints", () => {
         expect(width.from[0]).toBe(b.x); expect(width.to[0]).toBe(b.x+.55);
     });
     it("matches every overlay length to its field without bitmap scaling", () => {
-        const values={wheel_radius:.11,wheel_track:.32,blade_radius:.09,tool_width:.21,
+        const values={wheel_radius:.11,wheel_track:.32,blade_radius:.09,blade_x_offset:.02,blade_y_offset:-.0575,tool_width:.21,
             chassis_length:.54,chassis_width:.36,chassis_height:.14,chassis_z_offset:-.07,chassis_center_x:.16,
             wheel_width:.04,wheel_x_offset:.02,caster_radius:.025,caster_track:.22,caster_x_offset:.34,
             dock_visual_length:.67,dock_visual_width:.46,dock_visual_x_offset:.1,dock_visual_y_offset:-.08};

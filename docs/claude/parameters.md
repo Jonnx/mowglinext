@@ -556,3 +556,5 @@ Follow all six steps, in order. Skipping step 2 is the classic failure: the key 
 **Removing** a parameter: delete it from the template *and* the schema, add it to `settings.go` `retiredParamKeys` so existing installed yamls get scrubbed on the next save, and add it to `useSettingsManager.ts` `HIDDEN_FROM_ADVANCED` (L654) so it stops rendering in the meantime.
 
 Dock Center X and Dock Center Y locate the centre of the full visible footprint, including any side pedestal. X is forward from the parked rear axle; Y is left from the mower centreline. The renderer has no additional per-style lateral offset. Existing saved X values retain their meaning.
+
+Blade geometry: `blade_x_offset` / `blade_y_offset` (both 0.0 m) move the blade centre relative to the chassis centre (+X forward, +Y left). `mowgli.launch.py` forwards both to `mowgli.urdf.xacro`; the Hardware measurement editor previews and saves them. Zero preserves the original chassis-centred blade.

@@ -109,3 +109,24 @@ test("small desktop keeps the active drawing and numeric field in view",async({p
     }).toBe(true);
     await page.screenshot({path:shots+"/desktop-compact.png"});
 });
+
+
+for (const width of [1440,390]) test(`blade side offset uses signed metres and a transparent top preview at ${width}px`,async({page})=>{
+    await page.setViewportSize({width,height:1000});
+    await page.goto("/#/settings?section=hardware");
+    await page.getByText("Chassis & Geometry",{exact:true}).click();
+    const field=page.locator("#setting-blade_y_offset");
+    await field.click();
+    const mobile=width<768;
+    const scope=mobile?page.getByRole("dialog"):page.getByTestId("mower-preview");
+    const input=mobile?scope.locator("#measurement-value"):field;
+    await input.fill("-0.0575");
+    const overlay=scope.getByTestId("measurement-overlay");
+    await expect(overlay).toHaveAttribute("data-measurement","blade_y_offset");
+    await expect(overlay).toContainText("-0.0575 m");
+    await expect(scope.getByTestId("mower-top").locator('[data-mower-style]')).toHaveAttribute("data-transparent","true");
+    await page.waitForTimeout(350); // Let the mobile modal finish its entry transition for the PR capture.
+    await page.screenshot({path:shots+`/blade-offset-${width}.png`});
+    if(mobile) await scope.getByRole("button",{name:"Apply",exact:true}).click();
+    await expect(field).toHaveValue("-0.0575");
+});

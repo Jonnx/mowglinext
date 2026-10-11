@@ -168,6 +168,18 @@
           "default": 0.18,
           "description": "Effective cutting width in metres (2 x blade_radius)."
         },
+        "blade_x_offset": {
+          "type": "number",
+          "title": "Blade Forward Offset",
+          "default": 0.0,
+          "description": "Blade centre offset from the chassis centre in metres; positive forward, negative backward. Used by the blade URDF transform."
+        },
+        "blade_y_offset": {
+          "type": "number",
+          "title": "Blade Side Offset",
+          "default": 0.0,
+          "description": "Blade centre offset from the chassis centre in metres; positive left, negative right. Used by the blade URDF transform."
+        },
         "blade_radius": {
           "type": "number",
           "title": "Blade Radius",

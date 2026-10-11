@@ -97,3 +97,22 @@ def test_default_caster_position_is_fixed_when_chassis_length_changes() -> None:
             origin = robot.find(f"./joint[@name='front_{side}_caster_joint']/origin")
             assert origin is not None
             assert float(origin.attrib["xyz"].split()[0]) == 0.4
+
+
+def test_blade_offsets_preserve_legacy_and_locate_asymmetric_cutting_tool() -> None:
+    cases = [({}, (0.195, 0.0)),
+             ({"blade_x_offset": 0.0, "blade_y_offset": -0.0575}, (0.195, -0.0575)),
+             ({"blade_x_offset": 0.02, "blade_y_offset": 0.04}, (0.215, 0.04))]
+    for offsets, expected in cases:
+        result = subprocess.run(
+            ["xacro", str(_XACRO_FILE), "chassis_center_x:=0.195", "wheel_x_offset:=-0.005",
+             *[f"{key}:={value}" for key, value in offsets.items()]],
+            check=True, capture_output=True, text=True,
+        )
+        robot = ET.fromstring(result.stdout)
+        origin = robot.find("./joint[@name='blade_joint']/origin")
+        xyz = [float(value) for value in origin.attrib["xyz"].split()]
+        assert abs(xyz[0] - expected[0]) < 1e-9
+        assert abs(xyz[1] - expected[1]) < 1e-9
+        # Blade height is unchanged; wheel offset is not added to the blade.
+        assert abs(xyz[2] - (-0.1 + 0.05)) < 1e-9

@@ -2417,6 +2417,10 @@
     }
   },
   "settingsHardware": {
+    "bladeXOffset": "Blade Forward Offset",
+    "bladeYOffset": "Blade Side Offset",
+    "bladeXOffsetTooltip": "Measure from the chassis centre to the blade rotation centre, parallel to the direction of travel. Positive forward, negative backward; zero follows the chassis centre. Metres. Updates the blade position in the robot model and tool transform; does not change cutting width.",
+    "bladeYOffsetTooltip": "Measure sideways from the mower centreline to the blade rotation centre. Positive left, negative right when looking forwards. Metres. Updates the blade position in the robot model and tool transform; does not change cutting width.",
     "robotModel": "Robot Model",
     "robotModelDescription": "Select your mower to auto-fill hardware dimensions.",
     "robotName": "Robot Name",
@@ -4717,6 +4721,7 @@
     "badgeTooltip": "Hardware backend: {{name}} — open the hardware settings"
   },
   "measurementEditor": {
+    "bodyCentreLine": "Chassis centre reference",
     "cancel": "Cancel",
     "apply": "Apply",
     "close": "Close measurement",

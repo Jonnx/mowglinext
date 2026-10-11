@@ -297,6 +297,10 @@ mowgli:
 
     # Mowing blade
     blade_radius: 0.09
+    # Blade centre relative to chassis centre: +X forward, +Y left (m).
+    # Zero retains the original centred blade, including custom chassis centres.
+    blade_x_offset: 0.0
+    blade_y_offset: 0.0
     tool_width: 0.18           # effective cut width (2 × blade_radius)
 
     # -----------------------------------------------------------------

@@ -246,3 +246,28 @@ both GitHub GUI CI jobs passed on commit `718595fb`. The subsequent artwork URL
 change passed 45 focused unit tests, 13 browser cases and touched-file lint.
 Browser coverage rejects unversioned artwork requests and verifies painting,
 missing-mask fallback, shared appearance settings and desktop/mobile map views.
+
+
+## Offset blade geometry
+
+Hardware → Chassis & Geometry now includes **Blade Forward Offset** and **Blade Side Offset**.
+These are signed metres from the chassis centre: positive forward / left, negative backward / right.
+Zero preserves existing geometry, including custom chassis centres. Four decimal places retain
+57.5 mm as `-0.0575` without rounding. The blade's X position is `chassis_center_x + blade_x_offset`.
+For a chassis centre at X = 0.195 m, offsets (0, -0.0575) put the blade at (0.195, -0.0575),
+independent of `wheel_x_offset`. The live URDF, previews and measurement endpoints agree.
+The map continues to omit internal components. These offsets do not change blade radius or tool width.
+
+Desktop uses the existing top-view overlay; mobile uses the same measurement dialog with Apply/Cancel.
+The top shell is temporarily transparent while measuring the blade. Previously saved settings are not migrated.
+
+![Desktop blade offset](blade-offset-desktop.png)
+![Mobile blade offset](blade-offset-mobile.png)
+
+Physical acceptance: **HARDWARE_REQUIRED** for any off-centre robot. On the exact PR commit,
+record the robot unit, firmware image and running ROS image/URDF. With power isolated and blades
+removed, measure the blade rotation centre from the chassis centre; check the signed URDF
+`blade_joint` X/Y against those measurements (within measurement uncertainty). Confirm zero offsets
+retain the previous transform and that wheel/sensor transforms are unchanged. Navigation acceptance
+for an asymmetric cutting tool requires a separate supervised field run; software tests alone do not
+establish its coverage or edge-clearance behaviour.

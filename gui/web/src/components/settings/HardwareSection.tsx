@@ -318,6 +318,22 @@ export const HardwareSection: React.FC<Props> = ({
                             </Form.Item>
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
+                            <Form.Item htmlFor="setting-blade_x_offset" data-setting-key="blade_x_offset" label={fieldLabel("blade_x_offset", t("settingsHardware.bladeXOffset"))} tooltip={t("settingsHardware.bladeXOffsetTooltip")}>
+                                <InputNumber {...measurementEditor.fieldProps("blade_x_offset")} id="setting-blade_x_offset"
+                                    aria-label={t("settingsHardware.bladeXOffset") + ", m"}
+                                    value={typeof values.blade_x_offset === "number" ? values.blade_x_offset : 0} onChange={v => onChange("blade_x_offset", v)}
+                                    step={0.001} precision={4} style={{width: "100%"}} addonAfter="m"/>
+                            </Form.Item>
+                        </Col>
+                        <Col xs={12} sm={8} lg={6}>
+                            <Form.Item htmlFor="setting-blade_y_offset" data-setting-key="blade_y_offset" label={fieldLabel("blade_y_offset", t("settingsHardware.bladeYOffset"))} tooltip={t("settingsHardware.bladeYOffsetTooltip")}>
+                                <InputNumber {...measurementEditor.fieldProps("blade_y_offset")} id="setting-blade_y_offset"
+                                    aria-label={t("settingsHardware.bladeYOffset") + ", m"}
+                                    value={typeof values.blade_y_offset === "number" ? values.blade_y_offset : 0} onChange={v => onChange("blade_y_offset", v)}
+                                    step={0.001} precision={4} style={{width: "100%"}} addonAfter="m"/>
+                            </Form.Item>
+                        </Col>
+                        <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-caster_radius" data-setting-key="caster_radius" label={fieldLabel("caster_radius", t("settingsHardware.casterRadius"))} tooltip={t("settingsHardware.casterRadiusTooltip")}>
                                 <InputNumber {...measurementEditor.fieldProps("caster_radius")} aria-label={t("settingsHardware.casterRadius") + ", m"} aria-description={t("settingsHardware.casterRadiusTooltip")} id="setting-caster_radius"
                                     value={values.caster_radius}
