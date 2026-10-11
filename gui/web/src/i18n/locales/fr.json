@@ -2446,7 +2446,7 @@
     "modelConfirmOk": "Appliquer le préréglage",
     "modelConfirmCancel": "Annuler",
     "casterXOffset": "Position avant/arrière des roulettes",
-    "casterXOffsetTooltip": "Mesurez horizontalement de base_link (normalement le centre de l’essieu moteur arrière) aux axes des roulettes orientées vers l’avant. Positif vers l’avant, négatif vers l’arrière. Fixe leur position dans le modèle et le dessin, indépendamment de la longueur du châssis. Les valeurs des modèles sont des points de départ provisoires : mesurez votre robot.",
+    "casterXOffsetTooltip": "Mesurez horizontalement du centre de l’essieu moteur arrière aux axes des roulettes orientées vers l’avant. Positif vers l’avant, négatif vers l’arrière. Si le décalage X des roues est non nul, ajoutez-le à cette mesure. Fixe leur position dans le modèle et le dessin, indépendamment de la longueur du châssis. Les valeurs des modèles sont des points de départ provisoires : mesurez votre robot.",
     "chassisZOffset": "Décalage vertical du châssis",
     "chassisZOffsetTooltip": "Mesurez la hauteur du bas de la carrosserie au-dessus du sol, puis soustrayez la hauteur de l’essieu moteur. Le résultat situe le bas de la carrosserie par rapport à base_link : négatif sous l’essieu, positif au-dessus. Exemple : 0,050 m de garde au sol moins 0,100 m de hauteur d’essieu donne -0,050 m. Déplace verticalement la carrosserie sans déplacer roues, lame ou capteurs.",
     "chassisLengthTooltip": "Mesurez la distance horizontale en ligne droite entre les bords arrière et avant de la carrosserie, pare-chocs compris, sans suivre la courbure de la coque. Définit la longueur de la coque, du modèle de collision du robot et de son empreinte de navigation.",

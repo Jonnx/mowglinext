@@ -5,7 +5,9 @@ It is a scaled illustration, not CAD or collision geometry.
 
 - Configure the shell once in Hardware. Sensors and Map inherit the selection.
 - Five shells: Rounded, Sculpted, Utility, Yardforce-inspired, RM1000-inspired.
-- Style and transparency are display preferences saved in this browser.
+- Style and Hardware transparency are display preferences saved in this browser.
+- Sensors starts transparent each time it opens; its toggle affects only that
+  editor session (both top and side). The map always remains opaque.
 - All top views face up; all side views face left. There is no separate stop-button
   layer; future shell artwork can include a rear stop button if appropriate.
 - Transparent mode changes the opacity of the same shell art; it reveals the

@@ -327,6 +327,8 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
     const liveRobot = useRobotDescription();
     const robot = useMemo(() => previewRobotGeometry(liveRobot, values), [liveRobot, values]);
     const [visual] = useMowerVisual(values.mower_model);
+    // Each sensor-layout session starts see-through, independently of Hardware.
+    const [transparent, setTransparent] = useState(true);
     const [dragBounds, setDragBounds] = useState<Bounds | null>(null);
     const bounds = dragBounds ?? assemblyBounds(robot, "top", .12);
     const svgWidth = isMobile ? 340 : 520;
@@ -470,7 +472,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
     }, [cx, cy, SCALE, mode, toSvg]);
 
     const robotBody = liveRobot.fromUrdf ? <g transform={`translate(${cx} ${cy}) scale(${SCALE})`}>
-        <LayeredMower robot={robot} {...visual} sensors={false}/>
+        <LayeredMower robot={robot} {...visual} transparent={transparent} sensors={false}/>
         <path d="M -.01 0 H .01 M 0 -.01 V .01" stroke="#a8ccbe" strokeWidth={.002}/>
     </g> : null;
 
@@ -525,7 +527,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
                     />
 
                     <g transform={`translate(${cx} ${cy}) scale(${SCALE})`} style={{pointerEvents:"none"}}
-                        opacity={meta.id === "imu" && !visual.transparent ? .45 : 1}>
+                        opacity={meta.id === "imu" && !transparent ? .45 : 1}>
                         {robot.sensors?.filter(sensor=>sensor.id === meta.id).map(sensor=>
                             <SensorGraphic key={sensor.id} sensor={sensor} view="top" highlight/>)}
                     </g>
@@ -580,7 +582,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
                 </g>
             );
         },
-        [cx, cy, SCALE, svgUnitsPerPixel, robot, visual.transparent, dragging, rotating, hoveredSensor, getSensorValue, handlePointerDown, handleRotateDown, mode, colors, toSvg]
+        [cx, cy, SCALE, svgUnitsPerPixel, robot, transparent, dragging, rotating, hoveredSensor, getSensorValue, handlePointerDown, handleRotateDown, mode, colors, toSvg]
     );
 
     // Scale labels
@@ -643,7 +645,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
                 {t("robotComponentEditor.dragSensorsHint")}
             </Typography.Paragraph>
 
-            <MowerVisualControls/>
+            <MowerVisualControls transparent={transparent} onTransparencyChange={setTransparent}/>
             <Typography.Paragraph type="secondary">{t(liveRobot.fromUrdf ? "mowerVisual.previewNote" : "mowerVisual.waiting")}</Typography.Paragraph>
             <Row gutter={[16, 16]}>
                 <Col xs={24} lg={14}>
@@ -672,7 +674,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
                             {liveRobot.fromUrdf && [...SENSORS].reverse().map(renderSensor)}
                         </svg>
                     </div>
-                    {liveRobot.fromUrdf && <MowerView robot={robot} view="side" highlightSensors maxHeight={190}/>}
+                    {liveRobot.fromUrdf && <MowerView robot={robot} view="side" transparent={transparent} highlightSensors maxHeight={190}/>}
                 </Col>
 
                 <Col xs={24} lg={10}>

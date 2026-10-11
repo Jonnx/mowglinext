@@ -2450,7 +2450,7 @@
     "modelConfirmOk": "Apply preset",
     "modelConfirmCancel": "Cancel",
     "casterXOffset": "Caster Front/Back Position",
-    "casterXOffsetTooltip": "Measure horizontally from base_link (normally the rear drive-axle centre) to the caster wheel axles with the casters pointing straight ahead. Positive is forward, negative rearward. Fixes both caster positions in the robot model and artwork, independently of chassis length. Built-in model values are provisional starting points: measure your robot.",
+    "casterXOffsetTooltip": "Measure horizontally from the rear drive-axle centre to the caster wheel axles with the casters pointing straight ahead. Positive is forward, negative rearward. If Wheel X Offset is non-zero, add it to this measurement. Fixes both caster positions in the robot model and artwork, independently of chassis length. Built-in model values are provisional starting points: measure your robot.",
     "chassisZOffset": "Chassis vertical offset",
     "chassisZOffsetTooltip": "Measure the height of the body bottom above the ground, then subtract the drive-axle height. This is the body bottom relative to base_link: negative is below the axle, positive above. For example, 0.050 m clearance minus 0.100 m axle height gives -0.050 m. Moves the body vertically without moving wheels, blade or sensors.",
     "chassisLengthTooltip": "Measure the straight horizontal distance from the rear body edge to the front body edge, including the bumper; do not follow the curved shell. Sets the shell and robot collision-model length and the navigation footprint.",
