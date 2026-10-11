@@ -368,3 +368,22 @@ rear axle, with 220 mm drive wheels. This puts the shell top 70 mm above the axl
 and the bottom 40 mm above ground. These are photo-proportioned illustration
 values, not verified manufacturer dimensions or a hardware preset. Shell selection
 must never apply them to a real mower configuration.
+
+
+### Worx tray-centre alignment (2026-10-11)
+
+Worx Dock Center X/Y are display offsets of the slatted platform from the chassis
+centre/centreline. With both at zero the mower is centred on the tray. Top source
+registration is x=355 within crop [47,53,721,772]; the charging pedestal extends
+right of the tray and does not define its centre. The full configured dock width
+still sizes the complete artwork. Hardware, Sensors and map use the same anchor.
+Standard dock coordinates retain their rear-axle/full-footprint convention.
+Solid setup views use 70% dock opacity; transparent views use 18%.
+
+
+Dock registration is declared in `dockAssets.ts`: part source, nominal height,
+reference origin, built-in forward/left offset, and top/side anchor within the
+cropped footprint. `dockGeometry.ts` and `DockGraphic.tsx` have no model-specific
+positioning branches. A new dock is added as metadata; mower `shellAssets.ts`
+physical frames similarly preserve its true chassis extent despite image padding
+or wheel openings. Both map and setup previews consume the same registration.

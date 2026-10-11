@@ -245,7 +245,7 @@ test("Worx shallow chassis preview and disabled scanner artwork", async ({page})
         chassis_height: .14, chassis_z_offset: -.07, chassis_center_x: .16,
         wheel_radius: .11, wheel_width: .04, wheel_track: .32, caster_radius: .025,
         caster_track: .22, caster_x_offset: .34, gps_x: .20, gps_y: 0, gps_z: .08,
-        lidar_enabled: false, lidar_x: .24, lidar_y: 0, lidar_z: .1};
+        dock_visual_x_offset: 0, dock_visual_y_offset: 0, lidar_enabled: false, lidar_x: .24, lidar_y: 0, lidar_z: .1};
     await page.route("**/api/settings/yaml", route => route.fulfill({json: example}));
     await page.addInitScript(() => localStorage.setItem("mowgli.robot-visual.v1",
         JSON.stringify({style: "worx", dockAppearance: "worx", transparent: false})));
@@ -259,6 +259,8 @@ test("Worx shallow chassis preview and disabled scanner artwork", async ({page})
         const img = new Image(); img.src = e.getAttribute('href')!; return img.decode();
     })));
     await preview.screenshot({path: shots + "/worx-shallow-hardware.png"});
+    await preview.getByRole("switch").click();
+    await preview.screenshot({path: shots + "/worx-shallow-transparent.png"});
     await page.goto("/#/settings?section=sensors");
     await expect(page.locator('[data-sensor-control="gps"]')).toBeVisible();
     await expect(page.locator('[data-sensor="lidar"], [data-sensor-control="lidar"]')).toHaveCount(0);

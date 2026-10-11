@@ -1,6 +1,6 @@
 import {resolveDockAppearance} from "../constants/mowerAppearances";
 import {DockGraphic} from "./robot/DockGraphic";
-import {dockedAssemblyBounds, dockVisualGeometry, SETUP_DOCK_OPACITY} from "./robot/dockGeometry";
+import {dockedAssemblyBounds, dockVisualGeometry, setupDockOpacity} from "./robot/dockGeometry";
 import {LayeredMower, SensorGraphic} from "./robot/LayeredMower";
 import {MowerVisualControls, MowerView} from "./robot/MowerPreview";
 import {previewRobotGeometry, type Bounds} from "../utils/robotModel";
@@ -332,7 +332,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
     // Each sensor-layout session starts see-through, independently of Hardware.
     const [transparent, setTransparent] = useState(true);
     const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? "standard";
-    const dockGeometry = dockVisualGeometry(values, robot.wheelXOffset);
+    const dockGeometry = dockVisualGeometry(values, robot.wheelXOffset, dockStyle, robot.chassisCenterX);
     const [dragBounds, setDragBounds] = useState<Bounds | null>(null);
     const bounds = dragBounds ?? dockedAssemblyBounds(robot, "top", .12,dockStyle,dockGeometry);
     const svgWidth = isMobile ? 340 : 520;
@@ -476,7 +476,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
     }, [cx, cy, SCALE, mode, toSvg]);
 
     const robotBody = liveRobot.fromUrdf ? <g transform={`translate(${cx} ${cy}) scale(${SCALE})`}>
-        <g opacity={SETUP_DOCK_OPACITY} pointerEvents="none"><DockGraphic geometry={dockGeometry} style={dockStyle}/></g>
+        <g opacity={setupDockOpacity(transparent)} pointerEvents="none"><DockGraphic geometry={dockGeometry} style={dockStyle}/></g>
         <LayeredMower robot={robot} {...visual} transparent={transparent} sensors={false}/>
         <path d="M -.01 0 H .01 M 0 -.01 V .01" stroke="#a8ccbe" strokeWidth={.002}/>
     </g> : null;

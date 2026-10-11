@@ -377,7 +377,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
             latitude={mowerFeature.geometry.coordinates[1]} headingRad={mowerHeadingRad}/>
         : null;
     const dockImageMarker = styledDockReady && dockFeature instanceof DockFeatureBase
-        ? <StyledDockMarker geometry={dockVisualGeometry(settings, robotGeometry.wheelXOffset)} style={dockAppearance.layered} longitude={dockFeature.geometry.coordinates[0]} latitude={dockFeature.geometry.coordinates[1]} headingRad={dockHeadingRad}/>
+        ? <StyledDockMarker geometry={dockVisualGeometry(settings, robotGeometry.wheelXOffset, dockAppearance.layered, robotGeometry.chassisCenterX)} style={dockAppearance.layered} longitude={dockFeature.geometry.coordinates[0]} latitude={dockFeature.geometry.coordinates[1]} headingRad={dockHeadingRad}/>
         : dockImage && dockFeature instanceof DockFeatureBase && dockHasValidPose && dockHeadingRad !== undefined
         ? <MapImageMarker
             image={dockImage}

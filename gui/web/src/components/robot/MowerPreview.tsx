@@ -1,6 +1,6 @@
 import {resolveDockAppearance} from "../../constants/mowerAppearances";
 import {DockGraphic} from "./DockGraphic";
-import {dockedAssemblyBounds, previewDockOffsetY, dockVisualGeometry, SETUP_DOCK_OPACITY, type DockVisualGeometry} from "./dockGeometry";
+import {dockedAssemblyBounds, previewDockOffsetY, dockVisualGeometry, setupDockOpacity, type DockVisualGeometry} from "./dockGeometry";
 import {assemblyBounds} from "./assemblyBounds";
 import {Card, Flex, Select, Switch, Typography} from "antd";
 import {useTranslation} from "react-i18next";
@@ -34,7 +34,7 @@ export function MowerView({robot, view, maxHeight = 300, highlightSensors = fals
         <figcaption style={{fontSize:12,opacity:.7,marginBottom:8}}>{t("mowerVisual."+view)}</figcaption>
         <svg role="img" aria-label={t("mowerVisual."+view)} data-testid={`mower-${view}`}
             viewBox={[b.x,b.y,b.width,b.height].join(" ")} width="100%" style={{display:"block",height:maxHeight}}>
-            {showDock && <g opacity={SETUP_DOCK_OPACITY} pointerEvents="none">
+            {showDock && <g opacity={setupDockOpacity(transparent ?? preference.transparent)} pointerEvents="none">
                 <DockGraphic geometry={dockGeometry} view={view} style={dockStyle} offsetY={previewDockOffsetY(robot,view)}/>
             </g>}
             <LayeredMower robot={robot} {...preference} transparent={transparent ?? preference.transparent} view={view} highlightSensors={highlightSensors}/>
@@ -49,7 +49,9 @@ export function MowerPreview({values, compact = false}: {values: Record<string, 
     const {t} = useTranslation();
     const live = useRobotDescription();
     const robot = previewRobotGeometry(live,values);
-    const dockGeometry = dockVisualGeometry(values, robot.wheelXOffset);
+    const [visual] = useMowerVisual(values.mower_model);
+    const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? "standard";
+    const dockGeometry = dockVisualGeometry(values, robot.wheelXOffset, dockStyle, robot.chassisCenterX);
     return <Card size="small" title={t("mowerVisual.title")} style={{marginBottom:16}} data-testid="mower-preview">
         {!compact && <MowerVisualControls chooseStyle/>}
         {!live.fromUrdf ? <Typography.Text type="secondary">{t("mowerVisual.waiting")}</Typography.Text> : <>

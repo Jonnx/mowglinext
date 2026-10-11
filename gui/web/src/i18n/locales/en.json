@@ -2468,9 +2468,9 @@
     "dock_visual_x_offset": "Dock Center X",
     "dock_visual_lengthTooltip": "Measure the full dock from front to back, including the charging head, in metres. Scales its visible length in previews and on the map; does not move the docking pose.",
     "dock_visual_widthTooltip": "Measure the full dock from left to right, including a side charging pedestal, in metres. Scales its visible width in top views and on the map.",
-    "dock_visual_x_offsetTooltip": "With the mower parked, measure from the rear wheel axle to the centre of the full dock footprint along the mower’s length, in metres. Positive is forwards; negative is backwards. Moves only the illustration, not the calibrated docking pose.",
+    "dock_visual_x_offsetTooltip": "Worx dock: measure forwards/backwards from the chassis centre to the centre of the slatted platform. Zero centres the platform under the mower. Other docks: measure from the rear axle to the full footprint centre. Positive is forwards. Metres; illustration only, not the calibrated docking pose.",
     "dock_visual_y_offset": "Dock Center Y",
-    "dock_visual_y_offsetTooltip": "With the mower parked, measure from its centreline to the centre of the full dock footprint, including any side charging pedestal, in metres. Positive is to the mower’s left; negative is to its right. Moves the illustration sideways in top views and on the map; does not change docking calibration."
+    "dock_visual_y_offsetTooltip": "Worx dock: lateral displacement of the slatted platform centre from the mower centreline; zero aligns them, excluding the side charging pedestal. Other docks use the full footprint centre. Positive is left, negative is right. Metres; illustration only."
   },
   "settingsDriveMotor": {
     "savedLiveTitle": "Saved and applied live",
