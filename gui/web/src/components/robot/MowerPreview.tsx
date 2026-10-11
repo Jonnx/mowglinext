@@ -1,3 +1,5 @@
+import {DEFAULT_DOCK_STYLE} from "./dockAssets";
+import {SHELLS} from "./shellAssets";
 import type {MeasurementEditorState} from "./useMeasurementEditor";
 import {Button} from "antd";
 import {MeasurementDialog, MeasurementLegend} from "./MeasurementEditor";
@@ -17,11 +19,11 @@ export {MowerView} from "./MowerView";
 export function MowerVisualControls({values = {}, onStyleChange, transparent, onTransparencyChange}: {
     values?: Record<string, unknown>; onStyleChange?: (style: MowerStyle) => void; transparent?: boolean; onTransparencyChange?: (value: boolean) => void;
 }) {
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     const [preference, setPreference] = useMowerVisual(values);
     return <Flex wrap gap={12} align="center" style={{marginBottom:12}}>
         {onStyleChange && <Select aria-label={t("mowerVisual.bodyStyle")} value={preference.style} style={{minWidth:150}}
-            options={MOWER_STYLES.map(style => ({value:style,label:t("mowerVisual."+style)}))}
+            options={MOWER_STYLES.map(style => ({value:style,label:SHELLS[style].label[i18n.resolvedLanguage?.startsWith("fr") ? "fr" : "en"]}))}
             onChange={onStyleChange}/>}
         <label style={{display:"inline-flex",gap:8,alignItems:"center"}}>
             <Switch size="small" checked={transparent ?? preference.transparent} onChange={value=>onTransparencyChange ? onTransparencyChange(value) : setPreference({transparent: value})}/>
@@ -35,7 +37,7 @@ export function MowerPreview({values, compact = false, editor, onStyleChange}: {
     const live = useRobotDescription();
     const robot = previewRobotGeometry(live,values);
     const [visual] = useMowerVisual(values);
-    const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? "standard";
+    const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? DEFAULT_DOCK_STYLE;
     const dockGeometry = dockVisualGeometry(values, robot.wheelXOffset, dockStyle, robot.chassisCenterX);
     const measurementValues = {...DOCK_VISUAL_DEFAULTS,...values,caster_x_offset:resolveCasterPosition(values)};
     const measurement = editor?.active && !editor.invalid ? measurementGeometry(editor.active,robot,measurementValues,dockStyle) : null;

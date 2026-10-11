@@ -1,3 +1,4 @@
+import {DEFAULT_DOCK_STYLE} from "./dockAssets";
 import {useTranslation} from "react-i18next";
 import {useMowerVisual} from "../../hooks/useMowerVisual";
 import type {RobotGeometry} from "../../hooks/useRobotDescription";
@@ -13,7 +14,7 @@ import {MeasurementOverlay} from "./MeasurementOverlay";
 export function MowerView({values = {}, robot, view, maxHeight = 300, highlightSensors = false, transparent, showDock = false, dockGeometry, measurement}: {values?: Record<string, unknown>; robot: RobotGeometry; view: RobotView; maxHeight?: number; highlightSensors?: boolean; transparent?: boolean; showDock?: boolean; dockGeometry?: DockVisualGeometry; measurement?: Measurement}) {
     const {t} = useTranslation();
     const [preference] = useMowerVisual(values);
-    const dockStyle = resolveDockAppearance(preference.dockAppearance).layered ?? "standard";
+    const dockStyle = resolveDockAppearance(preference.dockAppearance).layered ?? DEFAULT_DOCK_STYLE;
     const b = showDock ? dockedAssemblyBounds(robot,view,.05,dockStyle,dockGeometry) : assemblyBounds(robot,view,.05);
     const frame = measurement ? measurementLayout(measurement,b).bounds : b;
     return <figure style={{margin:0,minWidth:0,flex:"1 1 200px"}}>

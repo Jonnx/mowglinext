@@ -1,4 +1,6 @@
-import type {MowerStyle} from "../hooks/useMowerVisual";
+import {APPEARANCE_REGISTRY} from "../components/robot/appearanceRegistry";
+import type {MowerStyle} from "../components/robot/shellAssets";
+import type {LayeredDockStyle} from "../components/robot/dockAssets";
 
 /** Display-only dock registry. Hardware appearance pairs reference these IDs;
  * image dimensions are visual metadata, never ROS/collision calibration.
@@ -23,64 +25,29 @@ export interface MapImageAppearance {
     forwardOffsetM?: number;
 }
 
-export type DockAppearanceId = "marker" | "styled" | "worx" | "generic" | "biltema-rm1000";
+export type DockAppearanceId = (typeof APPEARANCE_REGISTRY.docks)[LayeredDockStyle]["appearanceId"] | keyof typeof APPEARANCE_REGISTRY.legacyDocks;
 
 export interface DockAppearance {
     id: DockAppearanceId;
     labelKey: string;
     image?: MapImageAppearance;
-    layered?: "standard" | "worx";
+    layered?: LayeredDockStyle;
     /** Optional foreground cutout for the dock's center tongue over the mower. */
     foregroundClipPath?: string;
 }
 
 export const DOCK_FOREGROUND_CLIP_PATH = "polygon(43% 78%, 57% 78%, 68% 83%, 68% 92%, 59% 96%, 41% 96%, 32% 92%, 32% 83%)";
 
-export const DOCK_APPEARANCES: Record<DockAppearanceId, DockAppearance> = {
-    marker: {id: "marker", labelKey: "mapToolbar.dockAppearanceMarker"},
-    styled: {id: "styled", labelKey: "mowerVisual.dockStyle", layered: "standard"},
-    worx: {id: "worx", labelKey: "mowerVisual.worxDock", layered: "worx"},
-    generic: {
-        id: "generic",
-        labelKey: "mapToolbar.dockAppearanceGeneric",
-        foregroundClipPath: DOCK_FOREGROUND_CLIP_PATH,
-        image: {
-            src: "/assets/robots/generic/dock.webp",
-            altKey: "mapToolbar.dockAppearanceGenericAlt",
-            // Nominal visual footprint inherited from the RM1000 source photo;
-            // it is only a sizing approximation for other charging stations.
-            visibleLengthM: 0.63,
-            visibleLengthFraction: 0.951,
-            visibleWidthM: 0.46,
-            visibleWidthFraction: 0.678,
-            // Visually calibrated against the docked RM1000 photo; the docking
-            // tongue is layered over the mower while the outer station stays behind it.
-            poseAnchor: {x: 0.5, y: 0.16},
-            headingOffsetRad: Math.PI,
-        },
-    },
-    "biltema-rm1000": {
-        id: "biltema-rm1000",
-        labelKey: "mapToolbar.dockAppearanceBiltemaRm1000",
-        foregroundClipPath: DOCK_FOREGROUND_CLIP_PATH,
-        image: {
-            src: "/assets/robots/biltema-rm1000/dock.webp",
-            altKey: "mapToolbar.dockAppearanceBiltemaRm1000Alt",
-            visibleLengthM: 0.63,
-            visibleLengthFraction: 0.944,
-            visibleWidthM: 0.46,
-            visibleWidthFraction: 0.667,
-            // Visually calibrated against the docked RM1000 photo; the docking
-            // tongue is layered over the mower while the outer station stays behind it.
-            poseAnchor: {x: 0.5, y: 0.16},
-            headingOffsetRad: Math.PI,
-        },
-    },
-};
+export const DOCK_APPEARANCES = {
+    ...APPEARANCE_REGISTRY.legacyDocks,
+    ...Object.fromEntries(Object.entries(APPEARANCE_REGISTRY.docks).map(([layered, dock]) =>
+        [dock.appearanceId, {id: dock.appearanceId, labelKey: "mowerVisual.dockStyle", layered}])),
+} as Record<DockAppearanceId, DockAppearance>;
+export const DEFAULT_DOCK_APPEARANCE = APPEARANCE_REGISTRY.docks[APPEARANCE_REGISTRY.defaultDock].appearanceId;
 
 /** Docks are paired with the hardware appearance; there is no separate map override. */
 export function resolveDockAppearance(value: unknown): DockAppearance {
-    return Object.values(DOCK_APPEARANCES).find(({id}) => id === value) ?? DOCK_APPEARANCES.styled;
+    return Object.values(DOCK_APPEARANCES).find(({id}) => id === value) ?? DOCK_APPEARANCES[DEFAULT_DOCK_APPEARANCE];
 }
 
 export function shouldDisplayMapImage(
@@ -94,7 +61,6 @@ export function shouldDisplayMapImage(
 
 /** Explicit shell/dock pairs. Existing bodies share the basic dock artwork until
  * their own matching station is available; no duplicate bitmap files needed. */
-export const MOWER_STYLE_DOCKS: Record<MowerStyle, DockAppearanceId> = {
-    rounded: "styled", sculpted: "styled", utility: "styled",
-    yardforce: "styled", rm1000: "styled", worx: "worx",
-};
+export const MOWER_STYLE_DOCKS = Object.fromEntries(
+    Object.entries(APPEARANCE_REGISTRY.shells).map(([id, shell]) => [id, shell.dock]),
+) as Record<MowerStyle, DockAppearanceId>;

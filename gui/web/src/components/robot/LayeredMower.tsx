@@ -69,15 +69,14 @@ export const LayeredMower = memo(function LayeredMower({robot: r, style, transpa
     const wheels = view === "top" ? [-1,1].map(sign => <Wheel artwork={artwork} key={sign} view={view}
         x={sign*r.wheelTrack/2} y={-r.wheelXOffset} radius={r.wheelRadius} width={r.wheelWidth}/>)
         : <Wheel artwork={artwork} view={view} x={-r.wheelXOffset} y={-(r.wheelZ ?? 0)} radius={r.wheelRadius} width={r.wheelWidth}/>;
-    // Worx drive wheels sit outside the side body panels (the reference shows
-    // the complete wheel face). Keep their physical URDF placement unchanged.
-    const externalSideWheels = style === "worx" && view === "side";
+    // Layering is artwork metadata; physical wheel placement always comes from URDF.
+    const wheelsOverShell = SHELLS[style].wheelsOverShell?.[view] === true;
     return <g data-mower-style={style} data-view={view} data-transparent={transparent}>
         {layoutDetails && <g data-layer="casters">{(view === "top" ? [-1,1] : [1]).map(sign => <Wheel artwork={artwork} key={sign} view={view} caster
             x={view === "top" ? sign*r.casterTrack/2 : -r.casterXOffset}
             y={view === "top" ? -r.casterXOffset : -(r.casterZ ?? (-r.wheelRadius+r.casterRadius))}
             radius={r.casterRadius} width={r.casterWidth ?? r.casterRadius}/>)}</g>}
-        {!externalSideWheels && <g data-layer="wheels">{wheels}</g>}
+        {!wheelsOverShell && <g data-layer="wheels">{wheels}</g>}
         {layoutDetails && <g data-layer="blade" opacity={transparent ? 1 : 0}>
             <g transform={`translate(${view === "top" ? -(r.bladeY ?? 0) : -bladeX} ${view === "top" ? -bladeX : -(r.bladeZ ?? 0)})`}>
                 <PartSprite artwork={artwork} part="blade" view={view} width={r.bladeRadius*2}
@@ -93,7 +92,7 @@ export const LayeredMower = memo(function LayeredMower({robot: r, style, transpa
                 y={view === "top" ? -r.chassisCenterX-r.baseLength/2 : -bodyZ-r.baseHeight/2}
                 width={view === "top" ? r.baseWidth : r.baseLength} height={view === "top" ? r.baseLength : r.baseHeight}/>
         </g>
-        {externalSideWheels && <g data-layer="wheels">{wheels}</g>}
+        {wheelsOverShell && <g data-layer="wheels">{wheels}</g>}
         {sensors && (r.sensors ?? []).filter(s=>s.id !== "imu").map(s=><SensorGraphic artwork={artwork} key={s.id} sensor={s} view={view} highlight={highlightSensors}/>)}
     </g>;
 });

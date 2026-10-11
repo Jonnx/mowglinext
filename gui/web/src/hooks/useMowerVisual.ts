@@ -2,11 +2,12 @@ import {useSyncExternalStore} from "react";
 import {MOWER_MODELS} from "../constants/mowerModels";
 import {MOWER_STYLE_DOCKS, type DockAppearanceId} from "../constants/mowerAppearances";
 
-export const MOWER_STYLES = ["rounded", "sculpted", "utility", "yardforce", "rm1000", "worx"] as const;
-export type MowerStyle = typeof MOWER_STYLES[number];
+import {APPEARANCE_REGISTRY} from "../components/robot/appearanceRegistry";
+import {MOWER_STYLES, type MowerStyle} from "../components/robot/shellAssets";
+export {MOWER_STYLES, type MowerStyle} from "../components/robot/shellAssets";
 /** Display-only pair, independent of physical geometry. */
 export type MowerVisualPreset = {style: MowerStyle; dockAppearance: DockAppearanceId};
-export const DEFAULT_MOWER_VISUAL: MowerVisualPreset = {style: "sculpted", dockAppearance: "styled"};
+export const DEFAULT_MOWER_VISUAL: MowerVisualPreset = {style: APPEARANCE_REGISTRY.defaultShell, dockAppearance: MOWER_STYLE_DOCKS[APPEARANCE_REGISTRY.defaultShell]};
 
 /** Blank/unrecognised settings follow the model, without writing a browser's old
  * preference to the mower. Explicit selections persist through Settings Save. */

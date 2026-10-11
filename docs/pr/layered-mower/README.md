@@ -149,3 +149,23 @@ ignored rather than imported over mower configuration. Transparency remains a
 local editing aid; Map always uses an opaque shell. Saving only appearance needs
 no ROS restart. Regression coverage includes unsaved reload, save payload, a fresh
 browser, Sensors and Map.
+
+
+### Extensible artwork registry
+
+All shell/dock choices, bilingual labels, pairings, source files, bounds, physical
+frames, anchors, built-in offsets, map sizes and wheel layering now come from
+`gui/web/src/components/robot/appearanceRegistry.ts`. Asset modules expose typed
+views of that catalog; selectors and renderers do not repeat its ID lists.
+
+To add an appearance, supply PNG artwork and registry metadata, then run
+`npm run generate:appearances` in `gui/web`. It generates the backend shell enum
+and compact map derivatives. Build checks validate image dimensions, atlas cells,
+frames and references; tests enforce enum parity. A synthetic new shell/dock pair
+is tested through resolution and both rendered views to catch hardcoded branches.
+See the component README for the complete contributor workflow.
+
+Registry cleanup validation: 7 registry/schema tests and 53 focused frontend
+checks pass. All 29 browser checks (including four gallery captures) pass;
+TypeScript and lint pass with zero errors and the unchanged warning baseline.
+Existing compact assets regenerate byte-for-byte unchanged.

@@ -1,3 +1,6 @@
+import {APPEARANCE_REGISTRY} from "../../../src/components/robot/appearanceRegistry";
+import {MOWER_STYLES, SHELLS} from "../../../src/components/robot/shellAssets";
+import {DOCK_ARTWORK, type LayeredDockStyle} from "../../../src/components/robot/dockAssets";
 import {dockVisualGeometry} from "../../../src/components/robot/dockGeometry";
 import {DockGraphic} from "../../../src/components/robot/DockGraphic";
 import {createRoot} from "react-dom/client";
@@ -12,14 +15,6 @@ const robot=previewRobotGeometry(parseRobotUrdf(ROBOT_URDF)!,{
 });
 const rm1000Robot=previewRobotGeometry(robot,{chassis_center_x:.15,caster_x_offset:.36});
 const worxRobot=previewRobotGeometry(robot,{chassis_length:.54,chassis_width:.36,chassis_height:.14,chassis_z_offset:-.07,chassis_center_x:.16,wheel_radius:.11,wheel_track:.32,caster_x_offset:.34,caster_track:.22,caster_radius:.025});
-const styles=[
-    ["rounded","Rounded","Soft curves · compact silhouette"],
-    ["sculpted","Sculpted","Flowing panels · contoured shoulders"],
-    ["utility","Utility","Angular panels · geometric detail"],
-    ["yardforce","Yardforce-inspired","Raised rails · familiar proportions"],
-    ["rm1000","RM1000-inspired","Recessed console · flowing shoulder panels"],
-    ["worx","Worx-inspired","Shallow deck · open rear wheel bays"],
-] as const;
 createRoot(document.getElementById("root")!).render(<main>
     <style>{`
         *{box-sizing:border-box}body{margin:0;background:#061b16;color:#e1f5e9;font-family:Arial,sans-serif}
@@ -35,19 +30,19 @@ createRoot(document.getElementById("root")!).render(<main>
         .caption{font-size:11px;letter-spacing:1.5px;color:#91b7a3;text-align:center;margin:8px 0 0}
         footer{display:flex;justify-content:space-between;color:#85a995;font-size:13px;margin-top:25px}
     `}</style>
-    <header><div><div className="eyebrow">MOWGLINEXT / CHASSIS COLLECTION</div><h1>Six styles. One robot model.</h1></div>
+    <header><div><div className="eyebrow">MOWGLINEXT / CHASSIS COLLECTION</div><h1>{MOWER_STYLES.length} styles. One robot model.</h1></div>
         <p>Graphite shells · mint details · paired docks<br/>600 × 450 × 190 mm examples; shallow Worx 540 × 360 × 140 mm</p></header>
-    <div className="grid">{styles.map(([style,label,description],i)=><article key={style}>
-        <div className="title"><span className="number">0{i+1}</span><h2>{label}</h2></div><p>{description}</p>
-        <div className="views"><div className="view"><svg viewBox="-.255 -.51 .51 .66" aria-label={label+" top"}>
+    <div className="grid">{MOWER_STYLES.map((style,i)=><article key={style}>
+        <div className="title"><span className="number">0{i+1}</span><h2>{SHELLS[style].label.en}</h2></div><p>Shared dimensions · matching dock</p>
+        <div className="views"><div className="view"><svg viewBox="-.255 -.51 .51 .66" aria-label={SHELLS[style].label.en+" top"}>
             <LayeredMower robot={style === "rm1000" ? rm1000Robot : style === "worx" ? worxRobot : robot} style={style} transparent={false} view="top" sensors={false}/>
         </svg><div className="caption">TOP · FRONT ↑</div></div>
-        <div className="view"><svg viewBox="-.51 -.28 .66 .48" aria-label={label+" side"}>
+        <div className="view"><svg viewBox="-.51 -.28 .66 .48" aria-label={SHELLS[style].label.en+" side"}>
             <path d="M -.49 .102 H .14" stroke="#476c59" strokeWidth=".001" strokeDasharray=".012 .012"/>
             <LayeredMower robot={style === "rm1000" ? rm1000Robot : style === "worx" ? worxRobot : robot} style={style} transparent={false} view="side" sensors={false}/>
         </svg><div className="caption">SIDE · FRONT ←</div></div></div>
-    </article>)}{(["standard","worx"] as const).map((dock,i)=><article key={dock}>
-        <div className="title"><span className="number">0{i+7}</span><h2>{dock === "standard" ? "Standard dock" : "Side-charging dock"}</h2></div>
+    </article>)}{(Object.keys(DOCK_ARTWORK) as LayeredDockStyle[]).map((dock,i)=><article key={dock}>
+        <div className="title"><span className="number">0{i+MOWER_STYLES.length+1}</span><h2>{APPEARANCE_REGISTRY.docks[dock].label.en}</h2></div>
         <p>Selected with the hardware appearance · one shared system</p>
         <div className="views"><div className="view"><svg viewBox="-.26 -.60 .52 .73" aria-label="Paired dock top">
             <DockGraphic style={dock} geometry={dockVisualGeometry({},0,dock,.16)}/>

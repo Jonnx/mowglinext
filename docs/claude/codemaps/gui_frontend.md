@@ -232,3 +232,13 @@ cd gui/web && yarn generate:api   # regenerate src/api/Api.ts from ../docs/swagg
 - `src/api/Api.ts` — produced by `swagger-typescript-api` (`yarn generate:api`) from `gui/docs/swagger.json`; carries `/* eslint-disable */` + `@ts-nocheck`.
 - `yarn.lock`, `node_modules/`, `dist/`, `tests/e2e/.artifacts/` — lockfile is edited only via yarn; the rest are build/test output.
 - `src/concept/` is a dev-only design playground (route mounted only under `import.meta.env.DEV`), but `concept/motion.ts`, `concept/tokens.css`, `concept/concept.css` and several `concept/components/*` ARE imported by production pages — it is not dead code.
+
+
+### Appearance registry
+
+`web/src/components/robot/appearanceRegistry.ts` owns shell/component artwork,
+bilingual labels, paired docks, bounds, frames, anchors, defaults and wheel layering.
+The asset wrappers and `constants/mowerAppearances.ts` derive their IDs/catalogs.
+`web/scripts/appearance-registry.mjs` validates files/metadata and generates the
+backend shell enum; `npm run generate:appearances` also refreshes compact map assets.
+See `web/src/components/robot/README.md` for the contributor workflow.

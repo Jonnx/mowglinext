@@ -52,8 +52,8 @@ The side of a vertical cylindrical LiDAR is yaw-invariant.
 
 ## Assets and maintenance
 
-Shell atlases are in public/assets/robots/layered and registered in shellAssets.ts.
-Component atlases (drive-wheel, caster, blade, gps, lidar, imu, dock) use partAssets.ts.
+Shell atlases are in public/assets/robots/layered and registered in `appearanceRegistry.ts`.
+Component atlases (drive-wheel, caster, blade, gps, lidar, imu, dock) use the same registry.
 Each atlas contains top view on the left and side elevation on the right.
 The disc is a generated top/side atlas; its cutting envelope, not the asymmetric image crop, sets its radius.
 
@@ -271,8 +271,7 @@ dock fields and retired map appearance overrides cannot overwrite configuration.
 Only transparency remains browser-local; Sensors starts transparent, Map is solid.
 Saving appearance alone does not request a ROS restart or change physical geometry.
 
-Future dock artwork belongs in `DOCK_APPEARANCES`; a model can pair its ID with a
-chassis style. Photo docks use the existing calibrated MapImageMarker; a new
+Future dock artwork belongs in `APPEARANCE_REGISTRY.parts` and `.docks`; each shell declares its paired dock ID. Photo docks use the existing calibrated MapImageMarker; a new
 assembled dock uses declarative artwork metadata shared by the setup and map renderers. Old photo
 assets remain as contributed source/reference material, not selectable mower
 renderers. The obsolete static generic mower WebP is no longer shipped.
@@ -313,7 +312,7 @@ The charging station is on the robot's right, behind the body in the left-side
 view. This is an appearance choice, not a new measured hardware preset: chassis
 height/width/length and axle positions continue to follow the configured URDF.
 
-`MOWER_STYLE_DOCKS` explicitly pairs every shell with a dock appearance. Existing
+`MOWER_STYLE_DOCKS` is derived from the registry, which pairs every shell with a dock appearance. Existing
 shells share the original styled dock asset (no duplicated image files); Worx
 selects the side-charging dock. Hardware, Sensors and map all use that pair.
 The Worx station uses the editable dock footprint (including its right pedestal)
@@ -377,7 +376,7 @@ The standard dock uses its rear-axle registration and built-in +0.220 m forward 
 Solid setup views use 70% dock opacity; transparent views use 18%.
 
 
-Dock registration is declared in `dockAssets.ts`: part source, nominal height,
+Dock registration is declared in `appearanceRegistry.ts`: part source, nominal height,
 reference origin, built-in forward/left offset, and top/side anchor within the
 cropped footprint. `dockGeometry.ts` and `DockGraphic.tsx` have no model-specific
 positioning branches. A new dock is added as metadata; mower `shellAssets.ts`
@@ -386,7 +385,7 @@ or wheel openings. Both map and setup previews consume the same registration.
 
 
 The standard dock has a built-in +0.220 m forward offset from the parked rear
-axle in `dockAssets.ts`. Operator X/Y adjustments default to zero in the frontend,
+axle in `appearanceRegistry.ts`. Operator X/Y adjustments default to zero in the frontend,
 GUI schema and template; they are added to that registration, not a second nominal
 alignment. Existing explicitly saved adjustments remain additive; early test
 installations using a nominal dock-centre value should reset X to zero. This only
@@ -421,3 +420,27 @@ independent blade/swath widths. measurement-editor.spec.ts covers real-app deskt
 and mobile editing, cancellation, focus, validation, viewport resizing and no
 automatic settings writes. PR screenshots and dimensional fixture values are in
 docs/pr/layered-mower/README.md.
+
+
+## Adding shells and docks
+
+`appearanceRegistry.ts` is the only authored appearance catalog. The asset wrappers,
+TypeScript IDs, selectors, bilingual labels, defaults and shell/dock pairs derive
+from it. Renderers contain no shell-name conditionals.
+
+1. Add transparent PNG artwork under `public/assets/robots/layered/`.
+2. Add a `shells` entry with English/French labels, top/side filenames and canvas
+   sizes, source atlas cells, tight bounds, optional physical projection frames, paired dock ID,
+   compact map size and per-view wheel layering.
+3. For a new dock, add its artwork under `parts` and its registration under `docks`:
+   appearance ID, labels, part reference, origin, built-in offset and top/side anchors.
+   Reuse an existing dock ID when its artwork is suitable.
+4. Run `npm run generate:appearances` from `gui/web`. This generates the backend
+   `mower_visual_style` enum and compact map WebPs. Commit these derived files.
+5. Run `npm run test:appearances` and the renderer/browser checks. Normal build
+   validates artwork files, dimensions, bounds and pairings; normal tests also
+   enforce backend enum parity. No selector, renderer or separate ID list needs editing.
+
+Physical model presets remain independent: selecting new artwork does not alter
+chassis dimensions, sensor positions or control configuration. An optional preset
+association belongs to that model's metadata, not a renderer branch.

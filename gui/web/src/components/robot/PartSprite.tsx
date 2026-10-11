@@ -15,7 +15,7 @@ export function PartSprite({part,view,width,height,fallback,artwork="full"}: {
         {!loaded && fallback}
         <svg {...bounds}
             viewBox={[x,y,w,h].join(" ")} preserveAspectRatio="none" overflow="hidden">
-            <image href={artwork === "map" ? `/assets/robots/layered/map/${part}-${view}.webp` : `/assets/robots/layered/${part}.png`}
+            <image href={artwork === "map" ? `/assets/robots/layered/map/${part}-${view}.webp` : `/assets/robots/layered/${asset.files[view]}`}
                 x={artwork === "map" ? x : 0} y={artwork === "map" ? y : 0}
                 width={artwork === "map" ? w : asset.size[0]} height={artwork === "map" ? h : asset.size[1]}
                 onLoad={()=>setLoaded(true)} onError={()=>setLoaded(false)}/>

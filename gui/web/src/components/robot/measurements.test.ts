@@ -1,3 +1,4 @@
+import {DOCK_ARTWORK, type LayeredDockStyle} from "./dockAssets";
 import {describe, expect, it} from "vitest";
 import {MEASUREMENTS, measurementGeometry, validMeasurement, type MeasurementKey} from "./measurements";
 import {parseRobotUrdf, previewRobotGeometry} from "../../utils/robotModel";
@@ -26,7 +27,7 @@ describe("physical measurement endpoints", () => {
         expect(m.to[0]-m.from[0]).toBe(.27);
         expect(measurementGeometry("blade_radius",r,values,"standard")!.value).toBe(.09);
     });
-    for(const style of ["standard","worx"] as const) it("measures "+style+" dock adjustment from its built-in alignment", () => {
+    for(const style of Object.keys(DOCK_ARTWORK) as LayeredDockStyle[]) it("measures "+style+" dock adjustment from its built-in alignment", () => {
         const values={dock_visual_x_offset:0,dock_visual_y_offset:0,dock_visual_width:.55,dock_visual_length:.8};
         const x=measurementGeometry("dock_visual_x_offset",live,values,style)!;
         expect(x.from).toEqual(x.to); expect(x.value).toBe(0);

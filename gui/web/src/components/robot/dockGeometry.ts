@@ -1,3 +1,4 @@
+import {DEFAULT_DOCK_STYLE} from "./dockAssets";
 import {DOCK_ARTWORK, type LayeredDockStyle} from "./dockAssets";
 export type {LayeredDockStyle} from "./dockAssets";
 import type {RobotGeometry} from "../../hooks/useRobotDescription";
@@ -19,7 +20,7 @@ export const setupDockOpacity = (transparent: boolean) => transparent ? .18 : .7
 /** Standard docks use the parked rear axle. Worx offsets locate the slatted
  * platform relative to the chassis centre; zero centres the mower on its tray.
  * This is artwork registration only, never a change to the calibrated dock pose. */
-export function dockVisualGeometry(values: Record<string, unknown> = {}, wheelXOffset = 0, style: LayeredDockStyle = "standard", chassisCenterX = wheelXOffset): DockVisualGeometry {
+export function dockVisualGeometry(values: Record<string, unknown> = {}, wheelXOffset = 0, style: LayeredDockStyle = DEFAULT_DOCK_STYLE, chassisCenterX = wheelXOffset): DockVisualGeometry {
     const read = (key: keyof typeof DOCK_VISUAL_DEFAULTS, min: number, max: number) => {
         const raw = values[key];
         const n = typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() ? Number(raw) : NaN;
@@ -32,7 +33,7 @@ export function dockVisualGeometry(values: Record<string, unknown> = {}, wheelXO
         centerY: read("dock_visual_y_offset", -2, 2) + artwork.offset.left};
 }
 
-export function dockBounds(view: RobotView, style: LayeredDockStyle = "standard", geometry = dockVisualGeometry()): Bounds {
+export function dockBounds(view: RobotView, style: LayeredDockStyle = DEFAULT_DOCK_STYLE, geometry = dockVisualGeometry()): Bounds {
     const {length, width, centerX, centerY} = geometry;
     const artwork = DOCK_ARTWORK[style];
     const anchor = view === "top" ? artwork.topAnchor : artwork.sideAnchor;
@@ -48,7 +49,7 @@ export function previewDockOffsetY(robot: RobotGeometry, view: RobotView): numbe
 
 /** Include the dock in framing only; robot scale and origin stay fixed. */
 export function dockedAssemblyBounds(robot: RobotGeometry, view: RobotView, padding = .05,
-    style: LayeredDockStyle = "standard", geometry = dockVisualGeometry({}, robot.wheelXOffset, style, robot.chassisCenterX)): Bounds {
+    style: LayeredDockStyle = DEFAULT_DOCK_STYLE, geometry = dockVisualGeometry({}, robot.wheelXOffset, style, robot.chassisCenterX)): Bounds {
     const mower = assemblyBounds(robot, view, 0);
     const dock = dockBounds(view, style, geometry);
     const dockY = dock.y + previewDockOffsetY(robot, view);

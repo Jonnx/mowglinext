@@ -1,3 +1,4 @@
+import {APPEARANCE_REGISTRY} from "../../src/components/robot/appearanceRegistry";
 import {test,expect} from "@playwright/test";
 import {mkdirSync} from "node:fs";
 import {installMockBackend} from "./mock/mockBackend";
@@ -70,8 +71,8 @@ test("chassis style gallery",async({page})=>{
     mkdirSync(output,{recursive:true});
     await page.setViewportSize({width:1600,height:1150});
     await page.goto("/tests/e2e/fixtures/chassis-gallery.html");
-    await expect(page.locator("article")).toHaveCount(8);
-    await expect(page.locator("[data-mower-style]")).toHaveCount(12);
+    await expect(page.locator("article")).toHaveCount(Object.keys(APPEARANCE_REGISTRY.shells).length+Object.keys(APPEARANCE_REGISTRY.docks).length);
+    await expect(page.locator("[data-mower-style]")).toHaveCount(Object.keys(APPEARANCE_REGISTRY.shells).length*2);
     await page.evaluate(async()=>{
         await Promise.all([...document.querySelectorAll("image")].map(e=>{
             const image=new Image();image.src=e.getAttribute("href")!;return image.decode();

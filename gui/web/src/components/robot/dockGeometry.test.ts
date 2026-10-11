@@ -1,3 +1,4 @@
+import {DOCK_ARTWORK, type LayeredDockStyle} from "./dockAssets";
 import {describe, expect, it} from "vitest";
 import {dockBounds, dockedAssemblyBounds, dockVisualGeometry} from "./dockGeometry";
 import {parseRobotUrdf} from "../../utils/robotModel";
@@ -47,14 +48,14 @@ describe("dock display geometry", () => {
 it("moves the top/map dock left for positive Y without altering the side projection", () => {
     const baseline = dockVisualGeometry();
     const shifted = dockVisualGeometry({dock_visual_y_offset: .12});
-    for (const style of ["standard", "worx"] as const) {
+    for (const style of Object.keys(DOCK_ARTWORK) as LayeredDockStyle[]) {
         const before = dockBounds("top", style, baseline);
         const after = dockBounds("top", style, shifted);
         expect(after.x - before.x).toBeCloseTo(-.12);
         expect(after.y).toBe(before.y);
         expect(after.width).toBe(before.width);
         expect(dockBounds("side", style, shifted)).toEqual(dockBounds("side", style, baseline));
-        expect(before.x + before.width * (style === "worx" ? 308 / 721 : .5)).toBeCloseTo(0);
+        expect(before.x + before.width * DOCK_ARTWORK[style].topAnchor[0]).toBeCloseTo(0);
     }
 });
 

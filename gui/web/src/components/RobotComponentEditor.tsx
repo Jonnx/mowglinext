@@ -1,3 +1,4 @@
+import {DEFAULT_DOCK_STYLE} from "./robot/dockAssets";
 import {resolveDockAppearance} from "../constants/mowerAppearances";
 import {DockGraphic} from "./robot/DockGraphic";
 import {dockedAssemblyBounds, dockVisualGeometry, setupDockOpacity} from "./robot/dockGeometry";
@@ -331,7 +332,7 @@ export const RobotComponentEditor: React.FC<Props> = ({ values, onChange }) => {
     const [visual] = useMowerVisual(values);
     // Each sensor-layout session starts see-through, independently of Hardware.
     const [transparent, setTransparent] = useState(true);
-    const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? "standard";
+    const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? DEFAULT_DOCK_STYLE;
     const dockGeometry = dockVisualGeometry(values, robot.wheelXOffset, dockStyle, robot.chassisCenterX);
     const [dragBounds, setDragBounds] = useState<Bounds | null>(null);
     const bounds = dragBounds ?? dockedAssemblyBounds(robot, "top", .12,dockStyle,dockGeometry);

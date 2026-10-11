@@ -2,7 +2,7 @@ import {expect,test} from "@playwright/test";
 import {mkdirSync} from "node:fs";
 import {installMockBackend} from "./mock/mockBackend";
 import {SCENARIOS} from "./mock/scenarios";
-import {SHELLS} from "../../src/components/robot/shellAssets";
+import {SHELLS, MOWER_STYLES} from "../../src/components/robot/shellAssets";
 import {MOWER_MODELS} from "../../src/constants/mowerModels";
 import en from "../../src/i18n/locales/en.json" with {type:"json"};
 import {ROBOT_URDF} from "../../src/test/robotUrdf";
@@ -19,11 +19,12 @@ test.beforeEach(async({page})=>{
     await installMockBackend(page,{...base,topics:{...base.topics,robotDescription:{data:ROBOT_URDF}},
         rest:{...base.rest,"/api/settings/yaml":settings}});
 });
-test("five styles keep the same shell and sensor positions in transparent views",async({page})=>{
+test("registered styles keep the same shell and sensor positions in transparent views",async({page})=>{
     await page.goto("/#/settings?section=hardware");
     const preview=page.getByTestId("mower-preview");
     await expect(preview.locator('[data-layer="shell-art"]')).toHaveCount(2);
-    for(const [id,label] of [["rounded","Rounded"],["sculpted","Sculpted"],["utility","Utility"],["yardforce","Yardforce-inspired"],["rm1000","RM1000-inspired"],["worx","Worx-inspired"]]){
+    for(const id of MOWER_STYLES){
+        const label=SHELLS[id].label.en;
         await page.getByRole("combobox",{name:"Body style"}).press("ArrowDown");
         await page.getByText(label,{exact:true}).last().click();
         await page.getByRole("combobox",{name:"Body style"}).press("Escape");
@@ -123,22 +124,20 @@ test("caster front/back is explicit and remains fixed when the chassis changes",
 test("all shell dimensions describe opaque chassis edges, excluding atlas margins",async({page})=>{
     await page.goto("/#/settings?section=hardware");
     await expect(page.getByTestId("mower-top")).toBeVisible();
-    const measured=await page.evaluate(async()=>{
+    const measured=await page.evaluate(async(shells)=>{
         const result:Record<string,Record<string,number[]>>={};
-        for(const style of ["rounded","sculpted","utility","yardforce","rm1000","worx"]){
+        for(const [style,asset] of Object.entries(shells)){
             result[style]={};
-            const split = style === "rm1000" ? 740 : 768;
             for(const view of ["top","side"] as const){
-                const separateSide=(style === "rm1000" || style === "worx") && view === "side";
-                const image=new Image();image.src=`/assets/robots/layered/${style}${separateSide ? "-side" : ""}.png`;await image.decode();
+                const image=new Image();image.src=`/assets/robots/layered/${asset.files?.[view] ?? `${style}.png`}`;await image.decode();
                 const canvas=document.createElement("canvas");canvas.width=image.width;canvas.height=image.height;
                 const ctx=canvas.getContext("2d",{willReadFrequently:true})!;ctx.drawImage(image,0,0);
                 const pixels=ctx.getImageData(0,0,image.width,image.height).data;
                 // Scan the entire source cell, independent of crop metadata.
-                const start=separateSide || view === "top" ? 0 : split;
-                const end=separateSide || view === "side" ? image.width : split;
+                const [start,startY,width,height]=asset.cells[view];
+                const end=start+width;
                 let minX=image.width,minY=image.height,maxX=-1,maxY=-1;
-                for(let y=0;y<image.height;y++)for(let x=start;x<end;x++){
+                for(let y=startY;y<startY+height;y++)for(let x=start;x<end;x++){
                     // Ignore the antialias fringe; alpha >220 defines solid shell.
                     if(pixels[(y*image.width+x)*4+3]<=220)continue;
                     minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);
@@ -147,7 +146,7 @@ test("all shell dimensions describe opaque chassis edges, excluding atlas margin
             }
         }
         return result;
-    });
+    }, SHELLS);
     for(const [style,asset] of Object.entries(SHELLS)){
         for(const view of ["top","side"] as const){
             expect(measured[style][view],`${style} ${view}: physical crop must touch all four solid edges`).toEqual(asset[view]);

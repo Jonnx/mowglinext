@@ -1,3 +1,4 @@
+import {APPEARANCE_REGISTRY} from "./appearanceRegistry";
 import type {PartId} from "./partAssets";
 
 /** Artwork registration belongs beside the image bounds, not in the renderer.
@@ -10,16 +11,9 @@ export type DockArtwork = {
     height: number;
     origin: "rearAxle" | "chassisCenter";
     offset: {forward: number; left: number};
-    topAnchor: [number, number];
-    sideAnchor: [number, number];
+    topAnchor: readonly [number, number];
+    sideAnchor: readonly [number, number];
 };
-export const DOCK_ARTWORK = {
-    // Built-in parked alignment: footprint centre 220 mm ahead of rear axle.
-    standard: {part: "dock", height: .15, origin: "rearAxle",
-        offset: {forward: .220, left: 0}, topAnchor: [.5, .5], sideAnchor: [.5, 1]},
-    // Slatted platform centre x=355, cropped source starts x=47 and is 721px
-    // wide. The charging pedestal is outside this reference, within the crop.
-    worx: {part: "dock-worx", height: .14, origin: "chassisCenter",
-        offset: {forward: 0, left: 0}, topAnchor: [(355 - 47) / 721, .5], sideAnchor: [.5, 1]},
-} satisfies Record<string, DockArtwork>;
-export type LayeredDockStyle = keyof typeof DOCK_ARTWORK;
+export type LayeredDockStyle = keyof typeof APPEARANCE_REGISTRY.docks;
+export const DOCK_ARTWORK: Record<LayeredDockStyle, DockArtwork> = APPEARANCE_REGISTRY.docks;
+export const DEFAULT_DOCK_STYLE = APPEARANCE_REGISTRY.defaultDock;

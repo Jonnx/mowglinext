@@ -1,3 +1,4 @@
+import {DEFAULT_DOCK_STYLE} from "./dockAssets";
 import type {MeasurementEditorState} from "./useMeasurementEditor";
 import {useEffect, useRef, useState} from "react";
 import {Button, InputNumber, Modal, Typography} from "antd";
@@ -39,7 +40,7 @@ export function MeasurementDialog({session, live, values, onCancel, onApply}: {
     const draft = {...values, [key]: value};
     const robot = previewRobotGeometry(live,draft);
     const [visual] = useMowerVisual(values);
-    const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? "standard";
+    const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? DEFAULT_DOCK_STYLE;
     const geometry = dockVisualGeometry(draft,robot.wheelXOffset,dockStyle,robot.chassisCenterX);
     const valid = validMeasurement(key,value);
     const measurement = measurementGeometry(key,robot,draft,dockStyle);
