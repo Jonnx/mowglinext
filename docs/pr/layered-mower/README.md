@@ -85,6 +85,7 @@ subscription, drive command, save or restart is introduced.
 
 ![Desktop chassis offset measurement](measurement-desktop-height.png)
 ![Desktop wheel-track measurement](measurement-desktop-track.png)
+![Compact desktop dock measurement](measurement-desktop-compact.png)
 
 | Mobile side measurement | Mobile top measurement |
 | --- | --- |
@@ -114,7 +115,7 @@ Validation on 2026-10-11:
 - Full frontend unit suite: 973 tests passed in 119 files. Final focused checks
   cover physical measurement endpoints, rendering and locale parity.
 - TypeScript and lint pass (zero lint errors; existing warnings remain).
-- 14 Hardware/Sensors/measurement browser cases and 8 map cases pass.
+- 15 Hardware/Sensors/measurement browser cases and 8 map cases pass.
   Mobile checks cover Apply/Cancel/Escape, focus restoration, invalid input,
   viewport resizing and absence of automatic API writes.
 - Production build verified before deployment.

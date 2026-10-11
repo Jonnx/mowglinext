@@ -17,6 +17,13 @@ export function useMeasurementEditor(values: Record<string, unknown>, onChange: 
     const [invalidInput, setInvalidInput] = useState<MeasurementKey | null>(null);
     const [active, setActive] = useState<MeasurementKey | null>(null);
     const [session, setSession] = useState<{key: MeasurementKey; value: number | null} | null>(null);
+    useEffect(() => {
+        if (active && !mobile) {
+            // Focus may scroll the field underneath the now-sticky preview.
+            // Align it above the page's save bar after the compact preview lays out.
+            document.getElementById("setting-"+active)?.scrollIntoView({block:"end",behavior:"instant"});
+        }
+    }, [active,mobile]);
     const trigger = useRef<HTMLElement | null>(null);
     const close = () => {
         setSession(null);

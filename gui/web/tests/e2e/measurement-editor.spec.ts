@@ -93,3 +93,19 @@ test("shrinking the mobile viewport keeps editor actions accessible",async({page
     await dialog.getByRole("button",{name:"Apply",exact:true}).click();
     await expect(page.locator("#setting-wheel_radius")).toHaveValue("0.12000");
 });
+
+
+test("small desktop keeps the active drawing and numeric field in view",async({page})=>{
+    await page.setViewportSize({width:1280,height:720});
+    await page.goto("/#/settings?section=hardware");
+    await page.getByText("Chassis & Geometry",{exact:true}).click();
+    await page.locator("#setting-dock_visual_y_offset").click();
+    const preview=page.getByTestId("mower-preview");
+    await expect(preview).toHaveCSS("position","sticky");
+    await expect.poll(async()=>{
+        const svg=await preview.getByTestId("mower-top").boundingBox();
+        const input=await page.locator("#setting-dock_visual_y_offset").boundingBox();
+        return !!svg && !!input && svg.y>=80 && svg.y+svg.height<=input.y && input.y+input.height<680;
+    }).toBe(true);
+    await page.screenshot({path:shots+"/desktop-compact.png"});
+});

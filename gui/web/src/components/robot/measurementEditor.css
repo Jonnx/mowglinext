@@ -8,6 +8,8 @@
 .measurement-dialog .ant-modal-content {display:flex; flex-direction:column; border-radius:20px 20px 0 0; padding-bottom:max(16px,env(safe-area-inset-bottom));}
 .measurement-dialog .ant-modal-header,.measurement-dialog .ant-modal-footer {flex:none;}
 .measurement-dialog input {font-size:16px;}
-.measurement-preview-active {position:sticky; top:0; z-index:5; box-shadow:0 10px 24px #0006;}
+.ant-card.measurement-preview-active {position:sticky; top:0; z-index:5; box-shadow:0 10px 24px #0006;}
 .measurement-preview-summary {display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:8px;}
-@media (max-width:767px) {.measurement-preview-active {position:static;}}
+@media (max-width:767px) {.ant-card.measurement-preview-active {position:static;}}
+
+.hardware-settings input[id^="setting-"] {scroll-margin-bottom:120px;}

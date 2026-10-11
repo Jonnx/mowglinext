@@ -77,7 +77,7 @@ export const HardwareSection: React.FC<Props> = ({
     };
 
     return (
-        <div>
+        <div className="hardware-settings">
             {/* Identity: the name the fleet view and the GUI show for this mower */}
             <Card size="small" style={{ marginBottom: 16 }}>
                 <Form layout="vertical" size="small">

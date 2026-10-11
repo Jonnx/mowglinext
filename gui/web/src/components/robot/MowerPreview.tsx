@@ -40,7 +40,7 @@ export function MowerPreview({values, compact = false, editor}: {values: Record<
     const measurementValues = {...DOCK_VISUAL_DEFAULTS,...values,caster_x_offset:resolveCasterPosition(values)};
     const measurement = editor?.active && !editor.invalid ? measurementGeometry(editor.active,robot,measurementValues,dockStyle) : null;
     return <Card className={editor?.active ? "measurement-preview-active" : undefined} size="small" title={t("mowerVisual.title")} style={{marginBottom:16}} data-testid="mower-preview">
-        {!compact && <MowerVisualControls chooseStyle/>}
+        {!compact && !editor?.active && <MowerVisualControls chooseStyle/>}
         {!live.fromUrdf ? <Typography.Text type="secondary">{t("mowerVisual.waiting")}</Typography.Text> : <>
             <Flex wrap gap={16}>
                 <MowerView dockGeometry={dockGeometry} robot={robot} view="top" showDock={!compact} maxHeight={compact ? 210 : editor?.active ? 190 : 300} measurement={measurement?.view === "top" ? measurement : undefined} transparent={editor?.active === "blade_radius" ? true : undefined}/>
@@ -52,10 +52,10 @@ export function MowerPreview({values, compact = false, editor}: {values: Record<
             </div>}
             {measurement && <MeasurementLegend measurement={measurement}/>}
             {editor?.active && !measurement && <Typography.Text type="danger">{t("measurementEditor.invalid")}</Typography.Text>}
-            <Typography.Text style={{display:"block",marginTop:12}}>
+            {!editor?.active && <><Typography.Text style={{display:"block",marginTop:12}}>
                 {(robot.baseLength*100).toFixed(1)} × {(robot.baseWidth*100).toFixed(1)} × {(robot.baseHeight*100).toFixed(1)} cm
             </Typography.Text>
-            <Typography.Text type="secondary" style={{fontSize:12}}>{t("mowerVisual.previewNote")}</Typography.Text>
+            <Typography.Text type="secondary" style={{fontSize:12}}>{t("mowerVisual.previewNote")}</Typography.Text></>}
         </>}
         {editor?.session && <MeasurementDialog session={editor.session} live={live} values={values}
             onCancel={editor.close} onApply={editor.apply}/>}
