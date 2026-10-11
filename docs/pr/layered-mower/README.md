@@ -65,28 +65,30 @@ deliberately. A local plain basemap avoids publishing private garden/location da
 ![Docked map view](app-map-desktop-docked.png)
 ![Mobile docked map view](app-map-mobile-docked.png)
 
-## Planned: focused measurement editing
+## Focused measurement editor
 
-**Proposal only: the overlays and mobile dialog below are not implemented yet.**
+Implemented for 18 dimensional hardware fields. Desktop focus overlays the exact
+endpoints, extension lines, arrows and value on the existing top or side preview.
+The compact active preview stays above the fields while scrolling. Escape or
+Close measurement dismisses it. Invalid input never labels a fallback preview as
+the requested dimension.
 
-Desktop should reuse the existing top and side previews above the hardware fields.
-Focusing a field highlights its exact endpoints, extension lines, arrows and value
-in the relevant projection. Keep the existing preview visible while editing when
-the desktop viewport permits; do not add a second diagram panel. Use physical
-geometry/registered frames, never the bitmap canvas or its transparent margin.
+On mobile, tapping a dimension opens a bottom-sheet dialog with the appropriate
+projection, A/B endpoint labels, numeric input, units and the measurement help.
+The sheet follows the visual viewport as the keyboard opens; its body scrolls
+while Apply/Cancel remain accessible. The same dialog serves short touch screens.
 
-On mobile, tapping a dimension opens an accessible bottom-sheet dialog containing:
+**Apply** updates only the settings draft. **Cancel**, Escape and the close button
+discard that dialog edit and restore focus to the field. Only the page's existing
+**Save** persists changes. Invalid/out-of-range values disable Apply. No extra ROS
+subscription, drive command, save or restart is introduced.
 
-1. The field name and appropriate top or side view with the measurement highlighted.
-2. A plain-language description of where to measure from and to.
-3. The numeric editor, units and existing validation.
-4. **Apply** and **Cancel**. Apply changes the settings draft; only the page's
-   existing Save action persists settings. Cancel discards the dialog's edit.
+![Desktop chassis offset measurement](measurement-desktop-height.png)
+![Desktop wheel-track measurement](measurement-desktop-track.png)
 
-The drawing and input must remain visible above the software keyboard, with a
-scrollable sheet on short screens. Trap focus, support Escape, and return focus
-to the originating field on close. Reuse the existing renderer; no new telemetry
-subscription or map rerasterization is needed.
+| Mobile side measurement | Mobile top measurement |
+| --- | --- |
+| ![Mobile chassis offset](measurement-mobile-height.png) | ![Mobile wheel track](measurement-mobile-track.png) |
 
 | Field | Projection | Measurement endpoints |
 | --- | --- | --- |
@@ -102,31 +104,30 @@ subscription or map rerasterization is needed.
 | Dock length / width | Top | Complete registered footprint, including pedestal |
 | Dock Center X / Y | Top | Built-in artwork reference to adjusted reference, signed |
 
-A zero dock adjustment must still display the built-in alignment correctly.
+A zero dock adjustment displays the built-in alignment correctly.
 Changing numeric values updates the overlay immediately without saving or restarting
-ROS. Sensor-specific dimensions can reuse the same interaction later.
+ROS. Sensor-specific dimensions can reuse the same interaction later. Mass and encoder counts keep their ordinary inputs because they have no spatial endpoints.
 
 ## Validation and limitations
 
-Production code baseline: 051476543f761e7505b879daa04d2bf515fc7169.
-The accompanying screenshot commit changes only fixtures, captures and documentation.
-
-2026-10-11 checks:
-- TypeScript typecheck and 63 focused robot/model/preferences/locale unit tests passed.
-- 12 application/browser gallery and desktop/mobile map cases passed; captures reviewed.
-- Configuration drift check passed (three existing GNSS keys reported as uncategorized).
-- Production build and Go schema/default/generated-type parity passed on the production
-  baseline above. Known build chunk-size and AntD deprecation warnings remain.
-- Worx captures come from the shallow-layout browser check after b1352a42; the later
-  standard-dock-only offset change does not alter that appearance.
+Validation on 2026-10-11:
+- Full frontend unit suite: 973 tests passed in 119 files. Final focused checks
+  cover physical measurement endpoints, rendering and locale parity.
+- TypeScript and lint pass (zero lint errors; existing warnings remain).
+- 14 Hardware/Sensors/measurement browser cases and 8 map cases pass.
+  Mobile checks cover Apply/Cancel/Escape, focus restoration, invalid input,
+  viewport resizing and absence of automatic API writes.
+- Production build verified before deployment.
+- Earlier Go schema/default/generated-type parity and configuration drift checks
+  remain applicable: this editor changes no backend schema, template or URDF.
 - Full ROS workspace build and physical geometry acceptance are not claimed.
-  Browser mobile emulation is not a physical-phone performance measurement.
+  Browser mobile emulation is not a physical-phone/keyboard acceptance test.
 
 Reproduce from gui/web using the repository's installed dependencies:
 
     npx tsc --noEmit
     npx vitest run src/components/robot src/utils/robotModel.test.ts src/hooks/useMowerVisual.test.tsx src/i18n/locales.test.ts
-    npx playwright test tests/e2e/layered-pr-gallery.spec.ts tests/e2e/layered-app-map.spec.ts --workers=2
+    npx playwright test tests/e2e/measurement-editor.spec.ts tests/e2e/layered-mower.spec.ts tests/e2e/layered-app-map.spec.ts --workers=2
     npx playwright test tests/e2e/layered-mower.spec.ts -g "Worx shallow" --workers=1
 
 **HARDWARE_REQUIRED:** preset caster positions and chassis vertical offsets are

@@ -65,7 +65,7 @@ test("sensor edits update both projections and appearance survives navigation on
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.goto("/#/settings?section=hardware");
     await expect(page.getByTestId("mower-top").locator("[data-mower-style]")).toHaveAttribute("data-mower-style","yardforce");
-    await expect(page.getByRole("switch",{name:"Transparent shell"})).toBeChecked();
+    await expect(page.getByRole("switch",{name:"Transparent shell"})).not.toBeChecked();
     await page.getByTestId("mower-top").scrollIntoViewIfNeeded();
     await page.screenshot({path:shots+"/hardware-mobile.png"});
     await page.getByTestId("mower-side").scrollIntoViewIfNeeded();
@@ -106,16 +106,16 @@ test("chassis edits resize the assembly without changing the wheel diameter",asy
     expect(Number(await page.getByRole("spinbutton",{name:/Wheel Radius/}).inputValue())).toBe(.1);
 });
 
-test("caster fore/aft setting changes preview and automatic restores chassis placement",async({page})=>{
+test("caster front/back is explicit and remains fixed when the chassis changes",async({page})=>{
     await page.goto("/#/settings?section=hardware");
     await page.getByText("Chassis & Geometry",{exact:true}).click();
-    await page.getByRole("switch",{name:"Automatic from chassis"}).click();
-    const input=page.getByRole("spinbutton",{name:"Caster front/back position, m"});
-    await input.fill("0.32");await input.press("Tab");
-    await expect(page.getByTestId("mower-top").locator('[data-layer="casters"] > g').first()).toHaveAttribute("transform",/ -0.32\)/);
-    await page.getByRole("switch",{name:"Automatic from chassis"}).click();
-    await expect(input).toHaveCount(0);
-    await expect(page.getByTestId("mower-top").locator('[data-layer="casters"] > g').first()).toHaveAttribute("transform",/ -0.44999999999999996\)| -0.45\)/);
+    await expect(page.getByRole("switch",{name:"Automatic from chassis"})).toHaveCount(0);
+    const input=page.locator("#setting-caster_x_offset");
+    await input.fill("0.32"); await input.press("Tab");
+    const caster=page.getByTestId("mower-top").locator('[data-layer="casters"] > g').first();
+    await expect(caster).toHaveAttribute("transform",/ -0.32\)/);
+    await page.locator("#setting-chassis_length").fill("0.70");
+    await expect(caster).toHaveAttribute("transform",/ -0.32\)/);
 });
 
 // Inspect source alpha outside the configured crop as well. Testing only the
@@ -129,7 +129,7 @@ test("all shell dimensions describe opaque chassis edges, excluding atlas margin
             result[style]={};
             const split = style === "rm1000" ? 740 : 768;
             for(const view of ["top","side"] as const){
-                const separateSide=style === "rm1000" && view === "side";
+                const separateSide=(style === "rm1000" || style === "worx") && view === "side";
                 const image=new Image();image.src=`/assets/robots/layered/${style}${separateSide ? "-side" : ""}.png`;await image.decode();
                 const canvas=document.createElement("canvas");canvas.width=image.width;canvas.height=image.height;
                 const ctx=canvas.getContext("2d",{willReadFrequently:true})!;ctx.drawImage(image,0,0);
@@ -207,7 +207,7 @@ test("full application hardware preset gallery on desktop and mobile",async({pag
             expect(await page.evaluate(() => JSON.parse(localStorage.getItem("mowgli.robot-visual.v1")!).dockAppearance))
                 .toBe(preset.appearance?.dockAppearance ?? "styled");
             const side=page.getByTestId("mower-side");
-            if(Object.keys(preset.defaults).length){
+            if(preset.defaults.chassis_height !== undefined){
                 await expect(side.locator('[data-layer="shell-art"]')).toHaveAttribute("height",String(preset.defaults.chassis_height));
                 expect(Number(await side.locator('[data-layer="shell-art"]').getAttribute("y"))).toBeCloseTo(-preset.defaults.chassis_z_offset-preset.defaults.chassis_height);
                 expect(Number(await page.getByRole("spinbutton",{name:"Wheel Track, m",exact:true}).inputValue())).toBe(preset.defaults.wheel_track);

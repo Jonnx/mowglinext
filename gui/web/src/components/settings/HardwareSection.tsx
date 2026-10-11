@@ -1,3 +1,4 @@
+import {useMeasurementEditor} from "../robot/useMeasurementEditor";
 import {DOCK_VISUAL_DEFAULTS} from "../robot/dockGeometry";
 import {resolveCasterPosition} from "../../utils/casterPosition";
 import {DEFAULT_MOWER_VISUAL, useMowerVisual} from "../../hooks/useMowerVisual";
@@ -40,6 +41,7 @@ export const HardwareSection: React.FC<Props> = ({
     const { modal } = App.useApp();
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [, setVisual] = useMowerVisual(values.mower_model);
+    const measurementEditor = useMeasurementEditor(values,onChange);
     const selectedModel = values.mower_model || "YardForce500";
 
     const fieldLabel = (key: string, label: React.ReactNode) => (
@@ -153,7 +155,7 @@ export const HardwareSection: React.FC<Props> = ({
                 </Space>
             </Card>
 
-            <MowerPreview values={values}/>
+            <MowerPreview values={values} editor={measurementEditor}/>
 
             {/* Essential parameters (always visible) */}
             <Card
@@ -165,7 +167,7 @@ export const HardwareSection: React.FC<Props> = ({
                     <Row gutter={[16, 0]}>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-wheel_radius" data-setting-key="wheel_radius" label={fieldLabel("wheel_radius", t("settingsHardware.wheelRadius"))} tooltip={t("settingsHardware.wheelRadiusTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.wheelRadius") + ", m"} aria-description={t("settingsHardware.wheelRadiusTooltip")}  id="setting-wheel_radius"
+                                <InputNumber {...measurementEditor.fieldProps("wheel_radius")} aria-label={t("settingsHardware.wheelRadius") + ", m"} aria-description={t("settingsHardware.wheelRadiusTooltip")}  id="setting-wheel_radius"
                                     value={values.wheel_radius}
                                     onChange={(v) => onChange("wheel_radius", v)}
                                     step={0.001} precision={5} style={{ width: "100%" }}
@@ -175,7 +177,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-wheel_track" data-setting-key="wheel_track" label={fieldLabel("wheel_track", t("settingsHardware.wheelTrack"))} tooltip={t("settingsHardware.wheelTrackTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.wheelTrack") + ", m"} aria-description={t("settingsHardware.wheelTrackTooltip")}  id="setting-wheel_track"
+                                <InputNumber {...measurementEditor.fieldProps("wheel_track")} aria-label={t("settingsHardware.wheelTrack") + ", m"} aria-description={t("settingsHardware.wheelTrackTooltip")}  id="setting-wheel_track"
                                     value={values.wheel_track}
                                     onChange={(v) => onChange("wheel_track", v)}
                                     step={0.005} precision={3} style={{ width: "100%" }}
@@ -185,7 +187,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-blade_radius" data-setting-key="blade_radius" label={fieldLabel("blade_radius", t("settingsHardware.bladeRadius"))} tooltip={t("settingsHardware.bladeRadiusTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.bladeRadius") + ", m"} aria-description={t("settingsHardware.bladeRadiusTooltip")}  id="setting-blade_radius"
+                                <InputNumber {...measurementEditor.fieldProps("blade_radius")} aria-label={t("settingsHardware.bladeRadius") + ", m"} aria-description={t("settingsHardware.bladeRadiusTooltip")}  id="setting-blade_radius"
                                     value={values.blade_radius}
                                     onChange={(v) => onChange("blade_radius", v)}
                                     step={0.01} precision={3} style={{ width: "100%" }}
@@ -195,7 +197,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-tool_width" data-setting-key="tool_width" label={fieldLabel("tool_width", t("settingsHardware.toolWidth"))} tooltip={t("settingsHardware.toolWidthTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.toolWidth") + ", m"} aria-description={t("settingsHardware.toolWidthTooltip")}  id="setting-tool_width"
+                                <InputNumber {...measurementEditor.fieldProps("tool_width")} aria-label={t("settingsHardware.toolWidth") + ", m"} aria-description={t("settingsHardware.toolWidthTooltip")}  id="setting-tool_width"
                                     value={values.tool_width}
                                     onChange={(v) => onChange("tool_width", v)}
                                     step={0.01} precision={3} style={{ width: "100%" }}
@@ -237,7 +239,7 @@ export const HardwareSection: React.FC<Props> = ({
                     <Row gutter={[16, 0]}>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-chassis_length" data-setting-key="chassis_length" label={fieldLabel("chassis_length", t("settingsHardware.chassisLength"))} tooltip={t("settingsHardware.chassisLengthTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.chassisLength") + ", m"} aria-description={t("settingsHardware.chassisLengthTooltip")} id="setting-chassis_length"
+                                <InputNumber {...measurementEditor.fieldProps("chassis_length")} aria-label={t("settingsHardware.chassisLength") + ", m"} aria-description={t("settingsHardware.chassisLengthTooltip")} id="setting-chassis_length"
                                     value={values.chassis_length}
                                     onChange={(v) => onChange("chassis_length", v)}
                                     step={0.01} precision={3} style={{ width: "100%" }}
@@ -247,7 +249,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-chassis_width" data-setting-key="chassis_width" label={fieldLabel("chassis_width", t("settingsHardware.chassisWidth"))} tooltip={t("settingsHardware.chassisWidthTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.chassisWidth") + ", m"} aria-description={t("settingsHardware.chassisWidthTooltip")} id="setting-chassis_width"
+                                <InputNumber {...measurementEditor.fieldProps("chassis_width")} aria-label={t("settingsHardware.chassisWidth") + ", m"} aria-description={t("settingsHardware.chassisWidthTooltip")} id="setting-chassis_width"
                                     value={values.chassis_width}
                                     onChange={(v) => onChange("chassis_width", v)}
                                     step={0.01} precision={3} style={{ width: "100%" }}
@@ -257,7 +259,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-chassis_height" data-setting-key="chassis_height" label={fieldLabel("chassis_height", t("settingsHardware.chassisHeight"))} tooltip={t("settingsHardware.chassisHeightTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.chassisHeight") + ", m"} aria-description={t("settingsHardware.chassisHeightTooltip")} id="setting-chassis_height"
+                                <InputNumber {...measurementEditor.fieldProps("chassis_height")} aria-label={t("settingsHardware.chassisHeight") + ", m"} aria-description={t("settingsHardware.chassisHeightTooltip")} id="setting-chassis_height"
                                     value={values.chassis_height}
                                     onChange={(v) => onChange("chassis_height", v)}
                                     step={0.01} precision={3} style={{ width: "100%" }}
@@ -269,7 +271,7 @@ export const HardwareSection: React.FC<Props> = ({
                             <Form.Item htmlFor="setting-chassis_z_offset" data-setting-key="chassis_z_offset"
                                 label={fieldLabel("chassis_z_offset", t("settingsHardware.chassisZOffset"))}
                                 tooltip={t("settingsHardware.chassisZOffsetTooltip")}>
-                                <InputNumber id="setting-chassis_z_offset" aria-label={t("settingsHardware.chassisZOffset") + ", m"}
+                                <InputNumber {...measurementEditor.fieldProps("chassis_z_offset")} id="setting-chassis_z_offset" aria-label={t("settingsHardware.chassisZOffset") + ", m"}
                                     aria-description={t("settingsHardware.chassisZOffsetTooltip")}
                                     value={values.chassis_z_offset == null ? undefined : Number(values.chassis_z_offset)}
                                     onChange={v=>{if(v != null) onChange("chassis_z_offset",v);}}
@@ -278,7 +280,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-chassis_center_x" data-setting-key="chassis_center_x" label={fieldLabel("chassis_center_x", t("settingsHardware.chassisCenterX"))} tooltip={t("settingsHardware.chassisCenterXTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.chassisCenterX") + ", m"} aria-description={t("settingsHardware.chassisCenterXTooltip")}  id="setting-chassis_center_x"
+                                <InputNumber {...measurementEditor.fieldProps("chassis_center_x")} aria-label={t("settingsHardware.chassisCenterX") + ", m"} aria-description={t("settingsHardware.chassisCenterXTooltip")}  id="setting-chassis_center_x"
                                     value={values.chassis_center_x}
                                     onChange={(v) => onChange("chassis_center_x", v)}
                                     step={0.01} precision={3} style={{ width: "100%" }}
@@ -298,7 +300,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-wheel_width" data-setting-key="wheel_width" label={fieldLabel("wheel_width", t("settingsHardware.wheelWidth"))} tooltip={t("settingsHardware.wheelWidthTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.wheelWidth") + ", m"} aria-description={t("settingsHardware.wheelWidthTooltip")} id="setting-wheel_width"
+                                <InputNumber {...measurementEditor.fieldProps("wheel_width")} aria-label={t("settingsHardware.wheelWidth") + ", m"} aria-description={t("settingsHardware.wheelWidthTooltip")} id="setting-wheel_width"
                                     value={values.wheel_width}
                                     onChange={(v) => onChange("wheel_width", v)}
                                     step={0.005} precision={3} style={{ width: "100%" }}
@@ -308,7 +310,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-wheel_x_offset" data-setting-key="wheel_x_offset" label={fieldLabel("wheel_x_offset", t("settingsHardware.wheelXOffset"))} tooltip={t("settingsHardware.wheelXOffsetTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.wheelXOffset") + ", m"} aria-description={t("settingsHardware.wheelXOffsetTooltip")}  id="setting-wheel_x_offset"
+                                <InputNumber {...measurementEditor.fieldProps("wheel_x_offset")} aria-label={t("settingsHardware.wheelXOffset") + ", m"} aria-description={t("settingsHardware.wheelXOffsetTooltip")}  id="setting-wheel_x_offset"
                                     value={values.wheel_x_offset}
                                     onChange={(v) => onChange("wheel_x_offset", v)}
                                     step={0.01} precision={3} style={{ width: "100%" }}
@@ -318,7 +320,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-caster_radius" data-setting-key="caster_radius" label={fieldLabel("caster_radius", t("settingsHardware.casterRadius"))} tooltip={t("settingsHardware.casterRadiusTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.casterRadius") + ", m"} aria-description={t("settingsHardware.casterRadiusTooltip")} id="setting-caster_radius"
+                                <InputNumber {...measurementEditor.fieldProps("caster_radius")} aria-label={t("settingsHardware.casterRadius") + ", m"} aria-description={t("settingsHardware.casterRadiusTooltip")} id="setting-caster_radius"
                                     value={values.caster_radius}
                                     onChange={(v) => onChange("caster_radius", v)}
                                     step={0.005} precision={3} style={{ width: "100%" }}
@@ -328,7 +330,7 @@ export const HardwareSection: React.FC<Props> = ({
                         </Col>
                         <Col xs={12} sm={8} lg={6}>
                             <Form.Item htmlFor="setting-caster_track" data-setting-key="caster_track" label={fieldLabel("caster_track", t("settingsHardware.casterTrack"))} tooltip={t("settingsHardware.casterTrackTooltip")}>
-                                <InputNumber aria-label={t("settingsHardware.casterTrack") + ", m"} aria-description={t("settingsHardware.casterTrackTooltip")} id="setting-caster_track"
+                                <InputNumber {...measurementEditor.fieldProps("caster_track")} aria-label={t("settingsHardware.casterTrack") + ", m"} aria-description={t("settingsHardware.casterTrackTooltip")} id="setting-caster_track"
                                     value={values.caster_track}
                                     onChange={(v) => onChange("caster_track", v)}
                                     step={0.01} precision={3} style={{ width: "100%" }}
@@ -340,7 +342,7 @@ export const HardwareSection: React.FC<Props> = ({
                             <Form.Item htmlFor="setting-caster_x_offset" data-setting-key="caster_x_offset"
                                 label={fieldLabel("caster_x_offset", t("settingsHardware.casterXOffset"))}
                                 tooltip={t("settingsHardware.casterXOffsetTooltip")}>
-                                <InputNumber id="setting-caster_x_offset" aria-label={t("settingsHardware.casterXOffset") + ", m"}
+                                <InputNumber {...measurementEditor.fieldProps("caster_x_offset")} id="setting-caster_x_offset" aria-label={t("settingsHardware.casterXOffset") + ", m"}
                                     aria-description={t("settingsHardware.casterXOffsetTooltip")}
                                     value={resolveCasterPosition(values)} min={-.99} max={2} step={.01} precision={3}
                                     onChange={v=>{if(v != null) onChange("caster_x_offset",v);}}
@@ -356,7 +358,7 @@ export const HardwareSection: React.FC<Props> = ({
                                 <Form.Item htmlFor={`setting-${key}`} data-setting-key={key}
                                     label={fieldLabel(key, t(`settingsHardware.${key}`))}
                                     tooltip={t(`settingsHardware.${key}Tooltip`)}>
-                                    <InputNumber id={`setting-${key}`} aria-label={t(`settingsHardware.${key}`) + ", m"}
+                                    <InputNumber {...measurementEditor.fieldProps(key)} id={`setting-${key}`} aria-label={t(`settingsHardware.${key}`) + ", m"}
                                         aria-description={t(`settingsHardware.${key}Tooltip`)}
                                         value={values[key] ?? DOCK_VISUAL_DEFAULTS[key]}
                                         min={key.endsWith("_offset") ? -2 : .1}

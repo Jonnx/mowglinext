@@ -1,13 +1,18 @@
+import type {MeasurementEditorState} from "./useMeasurementEditor";
+import {Button} from "antd";
+import {MeasurementDialog, MeasurementLegend} from "./MeasurementEditor";
+import {measurementGeometry, MEASUREMENTS} from "./measurements";
+import {resolveCasterPosition} from "../../utils/casterPosition";
+import {DOCK_VISUAL_DEFAULTS} from "./dockGeometry";
 import {resolveDockAppearance} from "../../constants/mowerAppearances";
-import {DockGraphic} from "./DockGraphic";
-import {dockedAssemblyBounds, previewDockOffsetY, dockVisualGeometry, setupDockOpacity, type DockVisualGeometry} from "./dockGeometry";
-import {assemblyBounds} from "./assemblyBounds";
+import {dockVisualGeometry} from "./dockGeometry";
 import {Card, Flex, Select, Switch, Typography} from "antd";
 import {useTranslation} from "react-i18next";
-import {useRobotDescription, type RobotGeometry} from "../../hooks/useRobotDescription";
+import {useRobotDescription} from "../../hooks/useRobotDescription";
 import {MOWER_STYLES, useMowerVisual} from "../../hooks/useMowerVisual";
-import {previewRobotGeometry, type RobotView} from "../../utils/robotModel";
-import {LayeredMower} from "./LayeredMower";
+import {previewRobotGeometry} from "../../utils/robotModel";
+import {MowerView} from "./MowerView";
+export {MowerView} from "./MowerView";
 
 export function MowerVisualControls({chooseStyle = false, transparent, onTransparencyChange}: {
     chooseStyle?: boolean; transparent?: boolean; onTransparencyChange?: (value: boolean) => void;
@@ -25,44 +30,34 @@ export function MowerVisualControls({chooseStyle = false, transparent, onTranspa
         {!onTransparencyChange && <Typography.Text type="secondary" style={{fontSize:11}}>{t("mowerVisual.browserPreference")}</Typography.Text>}
     </Flex>;
 }
-export function MowerView({robot, view, maxHeight = 300, highlightSensors = false, transparent, showDock = false, dockGeometry}: {robot: RobotGeometry; view: RobotView; maxHeight?: number; highlightSensors?: boolean; transparent?: boolean; showDock?: boolean; dockGeometry?: DockVisualGeometry}) {
-    const {t} = useTranslation();
-    const [preference] = useMowerVisual();
-    const dockStyle = resolveDockAppearance(preference.dockAppearance).layered ?? "standard";
-    const b = showDock ? dockedAssemblyBounds(robot,view,.05,dockStyle,dockGeometry) : assemblyBounds(robot,view,.05);
-    return <figure style={{margin:0,minWidth:0,flex:"1 1 200px"}}>
-        <figcaption style={{fontSize:12,opacity:.7,marginBottom:8}}>{t("mowerVisual."+view)}</figcaption>
-        <svg role="img" aria-label={t("mowerVisual."+view)} data-testid={`mower-${view}`}
-            viewBox={[b.x,b.y,b.width,b.height].join(" ")} width="100%" style={{display:"block",height:maxHeight}}>
-            {showDock && <g opacity={setupDockOpacity(transparent ?? preference.transparent)} pointerEvents="none">
-                <DockGraphic geometry={dockGeometry} view={view} style={dockStyle} offsetY={previewDockOffsetY(robot,view)}/>
-            </g>}
-            <LayeredMower robot={robot} {...preference} transparent={transparent ?? preference.transparent} view={view} highlightSensors={highlightSensors}/>
-            <g stroke="#80ae9d" strokeWidth={.001} opacity={.65}>
-                <path d="M -.012 0 H .012 M 0 -.012 V .012"/>
-                {view === "side" && <path d={`M ${b.x} ${robot.wheelRadius-(robot.wheelZ ?? 0)} h ${b.width}`} strokeDasharray=".012 .012"/>}
-            </g>
-        </svg>
-    </figure>;
-}
-export function MowerPreview({values, compact = false}: {values: Record<string, unknown>; compact?: boolean}) {
+export function MowerPreview({values, compact = false, editor}: {values: Record<string, unknown>; compact?: boolean; editor?: MeasurementEditorState}) {
     const {t} = useTranslation();
     const live = useRobotDescription();
     const robot = previewRobotGeometry(live,values);
     const [visual] = useMowerVisual(values.mower_model);
     const dockStyle = resolveDockAppearance(visual.dockAppearance).layered ?? "standard";
     const dockGeometry = dockVisualGeometry(values, robot.wheelXOffset, dockStyle, robot.chassisCenterX);
-    return <Card size="small" title={t("mowerVisual.title")} style={{marginBottom:16}} data-testid="mower-preview">
+    const measurementValues = {...DOCK_VISUAL_DEFAULTS,...values,caster_x_offset:resolveCasterPosition(values)};
+    const measurement = editor?.active && !editor.invalid ? measurementGeometry(editor.active,robot,measurementValues,dockStyle) : null;
+    return <Card className={editor?.active ? "measurement-preview-active" : undefined} size="small" title={t("mowerVisual.title")} style={{marginBottom:16}} data-testid="mower-preview">
         {!compact && <MowerVisualControls chooseStyle/>}
         {!live.fromUrdf ? <Typography.Text type="secondary">{t("mowerVisual.waiting")}</Typography.Text> : <>
             <Flex wrap gap={16}>
-                <MowerView dockGeometry={dockGeometry} robot={robot} view="top" showDock={!compact} maxHeight={compact ? 210 : 300}/>
-                {!compact && <MowerView dockGeometry={dockGeometry} robot={robot} view="side" showDock maxHeight={300}/>}
+                <MowerView dockGeometry={dockGeometry} robot={robot} view="top" showDock={!compact} maxHeight={compact ? 210 : editor?.active ? 190 : 300} measurement={measurement?.view === "top" ? measurement : undefined} transparent={editor?.active === "blade_radius" ? true : undefined}/>
+                {!compact && <MowerView dockGeometry={dockGeometry} robot={robot} view="side" showDock maxHeight={editor?.active ? 190 : 300} measurement={measurement?.view === "side" ? measurement : undefined}/>}
             </Flex>
+            {editor?.active && <div className="measurement-preview-summary">
+                <Typography.Text strong>{t("settingsHardware."+MEASUREMENTS[editor.active].label)}</Typography.Text>
+                <Button size="small" onClick={editor.dismiss}>{t("measurementEditor.close")}</Button>
+            </div>}
+            {measurement && <MeasurementLegend measurement={measurement}/>}
+            {editor?.active && !measurement && <Typography.Text type="danger">{t("measurementEditor.invalid")}</Typography.Text>}
             <Typography.Text style={{display:"block",marginTop:12}}>
                 {(robot.baseLength*100).toFixed(1)} × {(robot.baseWidth*100).toFixed(1)} × {(robot.baseHeight*100).toFixed(1)} cm
             </Typography.Text>
             <Typography.Text type="secondary" style={{fontSize:12}}>{t("mowerVisual.previewNote")}</Typography.Text>
         </>}
+        {editor?.session && <MeasurementDialog session={editor.session} live={live} values={values}
+            onCancel={editor.close} onApply={editor.apply}/>}
     </Card>;
 }

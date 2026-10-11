@@ -395,3 +395,33 @@ GUI schema and template; they are added to that registration, not a second nomin
 alignment. Existing explicitly saved adjustments remain additive; early test
 installations using a nominal dock-centre value should reset X to zero. This only
 moves the illustration and does not change the calibrated dock pose.
+
+
+## Focused hardware measurements
+
+Hardware focus overlays the active dimension on the existing top/side preview.
+On mobile (or a short touch viewport), the field opens a bottom-sheet editor.
+Apply changes the settings draft only; Cancel/Escape discard the local edit and
+restore focus. Persistence still belongs to the page Save action.
+
+- measurements.ts registers the 18 supported keys and computes physical endpoints.
+  Lengths use chassis/dock frames, tracks use tyre centres, radii start at axles,
+  and signed geometry offsets use the robot origin. Dock adjustments start at the
+  artwork's nominal registration, including the standard +0.220 m offset.
+- MeasurementOverlay.tsx adds labels/extension lines and expands viewport bounds
+  without changing any physical dimensions.
+- MowerView.tsx shares the existing assembly rendering; MeasurementEditor.tsx
+  reuses the Hardware preview's live description, with no extra subscription.
+- useMeasurementEditor.ts connects fields to focus/dialog state. Empty, invalid or
+  out-of-range input must never display the last valid value as the current measurement.
+- The dialog follows visualViewport resize/scroll, uses Ant Design's focus trap,
+  and keeps actions outside its scrolling body. English/French endpoint/help
+  strings are shared with the existing Hardware labels/tooltips.
+- Map artwork and runtime geometry are unaffected until settings are explicitly
+  saved and the existing geometry-application workflow is followed.
+
+Tests: measurements.test.ts checks physical endpoints, signed/zero offsets and
+independent blade/swath widths. measurement-editor.spec.ts covers real-app desktop
+and mobile editing, cancellation, focus, validation, viewport resizing and no
+automatic settings writes. PR screenshots and dimensional fixture values are in
+docs/pr/layered-mower/README.md.
