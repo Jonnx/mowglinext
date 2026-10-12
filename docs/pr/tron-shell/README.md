@@ -25,6 +25,12 @@ of Tron's front omni wheels. The illustrative 750 × 590 × 297 mm chassis and
 wheel/sensor values are screenshot fixtures only, not measured dimensions or a
 preset. They are never applied by selecting this shell. No robot was accessed.
 
+The revised example places the chassis bottom 70 mm below the rear axle, giving
+60 mm ground clearance with its 130 mm wheel radius. This lowers the body 35 mm
+from the first screenshot without changing its height or wheel dimensions. The
+illustrative GPS mounting height moves down with the shell. This is a visual
+fit to the supplied reference, not a measured Tron specification.
+
 ## Artwork provenance and registration
 
 Built-in ImageGen generated `tron.png` using the user's three Tron photos as shape

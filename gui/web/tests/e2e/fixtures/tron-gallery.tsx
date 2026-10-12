@@ -3,7 +3,7 @@ import {LayeredMower} from "../../../src/components/robot/LayeredMower";
 import {parseRobotUrdf,previewRobotGeometry} from "../../../src/utils/robotModel";
 import {ROBOT_URDF} from "../../../src/test/robotUrdf";
 // Illustration proportions only. Selecting a shell never applies geometry.
-const robot=previewRobotGeometry(parseRobotUrdf(ROBOT_URDF)!,{chassis_length:.75,chassis_width:.59,chassis_height:.297,chassis_center_x:.28,chassis_z_offset:-.035});
+const robot=previewRobotGeometry(parseRobotUrdf(ROBOT_URDF)!,{chassis_length:.75,chassis_width:.59,chassis_height:.297,chassis_center_x:.28,chassis_z_offset:-.070});
 const colours=[{name:"Original silver",colour:""},{name:"Mowgli green",colour:"#3f8e79"},{name:"Ocean blue",colour:"#167bc1"},{name:"Warm orange",colour:"#e97822"}];
 createRoot(document.getElementById("root")!).render(<main>
 <style>{`
@@ -16,7 +16,7 @@ header{display:flex;justify-content:space-between;align-items:end;margin-bottom:
 <header><div><div className="eyebrow">MOWGLINEXT / NEW SHELL</div><h1>Airseekers Tron-inspired</h1></div><p>Silver cover only · original shading retained<br/>Graphite frame, deck and bumper stay unchanged</p></header>
 <div className="grid">{colours.map(({name,colour})=><article key={name}><h2>{name}</h2><div className="views">
 <div><svg viewBox="-.315 -.68 .63 .82"><LayeredMower robot={robot} style="tron" colour={colour} view="top" sensors={false} layoutDetails={false} transparent={false}/></svg><div className="caption">TOP · FRONT ↑</div></div>
-<div><svg viewBox="-.68 -.30 .82 .47"><LayeredMower robot={robot} style="tron" colour={colour} view="side" sensors={false} layoutDetails={false} transparent={false}/></svg><div className="caption">LEFT SIDE · FRONT ←</div></div>
+<div><svg viewBox="-.68 -.265 .82 .47"><LayeredMower robot={robot} style="tron" colour={colour} view="side" sensors={false} layoutDetails={false} transparent={false}/></svg><div className="caption">LEFT SIDE · FRONT ←</div></div>
 </div></article>)}</div>
 <footer><span>Actual application paint pipeline · no pre-painted colour variants</span><span>Shell-only study · standard dock pairing · illustrative proportions</span></footer>
 </main>);

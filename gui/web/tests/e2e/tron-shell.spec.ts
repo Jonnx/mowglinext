@@ -32,8 +32,9 @@ test("Tron silver cover recolours in both projections",async({page})=>{
 });
 // Photo-proportioned demo only; no manufacturer dimensions/preset are introduced.
 const settings={mower_model:"CUSTOM",mower_visual_style:"tron",mower_visual_colour:"#3f8e79",lidar_enabled:false,
-    chassis_length:.75,chassis_width:.59,chassis_height:.297,chassis_center_x:.28,chassis_z_offset:-.035,
+    chassis_length:.75,chassis_width:.59,chassis_height:.297,chassis_center_x:.28,chassis_z_offset:-.070,
     wheel_radius:.13,wheel_width:.065,wheel_track:.53,wheel_x_offset:0,caster_radius:.09,caster_track:.43,caster_x_offset:.52,
+    gps_x:.30,gps_y:0,gps_z:.165,
     blade_radius:.11,tool_width:.22,dock_visual_length:.90,dock_visual_width:.68,dock_visual_x_offset:0,dock_visual_y_offset:0};
 test("Tron hardware and transparent sensors share artwork and standard dock",async({page})=>{
     mkdirSync(shots,{recursive:true});
