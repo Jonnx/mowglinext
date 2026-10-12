@@ -4075,17 +4075,18 @@ private:
     if (blade_mismatch_since_ns_ == 0)
       blade_mismatch_since_ns_ = now_ns;
 
-    if (blade_reassert_due(in, blade_reassert_cfg_))
+    if (should_reassert_blade_on(in, blade_reassert_cfg_))
     {
-      const bool velocity_was_stale = in.cmd_vel_age_s > blade_reassert_cfg_.max_cmd_vel_age_s;
       RCLCPP_INFO_THROTTLE(get_logger(),
                            *get_clock(),
                            2000,
                            "Blade ON re-asserted: mow_enabled=true but the firmware reports the "
-                           "blade stopped%s (last cmd_vel %.0f ms ago).",
-                           velocity_was_stale ? " after a zero-velocity stop" : "",
+                           "blade stopped (last cmd_vel %.0f ms ago).",
                            in.cmd_vel_age_s * 1e3);
-      send_blade_on_with_fresh_velocity();
+      // Automatic retries require the existing velocity producer to be live.
+      // Never manufacture a zero packet here: that could renew blade authority
+      // after the firmware stopped it because the command producer disappeared.
+      send_blade_command(1, desired_blade_direction_);
       return;
     }
 

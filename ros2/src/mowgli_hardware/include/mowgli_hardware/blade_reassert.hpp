@@ -29,10 +29,10 @@
 //     (#763). `intent_authorized` is dropped on any emergency and only an
 //     explicit MowerControl ON sets it again;
 //   * never while the lift handling owns the blade (`enable_allowed`);
-//   * never send ON against a stale CMD_VEL: when stale, the bridge first sends
-//     a zero-velocity stop packet and retries ON only if that packet was written
-//     within the firmware window; a blind stale re-send would STOP a running
-//     blade.
+//   * never automatically retry ON against a stale CMD_VEL: the velocity
+//     producer must still be live. An explicit MowerControl ON can prime a
+//     zero-velocity stop first, but an automatic retry must never manufacture
+//     freshness after a producer disappears.
 
 #ifndef MOWGLI_HARDWARE__BLADE_REASSERT_HPP_
 #define MOWGLI_HARDWARE__BLADE_REASSERT_HPP_
@@ -73,9 +73,8 @@ constexpr bool blade_intent_mismatch(const BladeReassertInputs& in)
   return in.mow_enabled && in.enable_allowed && in.blade_status_fresh && !in.blade_active;
 }
 
-// True when an authorized retry is due. The bridge must send a zero CMD_VEL
-// first when the velocity stream is stale, then send the blade ON only if that
-// stop packet was written freshly enough for the firmware gate.
+// True when intent and retry spacing permit a retry. Automatic ON eligibility
+// additionally requires producer liveness (should_reassert_blade_on below).
 constexpr bool blade_reassert_due(const BladeReassertInputs& in,
                                   const BladeReassertConfig& cfg = {})
 {

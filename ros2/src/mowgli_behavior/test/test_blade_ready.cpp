@@ -81,6 +81,15 @@ TEST_F(BladeReadyTest, DelayedAcknowledgementDoesNotConsumeTheFallbackDelay)
   EXPECT_EQ(step(3.6, 0), BladeReadyResult::kTimerFallback);
 }
 
+TEST_F(BladeReadyTest, DelayedDeliveryCannotReplaceTheSourceObservationStabilityWindow)
+{
+  begin();
+  EXPECT_EQ(step(0.1, 10100000000), BladeReadyResult::kWaiting);
+  // The distinct report arrives 0.4s later but was observed only 0.05s later.
+  EXPECT_EQ(step(0.5, 10150000000), BladeReadyResult::kWaiting);
+  EXPECT_EQ(step(0.6, 10600000000), BladeReadyResult::kTelemetryReady);
+}
+
 TEST_F(BladeReadyTest, KnownTelemetryNeverFallsBackEvenIfItDisappears)
 {
   begin();
@@ -174,6 +183,8 @@ TEST_F(BladeReadyTest, UniqueObservationSilenceResetsStabilityWhenRosClockPauses
   EXPECT_EQ(step(2.3, 10300000000, 3000.0, true, true, true, true, 10300000000),
             BladeReadyResult::kWaiting);
   EXPECT_EQ(step(2.5, 10400000000, 3000.0, true, true, true, true, 10400000000),
+            BladeReadyResult::kWaiting);
+  EXPECT_EQ(step(2.7, 10500000000, 3000.0, true, true, true, true, 10500000000),
             BladeReadyResult::kTelemetryReady);
 }
 
