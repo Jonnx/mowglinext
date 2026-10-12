@@ -13,7 +13,7 @@ export const APPEARANCE_REGISTRY = {
             "side": [865, 204, 1111, 440],
             "files": {"top": "tron.png", "side": "tron.png"},
             "cells": {"top": [0, 0, 800, 764], "side": [800, 0, 1259, 764]},
-            "label": {"en": "Airseekers Tron-inspired", "fr": "Inspiré Airseekers Tron"},
+            "label": {"en": "Tron-inspired", "fr": "Inspiré Tron"},
             "dock": "styled",
             "mapMaxSize": 384,
             "wheelsOverShell": {"top": false, "side": true},

@@ -4,7 +4,7 @@ The shared renderer is used by Hardware, Sensors and the map's URDF appearance.
 It is a scaled illustration, not CAD or collision geometry.
 
 - Configure the shell once in Hardware. Sensors and Map inherit the selection.
-- Shell choices come from the registry: Rounded, Sculpted, Utility, Yardforce-inspired, RM1000-inspired, Worx-inspired and Airseekers Tron-inspired.
+- Shell choices come from the registry: Rounded, Sculpted, Utility, Yardforce-inspired, RM1000-inspired, Worx-inspired and Tron-inspired.
 - Shell style is saved in mower configuration; Hardware transparency stays browser-local.
 - Sensors starts transparent each time it opens; its toggle affects only that
   editor session (both top and side). The map always remains opaque.
