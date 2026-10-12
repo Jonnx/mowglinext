@@ -669,15 +669,25 @@ void FollowStrip::persistResumeCursor(const std::shared_ptr<BTContext>& ctx)
                                       : 0;
   const std::size_t absolute = base + trim_offset + path_progress_idx_;
   recordInterruptedCoverageProgress(*ctx, area_idx_, absolute, total_path_poses_);
+  // Report a saved cursor only after the atomic checkpoint write succeeds.
+  // Failed writes are reported by the persistence layer; live progress remains
+  // available for an in-process resume even when disk persistence fails.
+  if (!saveCoverageResumeState(*ctx))
+  {
+    RCLCPP_WARN(ctx->node->get_logger(),
+                "FollowStrip: area %u interrupted at pose %zu/%zu; resume cursor retained in "
+                "memory only",
+                area_idx_,
+                absolute,
+                total_path_poses_);
+    return;
+  }
   RCLCPP_INFO(ctx->node->get_logger(),
               "FollowStrip: area %u interrupted at pose %zu/%zu (%.0f%%) — resume cursor saved",
               area_idx_,
               absolute,
               total_path_poses_,
               static_cast<double>(ctx->coverage_percent));
-  // Persist to disk so the resume survives a full process/container restart,
-  // not just the in-RAM BT halt (the whole point of issue #334).
-  saveCoverageResumeState(*ctx);
 }
 
 bool FollowStrip::sendFollowGoal(const std::shared_ptr<BTContext>& ctx)
@@ -1741,7 +1751,7 @@ BT::NodeStatus FollowStrip::yieldToFleet(const std::shared_ptr<BTContext>& ctx, 
   ctx->fleet_yielded_areas.insert(area_idx_);
   RCLCPP_INFO(ctx->node->get_logger(),
               "FollowStrip: area %u is assigned to another fleet member — yielding %s "
-              "(resume cursor saved; this pass is not charged to the no-progress budget)",
+              "(this pass is not charged to the no-progress budget)",
               area_idx_,
               mid_pass ? "mid-pass" : "before starting");
   // SUCCESS = "this pass is over", exactly like a pass that mowed what it
