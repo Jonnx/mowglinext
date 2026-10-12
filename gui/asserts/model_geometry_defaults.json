@@ -1,0 +1,25 @@
+{
+  "_comment": "GENERATED from gui/web/src/constants/mowerModels.ts; run npm run generate:model-geometry from gui/web.",
+  "models": {
+    "YardForce500": {
+      "chassis_z_offset": -0.05
+    },
+    "YardForce500B": {
+      "chassis_z_offset": -0.05
+    },
+    "YardForceSA650": {
+      "chassis_z_offset": 0
+    },
+    "BiltemaRM1000": {},
+    "YardForce900ECO": {
+      "chassis_z_offset": 0
+    },
+    "LUV1000RI": {
+      "chassis_z_offset": 0
+    },
+    "Sabo": {
+      "chassis_z_offset": 0
+    },
+    "CUSTOM": {}
+  }
+}

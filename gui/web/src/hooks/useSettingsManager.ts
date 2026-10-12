@@ -376,20 +376,6 @@ export const useSettingsManager = () => {
                 const data = (res.data) || {};
                 setSavedValues(data);
                 setLocalValues(data);
-                // Best-effort: the reset-to-default UI degrades gracefully
-                // (no reset icons) if this fails, so it must not block load.
-                try {
-                    const defRes = await guiApi.request({
-                        path: "/settings/yaml/defaults",
-                        method: "GET",
-                        format: "json",
-                    });
-                    if (!defRes.error) {
-                        setDefaults((defRes.data as Record<string, any>) || {});
-                    }
-                } catch {
-                    /* defaults unavailable — reset affordance hidden */
-                }
                 initialLoadDone.current = true;
             } catch (e: any) {
                 notification.error({
@@ -401,6 +387,23 @@ export const useSettingsManager = () => {
             }
         })();
     }, []);
+
+    // The reset value follows the draft preset, including before Save. Discard
+    // responses from an earlier selection rather than displaying stale defaults.
+    useEffect(() => {
+        if (loading) return;
+        let active = true;
+        setDefaults({});
+        guiApi.request({
+            path: "/settings/yaml/defaults",
+            method: "GET",
+            format: "json",
+            query: {mower_model: localValues.mower_model},
+        }).then(res => {
+            if (active && !res.error) setDefaults((res.data as Record<string, any>) || {});
+        }).catch(() => { /* defaults unavailable: reset affordance stays hidden */ });
+        return () => { active = false; };
+    }, [loading, localValues.mower_model, guiApi]);
 
     const handleChange = useCallback((key: string, value: any) => {
         setLocalValues((prev) => ({ ...materializeLegacyCasterPosition(prev), [key]: value }));

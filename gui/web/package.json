@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "prebuild": "node --experimental-strip-types scripts/appearance-registry.mjs",
+    "prebuild": "node --experimental-strip-types scripts/appearance-registry.mjs && node --experimental-strip-types scripts/model-geometry-defaults.mjs",
+    "generate:model-geometry": "node --experimental-strip-types scripts/model-geometry-defaults.mjs --write",
     "generate:appearances": "node --experimental-strip-types scripts/appearance-registry.mjs --write-schema && node --experimental-strip-types scripts/generate-map-artwork.mjs",
     "test:appearances": "node --experimental-strip-types --test scripts/appearance-registry.test.mjs",
     "lint": "eslint src --report-unused-disable-directives --max-warnings 900",
