@@ -126,13 +126,20 @@ public:
       {
         context_->current_command = 0;  // IDLE — require an explicit operator start
       }
+      std::size_t completed_subpaths = 0;
+      for (const auto& [area, done] : context_->area_completed_swaths)
+      {
+        completed_subpaths += done.size();
+      }
       RCLCPP_INFO(get_logger(),
                   "Restored coverage resume state from %s (current_area=%d, %zu area(s) with a "
-                  "resume cursor, %zu completed, auto_continue=%s, stop_hold=%s)",
+                  "resume cursor, %zu completed areas, %zu completed subpaths, "
+                  "auto_continue=%s, stop_hold=%s)",
                   context_->coverage_resume_path.c_str(),
                   context_->current_area,
                   context_->area_resume_pose_index.size(),
                   context_->completed_areas.size(),
+                  completed_subpaths,
                   auto_continue ? "true" : "false",
                   preserve_stop_hold ? "true" : "false");
     }

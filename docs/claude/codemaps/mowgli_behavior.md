@@ -93,7 +93,8 @@
 | `utility_nodes.cpp` | 267 | Blade service, waits, `SaveObstacles`, `ResetEmergency` |
 | `coverage_persistence.cpp` | 353 | Text file `coverage_resume.txt` (atomic tmp+rename): `current_command`, `single_area_target`, `current_area`, `completed_areas`, per-`area` rows (id, pose_count, fingerprint, resume, completed swaths) |
 | `battery_filter.cpp` | 85 | Rate-independent low-pass on `v_battery` |
-| **`test/`** (gtest; all registered in `CMakeLists.txt`) | | |
+| **`test/`** (gtest + launch tests; all registered in `CMakeLists.txt`) | | |
+| `test_coverage_restart.launch.py` | | DDS-isolated process restart: real `behavior_tree_node`, fake map/planner/Nav2; crash between subpaths, reload START and targeted area, check startup log/GUI resume signal and dispatch only the next subpath |
 | `test_recording_nodes.cpp` | 561 | 21 tests: DP simplification, spacing gate, area math, save/cancel paths of `RecordArea` |
 | `test_obstacle_recovery.cpp` | 305 | 13 tests: `IsObstacleStuck` timing/cap/cooldown against latched collision state |
 | `test_docking_boundary_exempt.cpp` | 232 | 8 tests: `IsDocking` + BoundaryGuard blade-off dock-transit exemption |
