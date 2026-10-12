@@ -1,5 +1,5 @@
 {
-  "_comment": "GENERATED from gui/web/src/constants/mowerModels.ts; run npm run generate:model-geometry from gui/web.",
+  "_comment": "GENERATED from gui/web mowerModels.ts: npm run generate:model-geometry",
   "models": {
     "YardForce500": {
       "chassis_z_offset": -0.05

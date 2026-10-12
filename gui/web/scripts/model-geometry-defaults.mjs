@@ -12,7 +12,7 @@ export function modelGeometryDefaults(models = MOWER_MODELS) {
 }
 export async function syncModelGeometryDefaults(write = false) {
     const output = JSON.stringify({
-        _comment: "GENERATED from gui/web/src/constants/mowerModels.ts; run npm run generate:model-geometry from gui/web.",
+        _comment: "GENERATED from gui/web mowerModels.ts: npm run generate:model-geometry",
         models: modelGeometryDefaults(),
     }, null, 2) + "\n";
     for (const relative of ["../../asserts/model_geometry_defaults.json",
