@@ -12,10 +12,15 @@ pytest.importorskip(
 from mowgli_tools.drive_pid_math import (  # noqa: E402
     DrivePidParams,
     OdometryParams,
+    SpeedSample,
+    TickSample,
     TrialMetrics,
     resolve_robot_tuning_tier,
 )
-from mowgli_tools.drive_pid_tuner import DrivePidTuner, _build_parser  # noqa: E402
+from mowgli_tools.drive_pid_tuner import (  # noqa: E402
+    DrivePidTuner, RtkPoseSample, TrialAbortedError, _build_parser,
+)
+from mowgli_interfaces.msg import GnssStatus  # noqa: E402
 from mowgli_tools.robot_hardware_config import extract_robot_hardware_config  # noqa: E402
 
 
@@ -191,3 +196,86 @@ def test_stm32_session_still_refines_odometry_and_feedforward(tuner):
     assert recommended.wheel_pid_pwm_per_mps == pytest.approx(300.0)
     assert recommended.wheel_pid_kp == original.wheel_pid_kp
     assert recommended.wheel_pid_ki == original.wheel_pid_ki
+
+
+@pytest.mark.parametrize("rtk_fixed", [True, False])
+def test_mavros_real_metrics_session_to_report_without_motion(tuner, monkeypatch, rtk_fixed):
+    tuner._args.passes = 1
+    tuner._args.test_speed = 0.4
+    tuner._latest_odom_time = 100.0
+    tuner._latest_gnss_status = object()
+    tuner._get_drive_pid_params = Mock(return_value=OdometryParams(343.0))
+    for name in (
+        "_wait_for_initial_state", "_ensure_safe_to_start", "_log_motion_gate_state",
+        "_enter_recording_if_needed", "_stop_robot", "_cancel_recording_if_needed",
+    ):
+        setattr(tuner, name, Mock())
+    # No ROS node is initialized; all motion/BT endpoints are disconnected mocks.
+    tuner._publish_cmd = Mock(side_effect=AssertionError("Unexpected motion command"))
+    clock = [100.0]
+    monkeypatch.setattr("mowgli_tools.drive_pid_tuner.time.monotonic", lambda: clock[0])
+
+    def simulated_segment(recorder):
+        recorder.speed_samples = [SpeedSample(100 + i, 0.4) for i in range(1, 8)]
+        recorder.tick_samples = [
+            TickSample(101.0, 0, 0), TickSample(107.0, 823200, 823200),
+        ]
+        recorder.rtk_samples = [
+            RtkPoseSample(100 + i, (i - 1) * 0.4, 0.0, 0.01, True, True,
+                          GnssStatus.RTK_MODE_FIXED if rtk_fixed else GnssStatus.RTK_MODE_FLOAT,
+                          "FIXED" if rtk_fixed else "FLOAT")
+            for i in range(1, 8)
+        ]
+        clock[0] = 110.0
+
+    tuner._drive_segment = simulated_segment
+    if rtk_fixed:
+        assert tuner.run() == 0
+    else:
+        with pytest.raises(RuntimeError, match="No trustworthy RTK/GNSS distance"):
+            tuner.run()
+    with open(tuner._args.output) as stream:
+        report = yaml.safe_load(stream)
+    assert report["calibration_scope"] == "odometry"
+    assert report["proposed_params"] == {"ticks_per_meter": pytest.approx(343.0)}
+    assert "wheel_pid" not in yaml.safe_dump(report)
+    if rtk_fixed:
+        trial = report["trials"][0]
+        assert trial["rtk_accepted"] is True
+        assert trial["rtk_distance_m"] == pytest.approx(2.4)
+        assert trial["odom_distance_m"] == pytest.approx(2.4)
+        assert trial["stall_detected"] is False
+        assert trial["params_used"] == {"ticks_per_meter": 343.0}
+        assert "integral_saturation_suspected" not in trial
+    else:
+        assert "No trustworthy RTK/GNSS distance" in report["failure_message"]
+    tuner._publish_cmd.assert_not_called()
+    tuner._apply_drive_pid_params.assert_not_called()
+    tuner._stop_robot.assert_called()
+    tuner._cancel_recording_if_needed.assert_called_once()
+
+
+def test_mavros_aborted_speed_trial_keeps_metrics_without_pid_exception(tuner):
+    tuner._latest_odom_time = 0.0
+    tuner._stop_robot = Mock()
+
+    def aborted_segment(recorder):
+        recorder.speed_samples = [SpeedSample(i * 0.2, 0.051) for i in range(16)]
+        recorder.tick_samples = [TickSample(0, 0, 0), TickSample(3, 12534, 12818)]
+        raise RuntimeError("live_recent_speed_below_floor_with_ticks")
+
+    tuner._drive_segment = aborted_segment
+    with pytest.raises(TrialAbortedError, match="live_recent_speed_below_floor_with_ticks") as caught:
+        tuner._run_speed_trial(
+            name="odom_pass", phase="odometry", initial_speed=0.0,
+            target_speed=0.4, params=OdometryParams(343.0), duration_s=8.5,
+        )
+    metrics = caught.value.metrics
+    assert metrics.stall_detected is True
+    assert metrics.integral_saturation_suspected is False
+    assert metrics.left_ticks_seen == 12534
+    assert metrics.right_ticks_seen == 12818
+    assert metrics.params_used == {"ticks_per_meter": 343.0}
+    assert any("Partial trial metrics recorded after abort" in note for note in metrics.notes)
+    tuner._stop_robot.assert_called_once()
+    assert tuner._active_trial is None

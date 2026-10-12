@@ -137,7 +137,7 @@ class TrialRecorder:
     phase: str
     initial_speed: float
     target_speed: float
-    params: DrivePidParams
+    params: DrivePidParams | OdometryParams
     command_start_s: float
     ramp_time_s: float
     command_duration_s: float
@@ -660,7 +660,7 @@ class DrivePidTuner(Node):
                 updates[key] = float(value)
         return updates
 
-    def _resolve_starting_params(self, current_params: DrivePidParams) -> DrivePidParams:
+    def _resolve_starting_params(self, current_params: DrivePidParams | OdometryParams) -> DrivePidParams | OdometryParams:
         if self._args.hardware_backend == "mavros":
             return current_params
         params = current_params
@@ -685,8 +685,8 @@ class DrivePidTuner(Node):
     def _initial_baseline_source(
         self,
         *,
-        current_params: DrivePidParams,
-        starting_params: DrivePidParams,
+        current_params: DrivePidParams | OdometryParams,
+        starting_params: DrivePidParams | OdometryParams,
         profile_reference_params: DrivePidParams | None,
     ) -> str:
         if starting_params == current_params:
@@ -700,8 +700,8 @@ class DrivePidTuner(Node):
     def _log_initial_baseline(
         self,
         *,
-        current_params: DrivePidParams,
-        starting_params: DrivePidParams,
+        current_params: DrivePidParams | OdometryParams,
+        starting_params: DrivePidParams | OdometryParams,
         profile_reference_params: DrivePidParams | None,
     ) -> None:
         if self._args.hardware_backend == "mavros":
@@ -781,7 +781,7 @@ class DrivePidTuner(Node):
 
     def _build_drivetrain_diagnostics(
         self,
-        proposed_params: DrivePidParams,
+        proposed_params: DrivePidParams | OdometryParams,
     ) -> dict[str, Any]:
         diagnostics: dict[str, Any] = {}
         notes: list[str] = []
@@ -928,8 +928,8 @@ class DrivePidTuner(Node):
 
     def _run_feedforward_session(
         self,
-        working_params: DrivePidParams,
-    ) -> tuple[DrivePidParams, list[TrialMetrics], list[str]]:
+        working_params: DrivePidParams | OdometryParams,
+    ) -> tuple[DrivePidParams | OdometryParams, list[TrialMetrics], list[str]]:
         # Keep the historical ff entrypoint/API; MAVROS only fits odometry.
         if self._args.hardware_backend == "mavros":
             return self._run_odometry_session(working_params)
@@ -1176,7 +1176,7 @@ class DrivePidTuner(Node):
         if failures:
             raise RuntimeError(f"Failed to apply drive PID parameters: {failures}")
 
-    def _write_backup(self, params: DrivePidParams) -> None:
+    def _write_backup(self, params: DrivePidParams | OdometryParams) -> None:
         self._backup_path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "saved_at": _now_iso(),
@@ -1275,7 +1275,7 @@ class DrivePidTuner(Node):
         phase: str,
         initial_speed: float,
         target_speed: float,
-        params: DrivePidParams,
+        params: DrivePidParams | OdometryParams,
         duration_s: float | None = None,
         ramp_down: bool = True,
         hold_zero_after: bool = True,
@@ -2110,8 +2110,8 @@ class DrivePidTuner(Node):
 
     def _print_dry_run(
         self,
-        current_params: DrivePidParams,
-        working_params: DrivePidParams,
+        current_params: DrivePidParams | OdometryParams,
+        working_params: DrivePidParams | OdometryParams,
         profile_reference_params: DrivePidParams | None,
     ) -> None:
         print("=== ODOMETRY CALIBRATION DRY RUN ===" if self._args.hardware_backend == "mavros" else "=== DRIVE PID TUNER DRY RUN ===")
@@ -2132,9 +2132,9 @@ class DrivePidTuner(Node):
 
     def _print_summary(
         self,
-        current_params: DrivePidParams,
-        starting_params: DrivePidParams,
-        proposed_params: DrivePidParams,
+        current_params: DrivePidParams | OdometryParams,
+        starting_params: DrivePidParams | OdometryParams,
+        proposed_params: DrivePidParams | OdometryParams,
         feedforward_trials: list[TrialMetrics],
         response_trials: list[TrialMetrics],
         applied_live: bool,
@@ -2175,9 +2175,9 @@ class DrivePidTuner(Node):
         self,
         *,
         mode: str,
-        current_params: DrivePidParams,
-        starting_params: DrivePidParams,
-        proposed_params: DrivePidParams,
+        current_params: DrivePidParams | OdometryParams,
+        starting_params: DrivePidParams | OdometryParams,
+        proposed_params: DrivePidParams | OdometryParams,
         applied_live: bool,
         trials: list[TrialMetrics],
         reasons: list[str],

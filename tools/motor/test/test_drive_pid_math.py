@@ -12,6 +12,7 @@ from mowgli_tools.drive_pid_math import (
     WHEEL_PID_TEMPLATE_KI,
     WHEEL_PID_TEMPLATE_KP,
     DrivePidParams,
+    OdometryParams,
     LiveOscillationDecision,
     LiveStallDiagnostic,
     SpeedSample,
@@ -1126,3 +1127,32 @@ def test_recommend_pid_only_params_mass_tier_does_not_lower_the_floor() -> None:
     assert recommended_light.wheel_pid_kp == WHEEL_PID_TEMPLATE_KP
     assert any("below the firmware-unit floor" in reason for reason in light_reasons)
     assert any("below the firmware-unit floor" in reason for reason in heavy_reasons)
+
+
+@pytest.mark.parametrize("params, speed, stalled, saturation", [
+    (OdometryParams(343.0), 0.051, True, False),
+    (OdometryParams(343.0), 0.4, False, False),
+    (_params(), 0.051, True, True),
+])
+def test_trial_metrics_integrator_diagnostic_requires_real_pid(params, speed, stalled, saturation):
+    metrics = compute_trial_metrics(
+        name="odom_pass", phase="odometry", target_speed=0.4,
+        speed_samples=[SpeedSample(i * 0.2, speed) for i in range(20)],
+        response_samples=None, ticks_seen=12676,
+        left_ticks_seen=12534, right_ticks_seen=12818,
+        params_used=params, ground_speed_mean=0.4,
+        odom_distance_m=speed * 3.8, rtk_distance_m=1.52,
+        warnings=["existing warning"], notes=["existing note"],
+    )
+    assert metrics.params_used == params.to_dict()
+    assert metrics.integral_saturation_suspected is saturation
+    assert metrics.stall_detected is stalled
+    assert metrics.measured_speed_mean == pytest.approx(speed)
+    assert metrics.error_mean == pytest.approx(0.4 - speed)
+    assert metrics.left_right_tick_imbalance == pytest.approx(284 / 12676)
+    assert metrics.rtk_accepted is True
+    assert metrics.rtk_distance_m == 1.52
+    assert metrics.odom_distance_m == pytest.approx(speed * 3.8)
+    assert "existing warning" in metrics.warnings
+    assert "existing note" in metrics.notes
+    assert metrics.trial_quality == ("poor" if stalled else "warning")
