@@ -806,7 +806,7 @@
     "tickFactorLabel": "Tick factor:",
     "tickFactorUnit": "ticks/m at the wheel.",
     "bodyOmegaLabel": "Body omega from L/R diff:",
-    "perWheelTempNote": "Per-wheel motor temperatures + currents are not exposed by the firmware; only the blade motor reports those (see Hardware Status below).",
+    "perWheelTempNote": "Per-wheel electrical readings and ESC temperature depend on the backend and available telemetry. VESC motor RPM is distinct from physical wheel RPM.",
     "hardwareStatus": "Hardware Status",
     "mowerStatus": "Mower Status",
     "statusOk": "OK",
@@ -5000,5 +5000,21 @@
     "notEstablished": "To verify — not established / outside MAVROS",
     "notMeasured": "To verify — no reliable runtime measurement available",
     "telemetryPolicy": "Physical acquisition, MAVLink reception and ROS2 republication are distinct. Republishing a cache is not acquisition. Interval requests can override stream settings; the .param alone proves neither compatibility nor insufficient delivery. No universal minimum rate, SCHED_LOOP_RATE change or automatic rate increase."
+  },
+  "wheelTelemetry": {
+    "states": {
+      "online": "Online",
+      "absent": "Absent",
+      "stale": "Stale",
+      "fault": "Fault"
+    },
+    "temperature": "ESC temperature",
+    "current": "ESC current",
+    "voltage": "ESC voltage",
+    "ampHours": "Cumulative ESC consumption",
+    "motorRpm": "Motor RPM (absolute)",
+    "failureFlags": "Failure flags",
+    "errorCount": "Error count",
+    "age": "ESC acquisition age"
   }
 }

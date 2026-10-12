@@ -1,6 +1,6 @@
 import {useBladeTelemetry} from '../hooks/useBladeTelemetry';
 import {useHardwareBackend} from '../hooks/useHardwareBackend';
-import {motorDisplayValue} from '../utils/motorTelemetry';
+import {motorDisplayValue, wheelControllerFromDiagnostics, wheelControllerFields, showEncoderWheel, type WheelRole} from '../utils/motorTelemetry';
 import {
     Alert,
     Button,
@@ -217,6 +217,8 @@ export const DiagnosticsPage = () => {
     const {modal} = App.useApp();
     const {snapshot, loading, error: snapshotError, refresh} = useDiagnosticsSnapshot();
     const {diagnostics} = useDiagnostics();
+    const wheelControllers = {left_wheel: wheelControllerFromDiagnostics(diagnostics, 'left_wheel', nowMs),
+        right_wheel: wheelControllerFromDiagnostics(diagnostics, 'right_wheel', nowMs)};
     const finitePower = (value: number | undefined) =>
         typeof value === "number" && Number.isFinite(value) ? value : undefined;
     // Mobile uses collapsible panels; desktop shows sensors in the Robot tab.
@@ -1818,15 +1820,16 @@ export const DiagnosticsPage = () => {
                         {[
                             {label: t('diagnosticsPage.frontLeft'),  rpm: wheelRpm.fl, ticks: wheelTicks.wheel_ticks_fl, dir: wheelTicks.wheel_direction_fl, validMask: 1},
                             {label: t('diagnosticsPage.frontRight'), rpm: wheelRpm.fr, ticks: wheelTicks.wheel_ticks_fr, dir: wheelTicks.wheel_direction_fr, validMask: 2},
-                            {label: t('diagnosticsPage.rearLeft'),   rpm: wheelRpm.rl, ticks: wheelTicks.wheel_ticks_rl, dir: wheelTicks.wheel_direction_rl, validMask: 4},
-                            {label: t('diagnosticsPage.rearRight'),  rpm: wheelRpm.rr, ticks: wheelTicks.wheel_ticks_rr, dir: wheelTicks.wheel_direction_rr, validMask: 8},
-                        // Only show wheels the firmware reports encoders for
-                        // (rear-only on Mowgli) — permanent "no encoder
+                            {role: 'left_wheel' as WheelRole, label: t('diagnosticsPage.rearLeft'),   rpm: wheelRpm.rl, ticks: wheelTicks.wheel_ticks_rl, dir: wheelTicks.wheel_direction_rl, validMask: 4},
+                            {role: 'right_wheel' as WheelRole, label: t('diagnosticsPage.rearRight'),  rpm: wheelRpm.rr, ticks: wheelTicks.wheel_ticks_rr, dir: wheelTicks.wheel_direction_rr, validMask: 8},
+                        // One wheel renderer: encoder readings plus optional source-normalized controller fields.
+                        // Native wheel visibility remains unchanged.
+                        // Rear-only on Mowgli — permanent "no encoder
                         // reading" slots are noise. Until the first message
                         // arrives (mask 0/undefined), show all four.
                         ].filter(w => {
                             const mask = wheelTicks.valid_wheels ?? 0;
-                            return mask === 0 || (mask & w.validMask) !== 0;
+                            return showEncoderWheel(mask, w.validMask, 'role' in w && w.role ? wheelControllers[w.role] : undefined);
                         }).map(w => {
                             const valid = ((wheelTicks.valid_wheels ?? 0) & w.validMask) !== 0;
                             return (
@@ -1850,6 +1853,12 @@ export const DiagnosticsPage = () => {
                                             t('diagnosticsPage.noEncoderReading')
                                         )}
                                     </Typography.Text>
+                                    {'role' in w && w.role && wheelControllers[w.role] && <Space direction="vertical" size={0} style={{marginTop: 8}}>
+                                        <Typography.Text>{t('diagnosticsPage.escStatus')}: {t(`wheelTelemetry.states.${wheelControllers[w.role]!.state}`)}</Typography.Text>
+                                        {wheelControllerFields(wheelControllers[w.role]).map(field => <Typography.Text key={field.key} type="secondary" style={{fontSize: 11}}>
+                                            {t(`wheelTelemetry.${field.key}`)}: {motorDisplayValue(field.value, field.precision)}{Number.isFinite(field.value) && field.unit ? ` ${field.unit}` : ''}
+                                        </Typography.Text>)}
+                                    </Space>}
                                 </Col>
                             );
                         })}

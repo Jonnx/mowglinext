@@ -806,7 +806,7 @@
     "tickFactorLabel": "Facteur de ticks :",
     "tickFactorUnit": "ticks/m à la roue.",
     "bodyOmegaLabel": "Oméga corps depuis diff. G/D :",
-    "perWheelTempNote": "Les températures et courants moteur par roue ne sont pas exposés par le firmware ; seul le moteur de lame les rapporte (voir État du matériel ci-dessous).",
+    "perWheelTempNote": "Les mesures électriques et la température ESC par roue dépendent du backend et de la télémétrie disponible. Les RPM moteur VESC sont distincts des RPM physiques de roue.",
     "hardwareStatus": "État du matériel",
     "mowerStatus": "État de la tondeuse",
     "statusOk": "OK",
@@ -5000,5 +5000,21 @@
     "notEstablished": "À vérifier — non établi / hors MAVROS",
     "notMeasured": "À vérifier — aucune mesure runtime fiable disponible",
     "telemetryPolicy": "Les trois cadences sont distinctes : acquisition physique, réception MAVLink et republication ROS2. Une republication de cache ne constitue pas une acquisition. Les paramètres de streams peuvent être supplantés par des demandes de cadence ; aucune compatibilité ni insuffisance n’est déduite du .param seul. Aucun seuil minimal universel, changement de SCHED_LOOP_RATE ou hausse automatique de cadence."
+  },
+  "wheelTelemetry": {
+    "states": {
+      "online": "En ligne",
+      "absent": "Absent",
+      "stale": "Périmé",
+      "fault": "Défaut"
+    },
+    "temperature": "Température ESC",
+    "current": "Courant ESC",
+    "voltage": "Tension ESC",
+    "ampHours": "Consommation cumulée ESC",
+    "motorRpm": "RPM moteur (valeur absolue)",
+    "failureFlags": "Indicateurs de défaut",
+    "errorCount": "Compteur d’erreurs",
+    "age": "Âge de l’acquisition ESC"
   }
 }
