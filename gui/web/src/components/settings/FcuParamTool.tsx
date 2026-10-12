@@ -1,11 +1,12 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {Alert, Button, Card, Checkbox, Descriptions, Input, InputNumber, List, Select, Space, Table, Tag, Typography} from 'antd';
+import {Alert, Button, Card, Checkbox, Descriptions, Input, InputNumber, List, Select, Space, Collapse, Tag, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
 import {formatMavrosFirmwareVersion, mavrosAutopilotName, type MavrosInfo} from '../../hooks/useMavrosInfo';
 import {exportParamDocument, parseParamDocument, type ParamDocument} from '../../utils/fcuParamDocument';
 import {identityFromMavros, identityFromParamComments, type ParamIdentity} from '../../utils/fcuParamIdentity';
 import {admissibleParamCorrections, profileForIdentity, referenceParamHardware, reviewParamDocument,
     selectedParamCorrections, validParamHardware, type ParamHardware, type ParamReview} from '../../utils/fcuParamProfile';
+import {diagnosticGroups, diagnosticState, groupDiagnosticRows, summarizeDiagnostics, telemetryDiagnostics, type GnssDiagnosticBackend, type DiagnosticGroup} from '../../utils/fcuParamDiagnostics';
 import {listParamOriginals, saveParamOriginal, type ParamBackup} from '../../utils/fcuParamStorage';
 
 const download = (filename: string, text: string) => {
@@ -34,12 +35,15 @@ export function FcuParamTool({info}: {info?: MavrosInfo}) {
     const [error, setError] = useState<string | null>(null);
     const [selection, setSelection] = useState<{key: string; ids: string[]}>({key: '', ids: []});
     const [confirmation, setConfirmation] = useState<{key: string; confirmed: boolean; reason: string}>({key: '', confirmed: false, reason: ''});
-    const [category, setCategory] = useState('all');
+    const [gnss, setGnss] = useState<GnssDiagnosticBackend>('unknown');
     const profile = profileForIdentity(target);
     const planKey = JSON.stringify({filename, original: document?.original, target, hardware});
     const selected = selection.key === planKey ? selection.ids : [];
     const consent = confirmation.key === planKey ? confirmation : {confirmed: false, reason: ''};
     const rows = useMemo(() => document ? reviewParamDocument(document, target, hardware) : [], [document, target, hardware]);
+    const groups = groupDiagnosticRows(rows, hardware, gnss);
+    const visibleRows = Object.values(groups).flat();
+    const flows = telemetryDiagnostics(document, target, hardware, gnss);
     const sensitive = rows.filter(row => selected.includes(row.id) && (row.sensitive || row.provisional));
     const needsConsent = sensitive.length > 0;
     const failure = (caught: unknown) => {
@@ -79,6 +83,26 @@ export function FcuParamTool({info}: {info?: MavrosInfo}) {
         <InputNumber aria-label={t(`settingsFcuParams.bindings.${key}`)} min={min} max={max} precision={0}
             value={hardware[key] as number} onChange={value => {if (value !== null) changeHardware({[key]: value});}}/>
     </Space>;
+    const groupFields = (group: DiagnosticGroup) => <Space wrap>
+        {group === 'communication' && <>
+            <Typography.Text>{t('settingsFcuParams.serialPort')}</Typography.Text>
+            <InputNumber aria-label={t('settingsFcuParams.serialPort')} min={0} max={9} precision={0} value={hardware.serialPort} onChange={serialPort => changeHardware({serialPort})}/>
+            {numberField('gcsSysId', 1, 255)}{numberField('targetSysId', 1, 255)}
+        </>}
+        {group === 'actuators' && <>
+            <Checkbox checked={hardware.blade} onChange={e => changeHardware({blade: e.target.checked})}>{t('settingsFcuParams.blade')}</Checkbox>
+            {hardware.drive !== 'unknown' && <>{numberField('rightOutput', 1, 16)}{numberField('leftOutput', 1, 16)}</>}
+            {hardware.blade && numberField('bladeOutput', 1, 16)}
+        </>}
+        {group === 'can' && hardware.drive === 'vesc-dronecan' && <>
+            {numberField('canPort', 1, 2)}{numberField('canDriver', 1, 2)}
+            <Checkbox checked={hardware.legacyRpm} onChange={e => changeHardware({legacyRpm: e.target.checked})}>{t('settingsFcuParams.legacyRpm')}</Checkbox>
+            {hardware.legacyRpm && <>{numberField('rightEscIndex', 0, 15)}{numberField('leftEscIndex', 0, 15)}</>}
+        </>}
+        {group === 'navigation' && <Select aria-label={t('settingsFcuParams.gnssBackend')} value={gnss} style={{width: 240}}
+            onChange={value => {setGnss(value); clearPlan();}} options={['unknown', 'mavros', 'universal'].map(value => ({value, label: t(`settingsFcuParams.gnssBackends.${value}`)}))}/>}
+        {group === 'telemetry' && numberField('mavlinkChannel', 1, 10)}
+    </Space>;
     return <Space direction="vertical" style={{width: '100%'}} size={16} data-testid="fcu-param-tool">
         <Alert type="info" showIcon message={t('settingsFcuParams.title')} description={t('settingsFcuParams.scope')}/>
         {error && <Alert type="error" message={error}/>}
@@ -110,39 +134,56 @@ export function FcuParamTool({info}: {info?: MavrosInfo}) {
         </Card>
         <Card size="small" title={t('settingsFcuParams.hardwareTitle')}>
             <Typography.Paragraph>{t('settingsFcuParams.bindingPolicy')}</Typography.Paragraph>
-            <Space wrap>
-                <Select aria-label={t('settingsFcuParams.drive')} value={hardware.drive} style={{width: 250}} onChange={drive => changeHardware({drive})}
-                    options={['unknown', 'vesc-dronecan', 'pwm-skid'].map(value => ({value, label: t(`settingsFcuParams.drives.${value}`)}))}/>
-                <Checkbox checked={hardware.blade} onChange={e => changeHardware({blade: e.target.checked})}>{t('settingsFcuParams.blade')}</Checkbox>
-                {hardware.drive === 'vesc-dronecan' && <Checkbox checked={hardware.legacyRpm} onChange={e => changeHardware({legacyRpm: e.target.checked})}>{t('settingsFcuParams.legacyRpm')}</Checkbox>}
-                <Typography.Text>{t('settingsFcuParams.serialPort')}</Typography.Text>
-                <InputNumber aria-label={t('settingsFcuParams.serialPort')} min={0} max={9} precision={0} value={hardware.serialPort} onChange={serialPort => changeHardware({serialPort})}/>
-                {numberField('mavlinkChannel', 1, 10)}{numberField('gcsSysId', 1, 255)}{numberField('targetSysId', 1, 255)}
-                {hardware.drive !== 'unknown' && <>{numberField('rightOutput', 1, 16)}{numberField('leftOutput', 1, 16)}</>}
-                {hardware.blade && numberField('bladeOutput', 1, 16)}
-                {hardware.drive === 'vesc-dronecan' && <>{numberField('canPort', 1, 2)}{numberField('canDriver', 1, 2)}
-                    {hardware.legacyRpm && <>{numberField('rightEscIndex', 0, 15)}{numberField('leftEscIndex', 0, 15)}</>}</>}
-            </Space>
+            <Select aria-label={t('settingsFcuParams.drive')} value={hardware.drive} style={{width: 250}} onChange={drive => changeHardware({drive})}
+                options={['unknown', 'vesc-dronecan', 'pwm-skid'].map(value => ({value, label: t(`settingsFcuParams.drives.${value}`)}))}/>
             {!validParamHardware(hardware) && <Alert type="error" message={t('settingsFcuParams.invalidBindings')}/>}
         </Card>
+        <Collapse items={diagnosticGroups.map(group => ({key: group, label: <Space wrap>
+            <Typography.Text strong>{t(`settingsFcuParams.groups.${group}`)}</Typography.Text>
+            {document && profile ? Object.entries(summarizeDiagnostics([...groups[group].map(diagnosticState), ...(group === 'telemetry' ? flows.map(flow => flow.state) : [])]))
+                .filter(([, count]) => count > 0).map(([state, count]) => <Tag key={state}>{t(`settingsFcuParams.diagnostics.${state}`)}: {count}</Tag>)
+                : <Tag>{t('settingsFcuParams.diagnostics.review')}</Tag>}
+        </Space>, children: <Space direction="vertical" style={{width: '100%'}}>
+            {groupFields(group)}
+            {document && !profile && <Alert type="warning" message={t('settingsFcuParams.unsupported')}/>}
+            {document && profile && !groups[group].length && group !== 'telemetry' && <Typography.Text type="secondary">{t('settingsFcuParams.noApplicable')}</Typography.Text>}
+            {groups[group].map(row => <details key={row.id} data-testid={`diagnostic-${row.id}`}>
+                <summary>{row.parameter} — {t(`settingsFcuParams.diagnostics.${diagnosticState(row)}`)}</summary>
+                <Descriptions size="small" column={1}>
+                    <Descriptions.Item label={t('settingsFcuParams.current')}>{row.current ?? '—'}</Descriptions.Item>
+                    <Descriptions.Item label={t('settingsFcuParams.reason')}>{t(`settingsFcuParams.reasons.${row.reason}`)}</Descriptions.Item>
+                    <Descriptions.Item label={t('settingsFcuParams.category')}>{t(`settingsFcuParams.categories.${row.category}`)}{row.provisional && <Tag>{t('settingsFcuParams.provisional')}</Tag>}</Descriptions.Item>
+                    <Descriptions.Item label={t('settingsFcuParams.ruleVersions')}>{row.versions.join(', ')}</Descriptions.Item>
+                </Descriptions>
+                <a href={row.contract} target="_blank" rel="noreferrer">{t('settingsFcuParams.contract')}</a>{' '}
+                <a href={row.source} target="_blank" rel="noreferrer">{t('settingsFcuParams.documentation')}</a>
+                {row.editable && <Space><Typography.Text>{t('settingsFcuParams.proposed')}: {row.proposed}</Typography.Text>
+                    <Checkbox aria-label={`${t('settingsFcuParams.select')} ${row.parameter}`} checked={selected.includes(row.id)} onChange={e => selectRule(row, e.target.checked)}/></Space>}
+            </details>)}
+            {group === 'telemetry' && profile && <>
+                <Alert type="info" message={t('settingsFcuParams.telemetryPolicy')}/>
+                {flows.map(flow => <details key={flow.id} data-testid={`telemetry-${flow.id}`}>
+                    <summary>{t(`settingsFcuParams.flows.${flow.id}`)} — {t('settingsFcuParams.diagnostics.review')}</summary>
+                    <Descriptions size="small" column={1}>
+                        <Descriptions.Item label={t('settingsFcuParams.messages')}>{flow.messages}</Descriptions.Item>
+                        <Descriptions.Item label={t('settingsFcuParams.consumer')}>{flow.consumer}</Descriptions.Item>
+                        <Descriptions.Item label={t('settingsFcuParams.configuredFrequency')}>{flow.parameters.length ? flow.parameters.map(parameter => `${parameter.name}: ${parameter.configuredHz === undefined ? '—' : `${parameter.configuredHz} Hz`}`).join('; ') : t('settingsFcuParams.notEstablished')}</Descriptions.Item>
+                        <Descriptions.Item label={t('settingsFcuParams.observedFrequency')}>{t('settingsFcuParams.notMeasured')}</Descriptions.Item>
+                        <Descriptions.Item label={t('settingsFcuParams.acquisitionFrequency')}>{t('settingsFcuParams.notMeasured')}</Descriptions.Item>
+                        <Descriptions.Item label={t('settingsFcuParams.rosFrequency')}>{t('settingsFcuParams.notMeasured')}</Descriptions.Item>
+                        <Descriptions.Item label={t('settingsFcuParams.freshness')}>{flow.freshnessReferenceMs !== undefined ? t('settingsFcuParams.referenceDeadline', {ms: flow.freshnessReferenceMs}) : t('settingsFcuParams.notEstablished')}</Descriptions.Item>
+                    </Descriptions>
+                    <a href={flow.freshnessSource} target="_blank" rel="noreferrer">{t('settingsFcuParams.contract')}</a>
+                </details>)}
+            </>}
+        </Space>}))}/>
         {document && <Card size="small" title={`${filename} — ${document.entries.size} ${t('settingsFcuParams.parameters')}`}>
+            <Typography.Paragraph>{t('settingsFcuParams.hiddenPreserved')}</Typography.Paragraph>
             <Alert type="warning" message={t('settingsFcuParams.provisionalPolicy')} style={{marginBottom: 12}}/>
-            <Space wrap style={{marginBottom: 12}}>
-                <Button disabled={!profile} onClick={() => setSelection({key: planKey, ids: [...new Set([...selected, ...admissibleParamCorrections(rows).map(row => row.id)])]})}>{t('settingsFcuParams.selectAdmissible')}</Button>
+            <Space wrap>
+                <Button disabled={!profile} onClick={() => setSelection({key: planKey, ids: [...new Set([...selected, ...admissibleParamCorrections(visibleRows).map(row => row.id)])]})}>{t('settingsFcuParams.selectAdmissible')}</Button>
                 <Button onClick={() => setSelection({key: planKey, ids: []})}>{t('settingsFcuParams.clearSelection')}</Button>
-                <Select aria-label={t('settingsFcuParams.category')} value={category} style={{width: 240}} onChange={setCategory}
-                    options={['all', 'required', 'conditional', 'recommended', 'optional', 'calibration'].map(value => ({value, label: t(`settingsFcuParams.categories.${value}`)}))}/>
             </Space>
-            <Table<ParamReview> size="small" rowKey="id" dataSource={rows.filter(row => category === 'all' || category === row.category)} pagination={{pageSize: 12, showSizeChanger: true}} scroll={{x: 850}}
-                columns={[
-                    {title: t('settingsFcuParams.select'), render: (_, row) => <Checkbox aria-label={`${t('settingsFcuParams.select')} ${row.parameter}`} disabled={!row.editable} checked={selected.includes(row.id)} onChange={e => selectRule(row, e.target.checked)}/>},
-                    {title: t('settingsFcuParams.parameter'), dataIndex: 'parameter'},
-                    {title: t('settingsFcuParams.category'), render: (_, row) => <Tag>{t(`settingsFcuParams.categories.${row.category}`)}</Tag>},
-                    {title: t('settingsFcuParams.current'), render: (_, row) => row.current ?? '—'},
-                    {title: t('settingsFcuParams.proposed'), render: (_, row) => <>{row.accepted ? row.accepted.join(' / ') : row.proposed ?? '—'}{row.provisional && <Tag>{t('settingsFcuParams.provisional')}</Tag>}</>},
-                    {title: t('settingsFcuParams.state'), render: (_, row) => <Tag color={row.state === 'compliant' ? 'success' : row.state === 'mismatch' || row.state === 'missing' || row.state === 'ambiguous' ? 'error' : 'default'}>{t(`settingsFcuParams.states.${row.state}`)}</Tag>},
-                    {title: t('settingsFcuParams.reason'), render: (_, row) => <>{t(`settingsFcuParams.reasons.${row.reason}`)} <Typography.Text type="secondary">{t('settingsFcuParams.ruleScope', {versions: row.versions.join(', '), applicability: row.applicability})}</Typography.Text> <a href={row.contract} target="_blank" rel="noreferrer">{t('settingsFcuParams.contract')}</a>{row.source.startsWith('https://') && <> <a href={row.source} target="_blank" rel="noreferrer">{t('settingsFcuParams.documentation')}</a></>}</>},
-                ]}/>
             {needsConsent && <Space direction="vertical" style={{width: '100%', marginTop: 12}}>
                 <Alert type="warning" message={t('settingsFcuParams.confirmationTitle')} description={sensitive.map(row => row.parameter).join(', ')}/>
                 <Checkbox checked={consent.confirmed} onChange={e => setConfirmation({key: planKey, ...consent, confirmed: e.target.checked})}>{t('settingsFcuParams.confirmation')}</Checkbox>

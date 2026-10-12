@@ -4953,6 +4953,52 @@
       "powerCan": "Les rôles de moniteurs batterie, bus/adresses et débit CAN dépendent de la topologie électrique installée ; aucune valeur de référence copiée."
     },
     "ruleScope": "Versions : {{versions}} ; applicabilité : {{applicability}}.",
-    "contract": "Contrat backend"
+    "contract": "Contrat backend",
+    "groups": {
+      "communication": "Communication MAVLink",
+      "actuators": "Propulsion et lame",
+      "can": "DroneCAN et VESC",
+      "safety": "Sécurité et armement",
+      "navigation": "Navigation et capteurs",
+      "telemetry": "Télémétrie et fréquences de publication"
+    },
+    "diagnostics": {
+      "compatible": "Compatible (point contrôlé)",
+      "review": "À vérifier",
+      "missing": "Manquant / capacité inconnue",
+      "incompatible": "Incompatible avec la liaison identifiée"
+    },
+    "flows": {
+      "state": "Heartbeat et état FCU",
+      "imu": "IMU et attitude",
+      "gnss": "Positionnement via MAVROS",
+      "gnssExternal": "Positionnement Universal GNSS",
+      "esc": "ESC / VESC et odométrie",
+      "wheel": "Odométrie des roues",
+      "battery": "Batterie",
+      "rc": "Réception RC (si utilisée)",
+      "bladeRpm": "Retour RPM de la lame",
+      "bladeOutput": "Sortie de lame"
+    },
+    "gnssBackends": {
+      "unknown": "GNSS à identifier",
+      "mavros": "GNSS via MAVROS",
+      "universal": "Universal GNSS direct"
+    },
+    "gnssBackend": "Backend GNSS à analyser (ne modifie pas l’installation)",
+    "noApplicable": "Aucune exigence applicable au matériel sélectionné.",
+    "hiddenPreserved": "Seuls les points de compatibilité applicables sont affichés. Tous les paramètres masqués restent intégralement conservés à l’export.",
+    "ruleVersions": "Versions du profil",
+    "messages": "Messages MAVLink attendus",
+    "consumer": "Plugin et consommateur",
+    "configuredFrequency": "Cadence configurée du groupe (ne prouve pas la cadence du message)",
+    "observedFrequency": "Réception MAVLink mesurée",
+    "acquisitionFrequency": "Acquisition physique mesurée",
+    "rosFrequency": "Republication ROS2 mesurée",
+    "freshness": "Délai de fraîcheur du consommateur",
+    "referenceDeadline": "Référence du code : {{ms}} ms ; configuration effective à vérifier.",
+    "notEstablished": "À vérifier — non établi / hors MAVROS",
+    "notMeasured": "À vérifier — aucune mesure runtime fiable disponible",
+    "telemetryPolicy": "Les trois cadences sont distinctes : acquisition physique, réception MAVLink et republication ROS2. Une republication de cache ne constitue pas une acquisition. Les paramètres de streams peuvent être supplantés par des demandes de cadence ; aucune compatibilité ni insuffisance n’est déduite du .param seul. Aucun seuil minimal universel, changement de SCHED_LOOP_RATE ou hausse automatique de cadence."
   }
 }
