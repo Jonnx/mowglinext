@@ -135,8 +135,12 @@ public:
     if (!new_sample)
       return BladeReadyResult::kWaiting;
     if (!good_since_)
+    {
       good_since_ = now;
-    if (std::chrono::duration<double>(now - *good_since_).count() >= BladeReadyConfig::kStableSec)
+      good_since_stamp_ns_ = stamp_ns;
+    }
+    if (std::chrono::duration<double>(now - *good_since_).count() >= BladeReadyConfig::kStableSec &&
+        static_cast<double>(stamp_ns - good_since_stamp_ns_) / 1e9 >= BladeReadyConfig::kStableSec)
       return BladeReadyResult::kTelemetryReady;
     return BladeReadyResult::kWaiting;
   }
@@ -147,6 +151,7 @@ private:
   int64_t last_stamp_ns_{0};
   bool telemetry_seen_{false};
   std::optional<Clock::time_point> good_since_;
+  int64_t good_since_stamp_ns_{0};
   std::optional<Clock::time_point> accepted_since_;
   std::optional<Clock::time_point> last_observation_time_;
 };
