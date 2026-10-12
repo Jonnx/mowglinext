@@ -271,3 +271,71 @@ removed, measure the blade rotation centre from the chassis centre; check the si
 retain the previous transform and that wheel/sensor transforms are unchanged. Navigation acceptance
 for an asymmetric cutting tool requires a separate supervised field run; software tests alone do not
 establish its coverage or edge-clearance behaviour.
+
+
+## Upgrade compatibility review fixes
+
+Existing sparse configs retain their previous geometry: the package/schema/launch
+chassis-bottom default is zero, and the internal caster sentinel retains
+`chassis_center_x + chassis_length / 2 - caster_radius`. Hardware still displays
+an ordinary numeric caster position; editing freezes that position, and selecting
+a model preset explicitly proposes its model-specific geometry. Explicit saved
+caster and chassis offsets continue to win. This avoids moving visual/collision
+geometry simply by upgrading.
+
+The retired map appearance preference is not migrated. Users of the earlier dev
+build can reselect the new assembled RM1000 shell in Hardware. There is no static
+image fallback, special RM1000 save/reset handling or migration state.
+
+Validation: full Go API suite, 91 ROS/xacro and configuration-loader tests,
+configuration-drift check, 36 focused frontend tests, registry validation and
+TypeScript/production build passed. The full Go API suite also passed after
+removing the migration. The geometry regressions cover sparse-template geometry and explicit overrides. These checks
+run locally; they do not claim physical validation or installation on .118.
+
+
+## Browser artwork alignment correction
+
+Reproduced against PR #966 baseline `c152df8a51f3b11a331f4536162ce2a49b9ae82a`,
+using mocked GUI settings and the repository robot-description fixture. No live
+robot was used. Firefox displaced the nested image while the editor position
+circle remained correct; LiDAR yaw changed the direction of the displacement.
+Windows Playwright WebKit also lost the sensor raster through its SVG glow filter.
+
+The shared shell/part viewport now uses source-pixel dimensions and a parent
+transform to map into metres. Physical coordinates, crop registration and sensor
+mounting rotations are unchanged. Putting this transform on the nested SVG itself
+was rejected after the WebKit regression caught clipped/missing artwork. The
+sensor highlight is now two translucent strokes without an SVG filter.
+
+Verified on Playwright 1.62.1: Chromium 151.0.7922.34, Firefox 153.0 and WebKit 26.5
+on Windows. All **48 browser cases passed**: four widths (390, 768, 1440, 2046),
+four CSS scaling factors (0.8, 1, 1.25, 1.5), and three engines. Each checks actual
+LiDAR/GPS/IMU pixels against the independently rendered position circle at LiDAR
+yaw -90 and +45 degrees, requiring visibility and centre error below 1.75 pixels.
+The highlight is hidden during isolation so it cannot pass for missing artwork.
+The existing Hardware/map/saved-appearance suites also passed (20 cases).
+
+This is CSS layout scaling, not actual browser-toolbar zoom; Windows Playwright
+WebKit is not physical Safari/iOS acceptance. The high sensor mounting positions
+below deliberately reproduce the reported geometry; they are not recommendations
+for mounting sensors or evidence that a particular mower is physically calibrated.
+
+Reproduce from `gui/web`:
+
+```sh
+npx playwright install chromium firefox webkit
+npx playwright test --config playwright.robot-artwork.config.ts --workers=3
+```
+
+### Firefox after correction
+
+![Firefox sensor editor, centred raster and position circle](browser-firefox.png)
+
+### WebKit after correction
+
+![WebKit sensor editor, sensor pictures visible](browser-webkit.png)
+
+### Chromium reference
+
+![Chromium sensor editor](browser-chromium.png)

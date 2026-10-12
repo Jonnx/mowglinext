@@ -63,8 +63,8 @@
   <xacro:arg name="chassis_length"   default="0.60"/>
   <xacro:arg name="chassis_width"    default="0.40"/>
   <xacro:arg name="chassis_height"   default="0.19"/>
-  <!-- Shell bottom relative to axle; photo-estimated YardForce default. -->
-  <xacro:arg name="chassis_z_offset" default="-0.05"/>
+  <!-- Preserve the legacy body height unless a preset/operator sets an offset. -->
+  <xacro:arg name="chassis_z_offset" default="0.0"/>
   <xacro:arg name="chassis_mass_kg"  default="8.76"/>
   <xacro:arg name="chassis_center_x" default="0.20"/>
   <!-- 0.1 m = mowgli_robot.yaml's wheel_radius default (measured 2026-09-05).
@@ -78,7 +78,7 @@
   <xacro:arg name="caster_radius"    default="0.03"/>
   <xacro:arg name="caster_track"     default="0.36"/>
   <!-- -1 preserves the historical chassis-derived caster axle position. -->
-  <xacro:arg name="caster_x_offset"  default="0.40"/>
+  <xacro:arg name="caster_x_offset"  default="-1.0"/>
   <xacro:arg name="blade_radius"     default="0.09"/>
   <xacro:arg name="blade_x_offset" default="0.0"/>
   <xacro:arg name="blade_y_offset" default="0.0"/>
