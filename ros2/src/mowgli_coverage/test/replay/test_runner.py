@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import unittest
+from unittest import mock
 
 from run_replay import (
     check_controls,
@@ -17,6 +18,22 @@ from run_replay import (
     run_command,
     stable,
 )
+
+
+def child_has_exited(pid, start_time, timeout):
+    """Wait for this child, without confusing a reused PID with the original."""
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            # comm can contain spaces or ')'; the remaining fields start at state.
+            fields = pathlib.Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()
+        except (FileNotFoundError, ProcessLookupError):
+            return True
+        if fields[19] != start_time or fields[0] == 'Z':
+            return True
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.01)
 
 
 class ComparatorTests(unittest.TestCase):
@@ -61,6 +78,7 @@ class ComparatorTests(unittest.TestCase):
         for key, replacement in (
             ('parameters', {'width': 0.18}),
             ('build', {'revision': 'another'}),
+            ('build', {'revision': 'baseline', 'requested_cxx_flags_sha256': 'other'}),
         ):
             after = copy.deepcopy(before)
             after[key] = replacement
@@ -77,22 +95,49 @@ class ComparatorTests(unittest.TestCase):
             run_command([sys.executable, '-c', 'import time; time.sleep(60)'], 0.1)
         self.assertLess(time.monotonic() - started, 5)
 
-    @unittest.skipUnless(os.name == 'posix', 'planner wrapper runs only on POSIX')
+    def test_child_exit_waits_for_signal_teardown(self):
+        running = '123 (child with ) in name) R ' + '0 ' * 18 + '456'
+        zombie = running.replace(') R ', ') Z ')
+        with mock.patch.object(pathlib.Path, 'read_text', side_effect=[running, zombie]), \
+                mock.patch.object(time, 'sleep'), \
+                mock.patch.object(time, 'monotonic', return_value=0):
+            self.assertTrue(child_has_exited(123, '456', 1))
+
+    def test_child_exit_accepts_reaped_process(self):
+        for error in (FileNotFoundError, ProcessLookupError):
+            with self.subTest(error=error), \
+                    mock.patch.object(pathlib.Path, 'read_text', side_effect=error):
+                self.assertTrue(child_has_exited(123, '456', 1))
+
+    def test_child_exit_does_not_track_reused_pid(self):
+        reused = '123 (another child) R ' + '0 ' * 18 + '789'
+        with mock.patch.object(pathlib.Path, 'read_text', return_value=reused):
+            self.assertTrue(child_has_exited(123, '456', 1))
+
+    def test_child_exit_rejects_live_child_at_deadline(self):
+        running = '123 (child) R ' + '0 ' * 18 + '456'
+        with mock.patch.object(pathlib.Path, 'read_text', return_value=running), \
+                mock.patch.object(time, 'monotonic', side_effect=[0, 1]), \
+                mock.patch.object(time, 'sleep'):
+            self.assertFalse(child_has_exited(123, '456', 1))
+
+    @unittest.skipUnless(
+        os.name == 'posix' and pathlib.Path('/proc/self/stat').exists(), 'requires Linux procfs'
+    )
     def test_timeout_kills_wrapper_and_child(self):
-        child = 'import os,time; print(os.getpid(),flush=True); time.sleep(60)'
+        child = (
+            'import os,pathlib,time; '
+            "start=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]; "
+            'print(os.getpid(),start,flush=True); time.sleep(60)'
+        )
         wrapper = "import subprocess,sys; subprocess.run([sys.executable,'-c',sys.argv[1]])"
         started = time.monotonic()
         with self.assertRaises(subprocess.TimeoutExpired) as result:
             run_command([sys.executable, '-c', wrapper, child], 1)
+        pid, start_time = result.exception.output.split()
+        # EOF/reaping the wrapper can precede its child's exit_notify/Z state.
+        self.assertTrue(child_has_exited(int(pid), start_time, 1), 'original child still live')
         self.assertLess(time.monotonic() - started, 5)
-        pid = int(result.exception.output.strip())
-        status = pathlib.Path(f'/proc/{pid}/stat')
-        # A killed orphan can briefly remain a zombie until init reaps it.
-        try:
-            state = status.read_text().split()[2]
-        except (FileNotFoundError, ProcessLookupError):
-            return  # The child was reaped between locating and reading /proc.
-        self.assertEqual(state, 'Z')
 
 
 if __name__ == '__main__':

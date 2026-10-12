@@ -195,6 +195,80 @@ as an unrelated intermittent ROS/test-lifecycle hang, rather than a demonstrated
 planner-replay regression. No test, timeout, assertion or unrelated production
 code was changed to mask it. New-head required checks must still pass.
 
+
+### Follow-up: controlled contraction experiment (2026-10-12)
+
+The exact tested merge source/header were extracted from
+`6f9255585d5d531a101f29a2d3453c5290a403e3`; their SHA-256 values matched the
+archived CI records:
+source `d8cf4623761e49d7b99f7c007da4174867d619c72346193957880749d6840b32`,
+header `87572162592ef4b201f60aa80b352cf446b14f829052167fdd4dec7f80cbafdc`.
+The real planner was built as UID 1000 locally, using the project's pinned F2C
+recipe in Ubuntu 26.04 / GCC 15.2.0. Tests had no network or robot mounts.
+
+The local compiler's default target was x86-64 with FMA disabled. Debug and
+Release produced the same `square_fixed` plan (7,017 poses, fingerprint
+`0f4d6f7779e79f5b`). Adding `-mfma` to Release produced 7,059 poses and
+`bd97b10d720a3655`, matching that fixture's archived Release fingerprint.
+A minimal replay of the exact straight-segment endpoints reproduced the
+`40032f4af56bf5c8` versus `40032f4af56bf5c9` interpolation difference;
+disassembly of the FMA variant contained `vfmadd132pd`.
+
+Three controlled Release variants then planned each of the 26 retained fixtures
+once, with byte-matching inputs and the same local dependency binary: **78 replay
+records / 81 field-planning calls** (one two-polygon fixture per variant).
+
+| Controlled local comparison | Exact stable execution matches |
+| --- | ---: |
+| Default target vs `-mfma -ffp-contract=off` | 26/26 |
+| Default target vs `-mfma` | 0/26 |
+| `-mfma -ffp-contract=off` vs `-mfma` | 0/26 |
+
+This establishes a reproducible contraction-sensitive planner output. It does
+not establish an intermittent change within one unchanged binary, the actual
+ISA/contraction settings of the old CI binaries, or the original #823 cause.
+[GCC 15.2 documents](https://gcc.gnu.org/onlinedocs/gcc-15.2.0/gcc/Optimize-Options.html)
+that contraction can form native fused multiply-add operations and can be disabled
+with `-ffp-contract=off`. No production compiler or numerical policy is changed.
+
+The fresh local F2C library SHA-256 was
+`64dd2df93d40926f3c5f68299a3f3fd7815d2c2e1273a69c764d93c846f7795a`;
+the archived CI library was `1f006c55...535c69e6e4`. Despite matching source/header
+and all 26 fixture hashes, each local variant matched its corresponding archived
+CI execution on only 2/26 fixtures. This dependency/baseline difference prevents
+attributing the remaining cross-archive differences to contraction. It is not
+evidence of a random Fields2Cover search.
+
+To make the next CI comparison auditable, the standalone GNU build records cc1
+switches. Artifacts retain replay/planner/dependency binaries, hashes, disassembly,
+CPU information and linked libraries. Replay build metadata includes requested
+global/build-type flag hashes and compiler FMA/AVX2/fast-math/evaluation macros.
+Those are diagnostics; they do not replace full dependency provenance or authorize
+a saved resume cursor.
+
+### Follow-up: timeout-test regression
+
+A later duplicate ROS check on `835e67ef`
+([run 38096470556](https://github.com/mowglinext/mowglinext/actions/runs/38096470556))
+failed the Python wrapper/child test: its immediate procfs sample read `R`
+instead of `Z`. It did not load the planner or F2C. That job also had an unrelated
+`mowgli_behavior/test_follow_strip_dig` timeout; no behavior file is changed here.
+The duplicate ROS job and all three replay/image jobs passed.
+
+The test now waits up to one second for the original child's exit state, keyed
+by PID plus procfs start time. A still-live matching identity fails at the
+deadline; disappearance or PID reuse cannot be confused with a leaked child.
+Four deterministic cases cover running-to-zombie, reaping, PID reuse and a live
+child at the deadline. Production `run_command` kill/timeout behavior is unchanged.
+
+The repaired 11-test runner suite passed 20/20 local Linux repetitions (220 test
+cases). All 10 standalone CTest targets passed in 49.39 seconds, including the
+existing planner suites, trace tests, runner/comparison/provenance tests and smoke
+replay. The final lint and additional binary/metadata assertions did not run:
+the test image lacked the flake8 CLI, then host command execution stalled.
+Updated CI remains required; no green result for these new changes is claimed.
+Independent source review found no blocker or should-fix issue in the continuation.
+
 ## Integration and resume risks
 
 #718 can capture exact schema-1 goals and live effective parameters, with the

@@ -142,12 +142,16 @@ jobs:
             | xargs -0 sha256sum > "$ROOT/environment/fields2cover-library-sha256.txt"
           for package in cmake g++ libeigen3-dev libgdal-dev libgeos++-dev \
             libgeos-dev libgsl-dev libtinyxml2-dev libtbb-dev nlohmann-json3-dev \
-            libgtest-dev ros-lyrical-ortools-vendor; do
+            libgtest-dev ros-lyrical-ortools-vendor libc6 libstdc++6 binutils; do
             dpkg-query -W -f='${binary:Package}=${Version}\n' "$package"
           done | LC_ALL=C sort > "$ROOT/environment/packages.txt"
           uname -a > "$ROOT/environment/uname.txt"
           g++ --version > "$ROOT/environment/compiler.txt"
+          lscpu > "$ROOT/environment/cpu.txt"
           cmake --version > "$ROOT/environment/cmake.txt"
+          mkdir -p "$ROOT/build-metadata/fields2cover"
+          cp -L /opt/fields2cover-300/lib/libFields2Cover.so \
+            "$ROOT/build-metadata/fields2cover/"
           if [[ -f "$RUNNER_TEMP/f2c3/build/CMakeCache.txt" ]]; then
             mkdir -p "$ROOT/build-metadata/fields2cover"
             cp "$RUNNER_TEMP/f2c3/build/CMakeCache.txt" \
@@ -248,6 +252,17 @@ jobs:
               2>&1 | tee "$metadata_dir/ctest.log"
             cp "$build_dir/CMakeCache.txt" "$metadata_dir/"
             cp "$build_dir/compile_commands.json" "$metadata_dir/"
+            # Compile commands do not reveal implicit ISA/spec defaults. Retain
+            # cc1 switches and binaries so numerical differences can be audited.
+            cp "$build_dir/coverage_replay" "$metadata_dir/"
+            cp "$build_dir/libreplay_planner.a" "$metadata_dir/"
+            readelf -p .GCC.command.line "$build_dir/libreplay_planner.a" \
+              > "$metadata_dir/effective-gcc-switches.txt"
+            objdump -d "$build_dir/coverage_replay" \
+              > "$metadata_dir/replay-disassembly.txt"
+            sha256sum "$build_dir/coverage_replay" "$build_dir/libreplay_planner.a" \
+              > "$metadata_dir/binary-sha256.txt"
+            ldd "$build_dir/coverage_replay" > "$metadata_dir/linked-libraries.txt"
           }
           build_variant baseline "$BASELINE_SOURCE/src/coverage_planning.cpp" \
             "$BASELINE_SOURCE/include" "$BASELINE_SHA" ON "$BASELINE_SOURCE/test"

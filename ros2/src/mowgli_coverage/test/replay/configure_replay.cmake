@@ -26,9 +26,13 @@ function(add_coverage_replay planner_target)
   target_include_directories(coverage_replay PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
   target_link_libraries(coverage_replay PRIVATE ${planner_target}
     Fields2Cover::Fields2Cover nlohmann_json::nlohmann_json)
+  string(TOUPPER "${CMAKE_BUILD_TYPE}" replay_build_type)
+  string(SHA256 replay_flags_sha256
+    "${CMAKE_CXX_FLAGS}\n${CMAKE_CXX_FLAGS_${replay_build_type}}")
   target_compile_definitions(coverage_replay PRIVATE
     REPLAY_COMPILER="${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}"
-    REPLAY_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
+    REPLAY_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
+    REPLAY_REQUESTED_FLAGS_SHA256="${replay_flags_sha256}")
   if(REPLAY_BASELINE)
     target_compile_definitions(coverage_replay PRIVATE REPLAY_BASELINE)
   endif()

@@ -181,3 +181,50 @@ completed headlands retained; a changed-geometry/config control must reject stal
 positional cursors. An operator and emergency stop must be present, the field
 clear, localization/drive healthy, and normal firmware, collision and boundary
 protections enabled. This harness provides software evidence only.
+
+## Controlled floating-point replay
+
+On an FMA-capable x86_64 host, use the same pinned library, exact fixture files
+and byte-matching planner source/header for all variants. The 2026-10-12 experiment
+used audited merge `6f9255585d5d531a101f29a2d3453c5290a403e3` (see the investigation's
+source/header/library hashes). Extracting it to a separate directory keeps the
+current checkout untouched:
+
+```sh
+mkdir -p /tmp/coverage-audited
+git -c core.autocrlf=false archive 6f9255585d5d531a101f29a2d3453c5290a403e3 \
+  ros2/src/mowgli_coverage ros2/src/mowgli_interfaces/include \
+  | tar -x -C /tmp/coverage-audited
+for variant in default fma contract-off; do
+  flags=''
+  case "$variant" in
+    fma) flags='-mfma' ;;
+    contract-off) flags='-mfma -ffp-contract=off' ;;
+  esac
+  cmake -S /tmp/coverage-audited/ros2/src/mowgli_coverage/test/replay \
+    -B "/tmp/coverage-$variant" -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_PREFIX_PATH=/opt/fields2cover-300 -DCMAKE_CXX_FLAGS="$flags" \
+    -DREPLAY_REVISION=6f9255585d5d531a101f29a2d3453c5290a403e3
+  cmake --build "/tmp/coverage-$variant" --target coverage_replay --parallel 2
+  python3 ros2/src/mowgli_coverage/test/replay/run_replay.py \
+    --binary "/tmp/coverage-$variant/coverage_replay" --fixture /path/to/exact-report.json \
+    --same-process 5 --processes 3 --output "/tmp/results-$variant"
+done
+```
+
+Compare exact execution snapshots with matching fixtures; ignore build/timing
+fields only for this controlled numerical comparison. The local 26-fixture
+experiment found default and contraction-off outputs identical (26/26), while
+FMA-on differed (26/26). Only 2/26 matched each archived CI counterpart because
+the local dependency binary had a different hash. This is a demonstrated
+mechanism, not a confirmed CI or original-incident cause.
+
+Current standalone GNU builds use `-frecord-gcc-switches` for diagnostics only.
+New workflow artifacts retain `coverage_replay`, `libreplay_planner.a`,
+`effective-gcc-switches.txt`, disassembly, binary hashes, linked-library paths,
+CPU information and the actual F2C shared library. Replay build fields also
+record a SHA-256 of requested global/build-type C++ flags and compiler
+FMA/AVX2/fast-math/evaluation macros. Requested flags and compiler macros do not
+establish every dependency's effective flags; consult the retained binaries.
+All identities remain offline diagnostics, with production resume validation
+unchanged.
