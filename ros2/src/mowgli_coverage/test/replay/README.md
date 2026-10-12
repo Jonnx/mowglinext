@@ -215,9 +215,10 @@ done
 Compare exact execution snapshots with matching fixtures; ignore build/timing
 fields only for this controlled numerical comparison. The local 26-fixture
 experiment found default and contraction-off outputs identical (26/26), while
-FMA-on differed (26/26). Only 2/26 matched each archived CI counterpart because
-the local dependency binary had a different hash. This is a demonstrated
-mechanism, not a confirmed CI or original-incident cause.
+FMA-on differed (26/26). Only 2/26 matched each archived CI counterpart; the local
+dependency binary also had a different hash, so that comparison does not isolate
+contraction. This is a demonstrated mechanism, not a confirmed CI or
+original-incident cause.
 
 Current standalone GNU builds use `-frecord-gcc-switches` for diagnostics only.
 New workflow artifacts retain `coverage_replay`, `libreplay_planner.a`,
