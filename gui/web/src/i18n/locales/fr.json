@@ -2415,6 +2415,10 @@
     }
   },
   "settingsHardware": {
+    "bladeXOffset": "Décalage longitudinal de la lame",
+    "bladeYOffset": "Décalage latéral de la lame",
+    "bladeXOffsetTooltip": "Mesurer du centre du châssis au centre de rotation de la lame, dans le sens de marche. Positif vers l’avant, négatif vers l’arrière ; zéro suit le centre du châssis. En mètres. Modifie la position de la lame et la transformation de l’outil, pas la largeur de coupe.",
+    "bladeYOffsetTooltip": "Mesurer du plan médian du robot au centre de rotation de la lame. Positif à gauche, négatif à droite en regardant vers l’avant. En mètres. Modifie la position de la lame et la transformation de l’outil, pas la largeur de coupe.",
     "robotModel": "Modèle de robot",
     "robotModelDescription": "Sélectionnez votre tondeuse pour pré-remplir les dimensions matérielles.",
     "robotName": "Nom du robot",
@@ -4719,6 +4723,7 @@
     "badgeTooltip": "Backend matériel : {{name}} — ouvrir les réglages matériel"
   },
   "measurementEditor": {
+    "bodyCentreLine": "Référence du centre du châssis",
     "cancel": "Annuler",
     "apply": "Appliquer",
     "close": "Fermer la mesure",

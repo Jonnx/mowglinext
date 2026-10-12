@@ -60,10 +60,10 @@ mowgli:
     #     the radius before this change). The floor is raised to 0.60 with it.
     chassis_width: 0.45
     chassis_height: 0.19
-    # Provisional YardForce 500/500B shell placement from reference photos.
-    # Body bottom relative to rear axle; -0.05 gives 50 mm ground clearance
-    # with 100 mm wheel radius. This is not a surveyed hardware measurement.
-    chassis_z_offset: -0.05
+    # Body bottom relative to rear axle. Zero preserves legacy geometry.
+    # Hardware presets propose explicit model-specific offsets; applying one
+    # is an operator choice, not a geometry change during upgrade.
+    chassis_z_offset: 0.0
     chassis_mass_kg: 8.76
 
     # GUI dock illustration only; does not change navigation or calibration.
@@ -292,11 +292,16 @@ mowgli:
     caster_radius: 0.03
     caster_track: 0.36
     # Fixed axle X from base_link (rear axle), metres; positive forward.
-    # Provisional 500-series starting point, not a measured wheelbase.
-    caster_x_offset: 0.40
+    # Compatibility default: preserve the old chassis-derived position. The GUI
+    # displays its numeric result; applying a preset supplies an explicit axle X.
+    caster_x_offset: -1.0
 
     # Mowing blade
     blade_radius: 0.09
+    # Blade centre relative to chassis centre: +X forward, +Y left (m).
+    # Zero retains the original centred blade, including custom chassis centres.
+    blade_x_offset: 0.0
+    blade_y_offset: 0.0
     tool_width: 0.18           # effective cut width (2 × blade_radius)
 
     # -----------------------------------------------------------------

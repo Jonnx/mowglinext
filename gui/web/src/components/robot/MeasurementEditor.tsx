@@ -54,7 +54,7 @@ export function MeasurementDialog({session, live, values, onCancel, onApply}: {
         footer={<div className="measurement-actions"><Button onClick={onCancel}>{t("measurementEditor.cancel")}</Button>
             <Button type="primary" disabled={!valid} onClick={confirm}>{t("measurementEditor.apply")}</Button></div>}>
         {live.fromUrdf ? <MowerView values={values} robot={robot} view={spec.view} showDock dockGeometry={geometry}
-            measurement={measurement ?? undefined} transparent={key === "blade_radius" ? true : undefined}
+            measurement={measurement ?? undefined} transparent={key.startsWith("blade_") ? true : undefined}
             maxHeight={Math.max(115,Math.min(spec.view === "side" ? 180 : 240,viewport.height*.29))}/>
             : <Typography.Paragraph>{t("mowerVisual.waiting")}</Typography.Paragraph>}
         {measurement && live.fromUrdf && <MeasurementLegend measurement={measurement}/>}

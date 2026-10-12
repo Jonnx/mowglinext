@@ -92,7 +92,7 @@ const SECTION_DEFINITIONS: SectionMeta[] = [
             "robot_name", "mower_model", "wheel_radius", "wheel_track", "wheel_width",
             "wheel_x_offset", "chassis_center_x", "chassis_length", "chassis_width",
             "mower_visual_style", "mower_visual_colour", ...DOCK_VISUAL_KEYS, "chassis_height", "chassis_z_offset", "chassis_mass_kg", "caster_radius", "caster_track", "caster_x_offset",
-            "ticks_per_meter", "tool_width", "blade_radius",
+            "ticks_per_meter", "tool_width", "blade_radius", "blade_x_offset", "blade_y_offset",
             // The hardware backend's own wiring (ports, controller type), in
             // the same section: one place for "what this robot is made of".
             ...groupKeys(OPENMOWER_WIRING_GROUP),

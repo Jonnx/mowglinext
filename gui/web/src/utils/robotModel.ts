@@ -117,7 +117,7 @@ export function previewRobotGeometry(live: RobotGeometry, values: Record<string,
     };
     for (const [field, key] of Object.entries(keys) as [keyof typeof keys, string][]) {
         const n = read(key);
-        if (n !== undefined && (field === "chassisCenterX" || field === "wheelXOffset" || n > 0)) next[field] = n;
+        if (n !== undefined && (field === "chassisCenterX" || field === "wheelXOffset" || (field === "casterTrack" && n === 0) || n > 0)) next[field] = n;
     }
     // These derived relationships are the ones in mowgli.urdf.xacro.
     const configuredCasterX = read("caster_x_offset");
@@ -132,7 +132,12 @@ export function previewRobotGeometry(live: RobotGeometry, values: Record<string,
         next.chassisCenterZ = next.baseHeight/2 + (shellOffset ?? liveBottom);
     if (next.wheelRadius !== live.wheelRadius || next.casterRadius !== live.casterRadius)
         next.casterZ = -next.wheelRadius + next.casterRadius;
-    if (next.chassisCenterX !== live.chassisCenterX) next.bladeX = next.chassisCenterX;
+    // Preserve a running custom offset when an older/sparse API omits the keys.
+    const bladeXOffset = read("blade_x_offset");
+    const bladeYOffset = read("blade_y_offset");
+    if (bladeXOffset !== undefined || next.chassisCenterX !== live.chassisCenterX)
+        next.bladeX = next.chassisCenterX + (bladeXOffset ?? ((live.bladeX ?? live.chassisCenterX)-live.chassisCenterX));
+    if (bladeYOffset !== undefined) next.bladeY = bladeYOffset;
     if (next.wheelRadius !== live.wheelRadius) next.bladeZ = (live.bladeZ ?? 0) + live.wheelRadius - next.wheelRadius;
     next.sensors = live.sensors?.map(sensor => {
         const s = {...sensor};

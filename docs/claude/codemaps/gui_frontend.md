@@ -256,3 +256,5 @@ metadata in `appearanceRegistry.ts` declares both SVG masks and a suggested colo
 Hardware saves `mower_visual_colour` (empty = original) through the existing YAML
 settings writer; Sensors and Map consume it. New-shell mask instructions are in
 `components/robot/README.md`; generated compact masks share the PNG crop/frame.
+
+The Hardware measurement editor includes signed `blade_x_offset` / `blade_y_offset` relative to chassis centre. Four decimal places retain half-millimetre offsets. `previewRobotGeometry` preserves the live URDF offset when omitted; the blade measurement forces transparent top artwork. Zero caster track is accepted for a central caster.

@@ -131,7 +131,7 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
         type: "FeatureCollection",
         features: []
     })
-    const {config, setConfig} = useConfig(["gui.map.offset.x", "gui.map.offset.y", "gui.map.display.bearing", "gui.map.mower.appearance"])
+    const {config, setConfig} = useConfig(["gui.map.offset.x", "gui.map.offset.y", "gui.map.display.bearing"])
     const envs = useEnv()
     const guiApi = useApi()
     const obstacleOriginals = useObstacleOriginals();

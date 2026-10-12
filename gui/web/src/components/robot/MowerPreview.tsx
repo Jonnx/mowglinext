@@ -57,7 +57,7 @@ export function MowerPreview({values, compact = false, editor, onStyleChange, on
         {!compact && !editor?.active && <MowerVisualControls values={values} onStyleChange={onStyleChange} onColourChange={onColourChange}/>}
         {!live.fromUrdf ? <Typography.Text type="secondary">{t("mowerVisual.waiting")}</Typography.Text> : <>
             <Flex wrap gap={16}>
-                <MowerView values={values} dockGeometry={dockGeometry} robot={robot} view="top" showDock={!compact} maxHeight={compact ? 210 : editor?.active ? 190 : 300} measurement={measurement?.view === "top" ? measurement : undefined} transparent={editor?.active === "blade_radius" ? true : undefined}/>
+                <MowerView values={values} dockGeometry={dockGeometry} robot={robot} view="top" showDock={!compact} maxHeight={compact ? 210 : editor?.active ? 190 : 300} measurement={measurement?.view === "top" ? measurement : undefined} transparent={editor?.active?.startsWith("blade_") ? true : undefined}/>
                 {!compact && <MowerView values={values} dockGeometry={dockGeometry} robot={robot} view="side" showDock maxHeight={editor?.active ? 190 : 300} measurement={measurement?.view === "side" ? measurement : undefined}/>}
             </Flex>
             {editor?.active && <div className="measurement-preview-summary">
