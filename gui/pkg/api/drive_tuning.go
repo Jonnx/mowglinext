@@ -233,30 +233,48 @@ type driveTuningDrivetrain struct {
 	Notes                                    []string `json:"notes,omitempty" yaml:"notes"`
 }
 
+// The fit window is an estimation contract, never physical post-application evidence.
+type driveTuningCalibrationWindow struct {
+	StartStampNS          int64   `json:"start_stamp_ns" yaml:"start_stamp_ns"`
+	EndStampNS            int64   `json:"end_stamp_ns" yaml:"end_stamp_ns"`
+	LeftMotorRevolutions  float64 `json:"left_motor_revolutions" yaml:"left_motor_revolutions"`
+	RightMotorRevolutions float64 `json:"right_motor_revolutions" yaml:"right_motor_revolutions"`
+	RTKDistanceM          float64 `json:"rtk_distance_m" yaml:"rtk_distance_m"`
+	TicksPerMeter         float64 `json:"ticks_per_meter" yaml:"ticks_per_meter"`
+	CounterUnit           string  `json:"counter_unit" yaml:"counter_unit"`
+	Source                string  `json:"source" yaml:"source"`
+	LeftEpoch             int64   `json:"left_epoch" yaml:"left_epoch"`
+	RightEpoch            int64   `json:"right_epoch" yaml:"right_epoch"`
+	LeftSegment           int64   `json:"left_segment" yaml:"left_segment"`
+	RightSegment          int64   `json:"right_segment" yaml:"right_segment"`
+	GNSSBackend           string  `json:"gnss_backend" yaml:"gnss_backend"`
+}
+
 type driveTuningTrialReport struct {
-	TicksPerMeter               *float64 `json:"ticks_per_meter,omitempty" yaml:"ticks_per_meter"`
-	LeftTicksSeen               int64    `json:"left_ticks_seen,omitempty" yaml:"left_ticks_seen"`
-	RightTicksSeen              int64    `json:"right_ticks_seen,omitempty" yaml:"right_ticks_seen"`
-	Name                        string   `json:"name" yaml:"name"`
-	Phase                       string   `json:"phase" yaml:"phase"`
-	TargetSpeed                 float64  `json:"target_speed" yaml:"target_speed"`
-	MeasuredSpeedMean           float64  `json:"measured_speed_mean" yaml:"measured_speed_mean"`
-	Overshoot                   float64  `json:"overshoot" yaml:"overshoot"`
-	SettlingTime                *float64 `json:"settling_time,omitempty" yaml:"settling_time"`
-	StallDetected               bool     `json:"stall_detected" yaml:"stall_detected"`
-	OscillationDetected         bool     `json:"oscillation_detected" yaml:"oscillation_detected"`
-	LiveOscillationDetected     bool     `json:"live_oscillation_detected,omitempty" yaml:"live_oscillation_detected"`
-	OscillationSeverity         string   `json:"oscillation_severity,omitempty" yaml:"oscillation_severity"`
-	LiveOscillationSeverity     string   `json:"live_oscillation_severity,omitempty" yaml:"live_oscillation_severity"`
-	TrialQuality                string   `json:"trial_quality,omitempty" yaml:"trial_quality"`
-	IntegralSaturationSuspected bool     `json:"integral_saturation_suspected" yaml:"integral_saturation_suspected"`
-	GroundSpeedMean             *float64 `json:"ground_speed_mean,omitempty" yaml:"ground_speed_mean"`
-	OdomDistanceM               *float64 `json:"odom_distance_m,omitempty" yaml:"odom_distance_m"`
-	RTKDistanceM                *float64 `json:"rtk_distance_m,omitempty" yaml:"rtk_distance_m"`
-	RTKAccepted                 bool     `json:"rtk_accepted" yaml:"rtk_accepted"`
-	LeftRightTickImbalance      *float64 `json:"left_right_tick_imbalance,omitempty" yaml:"left_right_tick_imbalance"`
-	Warnings                    []string `json:"warnings,omitempty" yaml:"warnings"`
-	Notes                       []string `json:"notes,omitempty" yaml:"notes"`
+	CalibrationWindow           *driveTuningCalibrationWindow `json:"calibration_window,omitempty" yaml:"calibration_window"`
+	TicksPerMeter               *float64                      `json:"ticks_per_meter,omitempty" yaml:"ticks_per_meter"`
+	LeftTicksSeen               int64                         `json:"left_ticks_seen,omitempty" yaml:"left_ticks_seen"`
+	RightTicksSeen              int64                         `json:"right_ticks_seen,omitempty" yaml:"right_ticks_seen"`
+	Name                        string                        `json:"name" yaml:"name"`
+	Phase                       string                        `json:"phase" yaml:"phase"`
+	TargetSpeed                 float64                       `json:"target_speed" yaml:"target_speed"`
+	MeasuredSpeedMean           float64                       `json:"measured_speed_mean" yaml:"measured_speed_mean"`
+	Overshoot                   float64                       `json:"overshoot" yaml:"overshoot"`
+	SettlingTime                *float64                      `json:"settling_time,omitempty" yaml:"settling_time"`
+	StallDetected               bool                          `json:"stall_detected" yaml:"stall_detected"`
+	OscillationDetected         bool                          `json:"oscillation_detected" yaml:"oscillation_detected"`
+	LiveOscillationDetected     bool                          `json:"live_oscillation_detected,omitempty" yaml:"live_oscillation_detected"`
+	OscillationSeverity         string                        `json:"oscillation_severity,omitempty" yaml:"oscillation_severity"`
+	LiveOscillationSeverity     string                        `json:"live_oscillation_severity,omitempty" yaml:"live_oscillation_severity"`
+	TrialQuality                string                        `json:"trial_quality,omitempty" yaml:"trial_quality"`
+	IntegralSaturationSuspected bool                          `json:"integral_saturation_suspected" yaml:"integral_saturation_suspected"`
+	GroundSpeedMean             *float64                      `json:"ground_speed_mean,omitempty" yaml:"ground_speed_mean"`
+	OdomDistanceM               *float64                      `json:"odom_distance_m,omitempty" yaml:"odom_distance_m"`
+	RTKDistanceM                *float64                      `json:"rtk_distance_m,omitempty" yaml:"rtk_distance_m"`
+	RTKAccepted                 bool                          `json:"rtk_accepted" yaml:"rtk_accepted"`
+	LeftRightTickImbalance      *float64                      `json:"left_right_tick_imbalance,omitempty" yaml:"left_right_tick_imbalance"`
+	Warnings                    []string                      `json:"warnings,omitempty" yaml:"warnings"`
+	Notes                       []string                      `json:"notes,omitempty" yaml:"notes"`
 }
 
 type driveTuningBackupPayload struct {
@@ -622,6 +640,10 @@ func (m *driveTuningManager) runJob(job *driveTuningJob, commandArgs []string) {
 	job.appendLog("\nSaved report: " + job.reportPath + "\n")
 
 	if job.apply {
+		if job.backend == "mavros" && !validOdometryProposal(report) {
+			job.finish(driveTuningRunWarning, &exitCode, "No valid aligned odometry proposal; coefficient was not persisted. Review the report.")
+			return
+		}
 		toPersist := persistedParamsForMode(job.mode, report.ProposedParams, job.backend)
 		if err := persistRobotYamlUpdates(m.dbProvider, floatMapToAnyMap(toPersist)); err != nil {
 			job.appendLog("\nYAML persistence error: " + err.Error() + "\n")
@@ -1029,8 +1051,50 @@ func waitForContainerExec(ctx context.Context, dockerProvider types.IDockerProvi
 	}
 }
 
-// evaluateOdometryReport assesses distance observations, independently of speed
-// tracking. The shared API still transports its summary in feed_forward.
+// Numerically compare the serialized fit arithmetic; this is not a physical
+// accuracy threshold. Independent measurements are still required after applying.
+func coherentFitNumber(actual, expected float64) bool {
+	return isFiniteFloat64(actual) && isFiniteFloat64(expected) && actual > 0 && expected > 0 &&
+		math.Abs(actual-expected) <= 1e-9*math.Max(actual, expected)
+}
+
+func validOdometryFit(trial driveTuningTrialReport) bool {
+	w := trial.CalibrationWindow
+	if !trial.RTKAccepted || trial.StallDetected || w == nil ||
+		w.CounterUnit != "motor_revolution" || w.StartStampNS <= 0 || w.EndStampNS <= w.StartStampNS ||
+		(w.Source != "esc_status" && w.Source != "ardupilot_legacy") || w.GNSSBackend == "" ||
+		w.LeftEpoch < 0 || w.RightEpoch != w.LeftEpoch || w.LeftSegment < 0 || w.RightSegment < 0 {
+		return false
+	}
+	for _, value := range []float64{w.LeftMotorRevolutions, w.RightMotorRevolutions, w.RTKDistanceM, w.TicksPerMeter} {
+		if !isFiniteFloat64(value) || value <= 0 {
+			return false
+		}
+	}
+	return coherentFitNumber(w.TicksPerMeter, (w.LeftMotorRevolutions/2+w.RightMotorRevolutions/2)/w.RTKDistanceM) &&
+		trial.RTKDistanceM != nil && coherentFitNumber(*trial.RTKDistanceM, w.RTKDistanceM) &&
+		(trial.TicksPerMeter == nil || coherentFitNumber(*trial.TicksPerMeter, w.TicksPerMeter))
+}
+
+// A rejected or historical report must not persist a coefficient, even if it
+// carries proposed_params or a successful process exit from an older tool.
+func validOdometryProposal(report *driveTuningReport) bool {
+	trials := filterTrialsByPhase(report.Trials, "odometry")
+	if report.FailureMessage != "" || len(trials) == 0 {
+		return false
+	}
+	mean := 0.0
+	for _, trial := range trials {
+		if !validOdometryFit(trial) {
+			return false
+		}
+		mean += trial.CalibrationWindow.TicksPerMeter / float64(len(trials))
+	}
+	return coherentFitNumber(report.ProposedParams["ticks_per_meter"], mean)
+}
+
+// The shared API transports an estimate in feed_forward. No report field here
+// proves physical precision, even when applied_live is true.
 func evaluateOdometryReport(report *driveTuningReport, reportPath string) driveTuningValidationSummary {
 	summary := func(status driveTuningValidationStatus, message string) driveTuningValidationSummary {
 		return driveTuningValidationSummary{Status: status, Message: message,
@@ -1043,42 +1107,41 @@ func evaluateOdometryReport(report *driveTuningReport, reportPath string) driveT
 	if report.FailureMessage != "" {
 		return summary(driveTuningStatusWarning, "Odometry calibration did not complete successfully. Review the report failure details.")
 	}
-	errors := []float64{}
-	incompleteReference := false
-	measurementWarnings := false
-	oscillationWarning := false
+	fits := 0
+	measurementWarnings, oscillationWarning := false, false
 	for _, trial := range trials {
-		if trial.StallDetected || (trial.OdomDistanceM != nil && *trial.OdomDistanceM <= 0) {
+		if trial.StallDetected {
 			return summary(driveTuningStatusWarning, "An odometry pass stalled or produced no wheel motion. Check wheel observations and mechanics.")
 		}
 		measurementWarnings = measurementWarnings || len(trial.Warnings) > 0 || trial.TrialQuality == "warning" || trial.TrialQuality == "poor"
 		oscillationWarning = oscillationWarning ||
 			driveTuningWarningOscillation(driveTuningOscillationSeverity(trial.OscillationSeverity, trial.OscillationDetected), trial.OscillationDetected) ||
 			driveTuningWarningOscillation(driveTuningOscillationSeverity(trial.LiveOscillationSeverity, trial.LiveOscillationDetected), trial.LiveOscillationDetected)
-		if !trial.RTKAccepted || trial.RTKDistanceM == nil || trial.OdomDistanceM == nil ||
-			!isFiniteFloat64(*trial.RTKDistanceM) || !isFiniteFloat64(*trial.OdomDistanceM) || *trial.RTKDistanceM <= 1e-6 {
-			incompleteReference = true
-			continue
+		if validOdometryFit(trial) {
+			fits++
 		}
-		errors = append(errors, absFloat(*trial.OdomDistanceM-*trial.RTKDistanceM) / *trial.RTKDistanceM)
 	}
-	if len(errors) == 0 {
-		return summary(driveTuningStatusWarning, "No valid RTK/GNSS-backed odometry distance was accepted.")
+	if fits == 0 {
+		message := "No valid aligned motor/RTK calibration window was accepted. Review pass rejection notes; historical reports require a new estimate."
+		if oscillationWarning {
+			return summary(driveTuningStatusWarning, message+" Motion stability warning: review wheel measurements.")
+		}
+		if measurementWarnings {
+			return summary(driveTuningStatusWarning, message+" Measurement warnings: review pass notes.")
+		}
+		return summary(driveTuningStatusNotValidated, message)
 	}
-	errorPct := maxFloatSlice(errors) * 100
-	if errorPct > 2.0 {
-		return summary(driveTuningStatusWarning, fmt.Sprintf("Odometry distance error %.1f%% exceeds the accepted 2.0%% threshold.", errorPct))
+	if fits != len(trials) {
+		return summary(driveTuningStatusWarning, "Some odometry passes lack a valid aligned motor/RTK calibration window. Review the rejected passes.")
 	}
-	if incompleteReference {
-		return summary(driveTuningStatusWarning, "Some odometry passes lack a valid accepted RTK/GNSS distance. Review the measurement coverage.")
-	}
+	message := fmt.Sprintf("Coefficient calculated: coherent estimate on %d RTK window(s). Physical accuracy remains unvalidated after application; independent measurement is required.", fits)
 	if oscillationWarning {
-		return summary(driveTuningStatusWarning, fmt.Sprintf("Odometry calibration has a motion stability warning (distance error %.1f%%). Review the wheel measurements.", errorPct))
+		return summary(driveTuningStatusWarning, message+" Motion stability warning: review wheel measurements.")
 	}
 	if measurementWarnings {
-		return summary(driveTuningStatusWarning, fmt.Sprintf("Odometry calibration completed with measurement warnings (distance error %.1f%%). Review the pass notes.", errorPct))
+		return summary(driveTuningStatusWarning, message+" Measurement warnings: review pass notes.")
 	}
-	return summary(driveTuningStatusValidated, fmt.Sprintf("Validated odometry with distance error %.1f%%.", errorPct))
+	return summary(driveTuningStatusNotValidated, message)
 }
 
 func evaluateFeedForwardReport(report *driveTuningReport, reportPath string) driveTuningValidationSummary {
@@ -1501,6 +1564,12 @@ func sanitizeDriveTuningReport(report *driveTuningReport) {
 	report.ProposedParams = sanitizeFloat64Map(report.ProposedParams)
 	report.Recommended = sanitizeFloat64Map(report.Recommended)
 	for index := range report.Trials {
+		if w := report.Trials[index].CalibrationWindow; w != nil {
+			w.LeftMotorRevolutions = sanitizeFloat64Value(w.LeftMotorRevolutions)
+			w.RightMotorRevolutions = sanitizeFloat64Value(w.RightMotorRevolutions)
+			w.RTKDistanceM = sanitizeFloat64Value(w.RTKDistanceM)
+			w.TicksPerMeter = sanitizeFloat64Value(w.TicksPerMeter)
+		}
 		report.Trials[index].TicksPerMeter = sanitizeFloat64Ptr(report.Trials[index].TicksPerMeter)
 		report.Trials[index].TargetSpeed = sanitizeFloat64Value(report.Trials[index].TargetSpeed)
 		report.Trials[index].MeasuredSpeedMean = sanitizeFloat64Value(report.Trials[index].MeasuredSpeedMean)

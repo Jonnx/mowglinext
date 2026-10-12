@@ -13,6 +13,8 @@ from mowgli_tools.drive_pid_math import (
     WHEEL_PID_TEMPLATE_KP,
     DrivePidParams,
     OdometryParams,
+    MotorCounterSample,
+    motor_revolutions_between,
     LiveOscillationDecision,
     LiveStallDiagnostic,
     SpeedSample,
@@ -1130,7 +1132,7 @@ def test_recommend_pid_only_params_mass_tier_does_not_lower_the_floor() -> None:
 
 
 @pytest.mark.parametrize("params, speed, stalled, saturation", [
-    (OdometryParams(343.0), 0.051, True, False),
+    (OdometryParams(343.0), 0.051, False, False),
     (OdometryParams(343.0), 0.4, False, False),
     (_params(), 0.051, True, True),
 ])
@@ -1156,3 +1158,40 @@ def test_trial_metrics_integrator_diagnostic_requires_real_pid(params, speed, st
     assert "existing warning" in metrics.warnings
     assert "existing note" in metrics.notes
     assert metrics.trial_quality == ("poor" if stalled else "warning")
+
+
+def _motor_samples():
+    return [
+        MotorCounterSample(i * 1_000_000_000, i * 12.0, "ardupilot_legacy", 2, 1,
+                           delivery_ns=i * 1_000_000_000) for i in range(1, 6)
+    ]
+
+
+def test_motor_counter_exact_rtk_bounds_and_cache_republication():
+    samples = _motor_samples()
+    samples.insert(2, replace(samples[1], delivery_ns=2_100_000_000))
+    assert motor_revolutions_between(samples, 1_500_000_000, 4_500_000_000, 4) == 36.0
+
+
+@pytest.mark.parametrize("fault", ["epoch", "segment", "source", "rollback", "time", "cache",
+                                   "invalid", "nonfinite", "gap", "unbracketed"])
+def test_motor_window_rejects_discontinuous_or_unproven_observations(fault):
+    samples = _motor_samples()
+    if fault in ("epoch", "segment", "source"):
+        samples[2] = replace(samples[2], **{fault: "esc_status" if fault == "source" else 3})
+    elif fault == "rollback":
+        samples[2] = replace(samples[2], revolutions=0)
+    elif fault == "time":
+        samples[2] = replace(samples[2], stamp_ns=1_900_000_000)
+    elif fault == "cache":
+        samples.insert(2, replace(samples[1], revolutions=999))
+    elif fault == "invalid":
+        samples[2] = replace(samples[2], valid=False)
+    elif fault == "nonfinite":
+        samples[2] = replace(samples[2], revolutions=float("nan"))
+    elif fault == "gap":
+        samples = [samples[0], samples[-1]]
+    elif fault == "unbracketed":
+        samples = samples[1:]
+    with pytest.raises(ValueError):
+        motor_revolutions_between(samples, 1_500_000_000, 4_500_000_000, 3)

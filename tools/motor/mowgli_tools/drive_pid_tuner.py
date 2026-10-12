@@ -13,6 +13,7 @@ import sys
 import time
 from typing import Any
 
+from diagnostic_msgs.msg import DiagnosticArray
 from geometry_msgs.msg import TwistStamped
 from mowgli_interfaces.msg import (
     AbsolutePose,
@@ -34,6 +35,7 @@ import yaml
 from .drive_pid_math import (
     DrivePidParams,
     OdometryParams,
+    MotorCounterSample,
     LiveStallDiagnostic,
     OscillationAssessment,
     SpeedSample,
@@ -51,7 +53,7 @@ from .drive_pid_math import (
     integrate_distance,
     is_warning_oscillation_severity,
     max_oscillation_severity,
-    mavros_ticks_per_meter_from_motor_revolutions,
+    motor_revolutions_between,
     oscillation_severity_rank,
     recommend_drive_pid_params,
     recommend_pid_only_params,
@@ -122,6 +124,10 @@ class RtkPoseSample:
     corrections_active: bool
     rtk_mode: int
     mode_label: str
+    observation_stamp_ns: int = 0
+    observation_sequence: int = 0
+    backend: str = ""
+    provenance_valid: bool = False
 
 
 @dataclass(frozen=True)
@@ -151,6 +157,9 @@ class TrialRecorder:
     speed_samples: list[SpeedSample] = field(default_factory=list)
     rtk_samples: list[RtkPoseSample] = field(default_factory=list)
     tick_samples: list[TickSample] = field(default_factory=list)
+    left_motor_samples: list[MotorCounterSample] = field(default_factory=list)
+    right_motor_samples: list[MotorCounterSample] = field(default_factory=list)
+    accepted_rtk_samples: list[RtkPoseSample] = field(default_factory=list)
 
     @property
     def command_end_s(self) -> float:
@@ -160,9 +169,11 @@ class TrialRecorder:
 
 
 class TrialAbortedError(RuntimeError):
-    def __init__(self, message: str, metrics: TrialMetrics | None = None) -> None:
+    def __init__(self, message: str, metrics: TrialMetrics | None = None,
+                 completed_trials: list[TrialMetrics] | None = None) -> None:
         super().__init__(message)
         self.metrics = metrics
+        self.completed_trials = completed_trials
 
 
 def _default_backup_path() -> Path:
@@ -272,6 +283,7 @@ class DrivePidTuner(Node):
         self._latest_emergency: Emergency | None = None
         self._latest_high_level_status: HighLevelStatus | None = None
         self._latest_gnss_status: GnssStatus | None = None
+        self._gnss_status_history: dict[int, GnssStatus] = {}
         self._latest_odom_time: float | None = None
         self._latest_wheel_tick_time: float | None = None
         self._latest_wheel_tick_factor: float | None = None
@@ -317,6 +329,8 @@ class DrivePidTuner(Node):
         self.create_subscription(AbsolutePose, "/gps/absolute_pose", self._on_absolute_pose, reliable_qos)
         self.create_subscription(GnssStatus, "/gps/status", self._on_gnss_status, reliable_qos)
         self.create_subscription(Odometry, "/odometry/filtered_map", self._on_filtered_map_odom, sensor_qos)
+        if args.hardware_backend == "mavros":
+            self.create_subscription(DiagnosticArray, "/diagnostics", self._on_motor_diagnostics, reliable_qos)
 
     # ------------------------------------------------------------------
     # ROS callbacks
@@ -333,6 +347,39 @@ class DrivePidTuner(Node):
 
     def _on_gnss_status(self, msg: GnssStatus) -> None:
         self._latest_gnss_status = msg
+        if self._args.hardware_backend == "mavros":
+            self._gnss_status_history[self._stamp_ns(msg.header.stamp)] = msg
+            while len(self._gnss_status_history) > 128:
+                del self._gnss_status_history[next(iter(self._gnss_status_history))]
+
+    @staticmethod
+    def _stamp_ns(stamp: Any) -> int:
+        return int(stamp.sec) * 1_000_000_000 + int(stamp.nanosec)
+
+    def _on_motor_diagnostics(self, msg: DiagnosticArray) -> None:
+        if self._active_trial is None:
+            return
+        for status in msg.status:
+            if status.name != "mavros_esc_wheel_odometry/source":
+                continue
+            values = {item.key: item.value for item in status.values}
+            source = values.get("active_source", "")
+            delivery = self._stamp_ns(msg.header.stamp)
+            for wheel in ("left", "right"):
+                try:
+                    sample = MotorCounterSample(
+                        stamp_ns=int(values[f"{source}/{wheel}_sample_stamp_ns"]),
+                        revolutions=float(values[f"{source}/{wheel}_raw_ticks"]),
+                        source=source, epoch=int(values[f"{source}/epoch"]),
+                        segment=int(values[f"{source}/{wheel}_segment"]),
+                        valid=(values.get("ticks_unit") == "motor_revolution"
+                               and source in ("esc_status", "ardupilot_legacy")
+                               and values.get(f"{source}/{wheel}_valid") == "true"),
+                        delivery_ns=delivery,
+                    )
+                except (KeyError, ValueError):
+                    sample = MotorCounterSample(delivery, float("nan"), source, 0, 0, False, delivery)
+                getattr(self._active_trial, f"{wheel}_motor_samples").append(sample)
 
     def _on_wheel_odom(self, msg: Odometry) -> None:
         now_s = time.monotonic()
@@ -379,6 +426,24 @@ class DrivePidTuner(Node):
         if self._active_trial is None:
             return
         status = self._latest_gnss_status
+        stamp_ns = self._stamp_ns(msg.header.stamp)
+        observation_time = time.monotonic()
+        provenance_valid = False
+        if self._args.hardware_backend == "mavros":
+            # Bind quality and receiver identity to this pose, not to the latest cached status.
+            status = self._gnss_status_history.get(stamp_ns)
+            age_s = (self.get_clock().now().nanoseconds - stamp_ns) / 1e9
+            provenance_valid = (
+                status is not None and stamp_ns > 0 and 0 <= age_s <= self._args.odom_timeout
+                and msg.source == AbsolutePose.SOURCE_GPS
+                and not (msg.flags & AbsolutePose.FLAG_GPS_DEAD_RECKONING)
+                and math.isfinite(msg.position_accuracy)
+                and 0 <= msg.position_accuracy <= self._args.rtk_accuracy_threshold
+                and bool(msg.flags & (AbsolutePose.FLAG_GPS_RTK_FIXED
+                                      | (AbsolutePose.FLAG_GPS_RTK_FLOAT if self._args.allow_rtk_float else 0)))
+            )
+            # Explicit ROS-acquisition -> monotonic trial-window conversion at delivery.
+            observation_time -= age_s
         rtk_mode = GnssStatus.RTK_MODE_UNKNOWN if status is None else int(status.rtk_mode)
         fix_valid = False if status is None else bool(status.fix_valid)
         corrections_active = False if status is None else bool(status.corrections_active)
@@ -389,7 +454,7 @@ class DrivePidTuner(Node):
             mode_label = "RTK_FLOAT"
         self._active_trial.rtk_samples.append(
             RtkPoseSample(
-                time_s=time.monotonic(),
+                time_s=observation_time,
                 x_m=float(msg.pose.pose.position.x),
                 y_m=float(msg.pose.pose.position.y),
                 horizontal_accuracy_m=(
@@ -401,6 +466,10 @@ class DrivePidTuner(Node):
                 corrections_active=corrections_active,
                 rtk_mode=rtk_mode,
                 mode_label=mode_label,
+                observation_stamp_ns=stamp_ns,
+                observation_sequence=0 if status is None else status.position_observation_sequence,
+                backend="" if status is None else status.backend,
+                provenance_valid=provenance_valid,
             )
         )
 
@@ -547,6 +616,8 @@ class DrivePidTuner(Node):
             )
             return 0
         except Exception as exc:
+            if self._args.hardware_backend == "mavros" and isinstance(exc, TrialAbortedError) and exc.metrics is not None:
+                feedforward_trials.extend(exc.completed_trials or [exc.metrics])
             self._remember_failure(str(exc))
             raise
         finally:
@@ -1032,29 +1103,31 @@ class DrivePidTuner(Node):
         duration = self._feedforward_duration(speed)
         self.get_logger().info(f"Odometry calibration: {self._args.passes} straight pass(es).")
         for index in range(self._args.passes):
-            trial = self._run_speed_trial(
-                name=f"odom_pass_{index + 1}_{speed:.2f}mps",
-                phase="odometry",
-                initial_speed=0.0,
-                target_speed=speed,
-                params=params,
-                duration_s=duration,
-            )
+            try:
+                trial = self._run_speed_trial(
+                    name=f"odom_pass_{index + 1}_{speed:.2f}mps",
+                    phase="odometry",
+                    initial_speed=0.0,
+                    target_speed=speed,
+                    params=params,
+                    duration_s=duration,
+                )
+            except TrialAbortedError as exc:
+                exc.completed_trials = [*trials, *([exc.metrics] if exc.metrics is not None else [])]
+                raise
             trials.append(trial)
             if trial.stall_detected:
-                raise RuntimeError("Odometry calibration observed no wheel motion.")
-            if trial.rtk_accepted and trial.rtk_distance_m is not None:
-                coefficient = mavros_ticks_per_meter_from_motor_revolutions(
-                    trial.left_ticks_seen, trial.right_ticks_seen, trial.rtk_distance_m
-                )
+                raise TrialAbortedError("Odometry calibration observed no wheel/ground motion.", trial, trials)
+            if trial.rtk_accepted and trial.calibration_window is not None:
+                coefficient = trial.calibration_window["ticks_per_meter"]
                 if not math.isfinite(coefficient) or coefficient <= 0.0:
-                    raise RuntimeError("Odometry calibration produced an invalid ticks_per_meter.")
+                    raise TrialAbortedError("Odometry calibration produced an invalid ticks_per_meter.", trial, trials)
                 coefficients.append(coefficient)
                 reasons.append(f"Pass {index + 1}: ticks_per_meter -> {coefficient!r} from wheel rotations/reference distance.")
-            elif self._latest_gnss_status is not None:
-                raise RuntimeError("No trustworthy RTK/GNSS distance was accepted during the odometry pass.")
             else:
-                reasons.append(f"Pass {index + 1}: reference unavailable, leaving ticks_per_meter unchanged.")
+                raise TrialAbortedError(
+                    "No trustworthy aligned motor/RTK window was accepted during the odometry pass.", trial, trials,
+                )
             # All passes use the same live reference, including report-only runs.
             if index < self._args.passes - 1:
                 if self._args.auto_turn:
@@ -1958,6 +2031,10 @@ class DrivePidTuner(Node):
         steady_end = recorder.command_end_s
         if recorder.ramp_down:
             steady_end = recorder.command_end_s - max(0.5, recorder.ramp_time_s * 0.5)
+        if isinstance(recorder.params, OdometryParams):
+            # Use the commanded plateau, excluding all ramp-down and stop/hold time.
+            steady_end = min(recorder.command_end_s, recorder.command_start_s + recorder.command_duration_s
+                             - (recorder.ramp_time_s if recorder.ramp_down else 0.0))
         speed_samples = [
             sample for sample in recorder.speed_samples
             if steady_start <= sample.time_s <= steady_end
@@ -2010,7 +2087,7 @@ class DrivePidTuner(Node):
             steady_end=steady_end,
         )
         notes.extend(rtk_notes)
-        return compute_trial_metrics(
+        metrics = compute_trial_metrics(
             name=recorder.name,
             phase=recorder.phase,
             target_speed=recorder.target_speed,
@@ -2028,6 +2105,69 @@ class DrivePidTuner(Node):
             warnings=recorder.warnings,
             notes=notes,
         )
+        if (isinstance(recorder.params, OdometryParams) and metrics.rtk_distance_m is not None
+                and (metrics.rtk_distance_m < 1.0 or metrics.stall_detected)):
+            metrics = replace(metrics, rtk_accepted=False)
+        if isinstance(recorder.params, OdometryParams) and metrics.rtk_accepted:
+            try:
+                anchor = recorder.accepted_rtk_samples[0]
+                # Restrict interpolation brackets themselves to the commanded plateau.
+                # Explicitly map monotonic trial bounds into the ROS acquisition domain.
+                plateau_start = anchor.observation_stamp_ns + round((steady_start - anchor.time_s) * 1e9)
+                plateau_end = anchor.observation_stamp_ns + round((steady_end - anchor.time_s) * 1e9)
+                counters = [
+                    [sample for sample in samples if plateau_start <= sample.stamp_ns <= plateau_end
+                     or (not sample.valid and plateau_start <= sample.delivery_ns <= plateau_end)]
+                    for samples in (recorder.left_motor_samples, recorder.right_motor_samples)
+                ]
+                if not all(counters):
+                    raise ValueError("Motor acquisition provenance unavailable on plateau")
+                common_start = max(min(sample.stamp_ns for sample in samples) for samples in counters)
+                common_end = min(max(sample.stamp_ns for sample in samples) for samples in counters)
+                aligned = [sample for sample in recorder.accepted_rtk_samples
+                           if common_start <= sample.observation_stamp_ns <= common_end]
+                if len(aligned) < 2:
+                    raise ValueError("Insufficient common motor/RTK coverage on plateau")
+                ground_speed_mean, rtk_distance_m, alignment_notes = self._compute_rtk_metrics(
+                    recorder=recorder, steady_start=aligned[0].time_s, steady_end=aligned[-1].time_s,
+                )
+                if ground_speed_mean is None or rtk_distance_m is None or rtk_distance_m < 1.0:
+                    raise ValueError("Aligned RTK window rejected: " + "; ".join(alignment_notes))
+                validated = recorder.accepted_rtk_samples
+                if (len(validated) < 2 or any(
+                    not common_start <= sample.observation_stamp_ns <= common_end
+                    for sample in validated
+                )):
+                    raise ValueError("Reselected RTK observations outside common motor window")
+                start = validated[0].observation_stamp_ns
+                end = validated[-1].observation_stamp_ns
+                left = motor_revolutions_between(counters[0], start, end, self._args.odom_timeout)
+                right = motor_revolutions_between(counters[1], start, end, self._args.odom_timeout)
+                if (counters[0][0].source, counters[0][0].epoch) != (counters[1][0].source, counters[1][0].epoch):
+                    raise ValueError("Different motor source/epoch between wheels")
+                if left <= 0 or right <= 0:
+                    metrics = replace(metrics, stall_detected=True, trial_quality="poor")
+                    raise ValueError("No forward movement of both motor counters in accepted RTK window")
+                metrics = replace(
+                    metrics, ground_speed_mean=ground_speed_mean,
+                    ground_error_mean=recorder.target_speed - ground_speed_mean,
+                    rtk_distance_m=rtk_distance_m, calibration_window={
+                        "start_stamp_ns": start, "end_stamp_ns": end,
+                        "left_motor_revolutions": left, "right_motor_revolutions": right,
+                        "rtk_distance_m": rtk_distance_m,
+                        "ticks_per_meter": (left + right) * 0.5 / rtk_distance_m,
+                        "counter_unit": "motor_revolution",
+                        "source": counters[0][0].source,
+                        "left_epoch": counters[0][0].epoch, "left_segment": counters[0][0].segment,
+                        "right_epoch": counters[1][0].epoch, "right_segment": counters[1][0].segment,
+                        "gnss_backend": anchor.backend,
+                    },
+                )
+            except ValueError as exc:
+                # GNSS quality remains diagnostic; a rejected fit is never calibrable.
+                metrics = replace(metrics, rtk_accepted=False, calibration_window=None,
+                                  notes=(*metrics.notes, str(exc)))
+        return metrics
 
     def _ticks_seen(self, samples: list[TickSample]) -> tuple[int, int, int]:
         activity = compute_tick_activity(samples)
@@ -2045,6 +2185,7 @@ class DrivePidTuner(Node):
         steady_end: float,
     ) -> tuple[float | None, float | None, list[str]]:
         notes: list[str] = []
+        recorder.accepted_rtk_samples = []
         if self._latest_gnss_status is None:
             notes.append("/gps/status absent, RTK validation disabled.")
             return None, None, notes
@@ -2054,6 +2195,22 @@ class DrivePidTuner(Node):
         for sample in recorder.rtk_samples:
             if not (steady_start <= sample.time_s <= steady_end):
                 continue
+            if isinstance(recorder.params, OdometryParams) and not sample.provenance_valid:
+                notes.append("RTK pose provenance/freshness unavailable for odometry calibration.")
+                return None, None, notes
+            if isinstance(recorder.params, OdometryParams) and (
+                not sample.fix_valid or not sample.corrections_active
+                or sample.observation_sequence <= 0 or not sample.backend
+                or not math.isfinite(sample.x_m) or not math.isfinite(sample.y_m)
+                or not math.isfinite(sample.horizontal_accuracy_m)
+                or not 0 <= sample.horizontal_accuracy_m <= self._args.rtk_accuracy_threshold
+                or sample.rtk_mode not in (
+                    (GnssStatus.RTK_MODE_FIXED,) if require_fixed
+                    else (GnssStatus.RTK_MODE_FIXED, GnssStatus.RTK_MODE_FLOAT)
+                )
+            ):
+                notes.append("RTK quality rejected inside odometry plateau; window rejected.")
+                return None, None, notes
             if not sample.fix_valid:
                 continue
             if not sample.corrections_active:
@@ -2092,7 +2249,16 @@ class DrivePidTuner(Node):
 
         start = accepted[0]
         end = accepted[-1]
-        dt = end.time_s - start.time_s
+        if isinstance(recorder.params, OdometryParams):
+            for previous, current in zip(accepted, accepted[1:]):
+                gap = (current.observation_stamp_ns - previous.observation_stamp_ns) / 1e9
+                if (gap <= 0 or gap > self._args.odom_timeout or current.backend != previous.backend
+                        or (previous.observation_sequence and current.observation_sequence <= previous.observation_sequence)):
+                    notes.append("RTK acquisition gap, duplicate, restart or source change; window rejected.")
+                    return None, None, notes
+            recorder.accepted_rtk_samples = accepted
+        dt = ((end.observation_stamp_ns - start.observation_stamp_ns) / 1e9
+              if isinstance(recorder.params, OdometryParams) else end.time_s - start.time_s)
         if dt <= 0.5:
             notes.append("RTK steady-state time span too short.")
             return None, None, notes
@@ -2101,6 +2267,9 @@ class DrivePidTuner(Node):
         distance = (dx * dx + dy * dy) ** 0.5
         if distance < 1.0:
             notes.append("RTK segment too short for a stable distance estimate.")
+            if isinstance(recorder.params, OdometryParams):
+                # Valid RTK still diagnoses stationary ground/slip, but cannot fit a coefficient.
+                return distance / dt, distance, notes
             return None, None, notes
         return distance / dt, distance, notes
 
@@ -2236,13 +2405,17 @@ class DrivePidTuner(Node):
             payload["calibration_scope"] = "odometry"
             payload["hardware_node"] = self._args.odometry_node
             payload["initial_baseline_source"] = "live_odometry"
-            payload["recommended"] = proposed_params.to_dict()
+            eligible = (not failure_message and bool(trials)
+                        and all(trial.rtk_accepted and trial.calibration_window is not None
+                                and not trial.stall_detected for trial in trials))
+            payload["recommended"] = proposed_params.to_dict() if eligible else {}
+            if not eligible:
+                # Current/starting values are still retained, without posing as a proposal.
+                payload["proposed_params"] = {}
             for entry, trial in zip(payload["trials"], trials):
                 entry.pop("integral_saturation_suspected", None)
-                if trial.rtk_accepted and trial.rtk_distance_m is not None:
-                    entry["ticks_per_meter"] = mavros_ticks_per_meter_from_motor_revolutions(
-                        trial.left_ticks_seen, trial.right_ticks_seen, trial.rtk_distance_m
-                    )
+                if trial.rtk_accepted and trial.calibration_window is not None:
+                    entry["ticks_per_meter"] = trial.calibration_window["ticks_per_meter"]
         if failure_message is not None:
             payload["failure_message"] = failure_message
         output_path.write_text(
