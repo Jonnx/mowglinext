@@ -57,7 +57,7 @@ opt-in observer that delegates AUTO's argmin search once and records its return
 value. Normal callers leave the observer absent. `coverage_server.cpp` is
 unchanged to preserve #924 ownership.
 
-## Validation status
+## Historical validation (2026-10-10)
 
 The completed x86_64 CI comparison tested PR head
 `54dbcbc1fddc86d7166c92f137e3018a10c9cc7a` in synthetic merge
@@ -154,6 +154,46 @@ comparison. Nine comparison regressions reject missing/null values, incorrect
 fixture/output/input hashes, missing baseline snapshots, invalid measurements,
 stage reordering/duplicates and submillimetre trace drift. None of these harness
 repairs is presented as a production fix for #823.
+
+## Review and rebase (2026-10-12)
+
+The eight PR commits were rebased without conflicts onto fetched `dev`
+`fd244fecace467d0046b28012bc29d5a4099220f`. `git range-diff` reports all eight
+patches unchanged. The final diff retains the same 19-file scope; upstream's
+sharp-corner pivot changes and current planner regression tests are preserved.
+The new review did not establish a production correctness defect requiring an
+algorithm or resume-state change.
+
+An independent source review of rebased implementation
+`b0fe1cb9e7626996f93a61d1d58ec2408a04e49d` found no confirmed blocker or
+should-fix issue. It checked observer passivity, server/replay input parity,
+connector/start-hint arguments, exact geometry/quaternion comparisons, retained
+evidence, provenance, build configurations and documentation limits. This is
+source-review evidence, separate from execution and CI evidence. The PR body
+records the final validation head and run links; the measurements above retain
+their original baseline and must not be relabelled as new measurements.
+
+### Historical `test_follow_strip_dig` timeout
+
+[Push run 38096470556](https://github.com/mowglinext/mowglinext/actions/runs/38096470556)
+on documentation head `835e67efb80246cb2af860ca286e52b55388a8e1` timed out after
+180.10 s. Its final test was
+`FollowStripDigTest.EndSessionForgetsTheDigPointsButKeepsTheEventCounter`; the
+last application log was `EndSession: clearing per-session flags`. The log does
+not distinguish a hang inside that call from executor/test teardown. It does
+not establish CI resource starvation or a precise deadlock cause.
+
+The test and `status_nodes.cpp` are unchanged between that head and the fetched
+dev baseline. This test ticks `EndSession` against fake action/service servers;
+it never invokes the coverage planner. The same CTest target passed in 20.47 s on the
+previous implementation's [push rerun 38092861214](https://github.com/mowglinext/mowglinext/actions/runs/38092861214),
+20.46 s on the same documentation head's [PR run 38096473964](https://github.com/mowglinext/mowglinext/actions/runs/38096473964),
+and 20.63 s on [dev run 38070842188](https://github.com/mowglinext/mowglinext/actions/runs/38070842188)
+(`d4924a4b1e6dd7d56aca49b92d4a324a5196d3d6`). The individual final case took
+9 ms and 21 ms in the successful push/PR runs. This supports classification
+as an unrelated intermittent ROS/test-lifecycle hang, rather than a demonstrated
+planner-replay regression. No test, timeout, assertion or unrelated production
+code was changed to mask it. New-head required checks must still pass.
 
 ## Integration and resume risks
 

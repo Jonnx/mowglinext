@@ -169,7 +169,7 @@ semantic completion remain #925/#931/#932 responsibilities. Planner determinism
 alone does not settle them.
 
 See [INVESTIGATION.md](INVESTIGATION.md) for the incident evidence, dependency
-findings and the validation status of this Draft.
+findings and baseline-specific validation evidence.
 
 Physical charge/resume acceptance is **HARDWARE_REQUIRED**. The incident's exact
 repo/image, firmware, submodule gitlinks, robot unit and receiver/driver baseline
