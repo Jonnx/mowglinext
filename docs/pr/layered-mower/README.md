@@ -346,7 +346,7 @@ npx playwright test --config playwright.robot-artwork.config.ts --workers=3
 `gui/web/src/constants/mowerModels.ts` remains the authored preset source. Run
 `npm run generate:model-geometry` from `gui/web` after changing its opted-in
 upgrade fields. The generator emits identical `model_geometry_defaults.json`
-assets for the GUI and ROS images; build and registry tests reject stale data.
+assets for the GUI and ROS images; the Go asset parity test (`go test ./...` in GUI CI) rejects stale data.
 Only `chassis_z_offset` is opted in. This is not an automatic reapplication of
 wheel dimensions, sensor mounts, calibration, charging settings or the full preset.
 

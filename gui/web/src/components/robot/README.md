@@ -542,7 +542,7 @@ See the end-to-end test README for commands and the browser coverage limits.
 Preset numbers are authored only in `src/constants/mowerModels.ts`.
 `npm run generate:model-geometry` emits matching GUI/ROS assets for the explicit
 upgrade-key allowlist in `scripts/model-geometry-defaults.mjs` (currently only
-`chassis_z_offset`). Build and registry tests reject stale copies. The loader
+`chassis_z_offset`). The Go asset parity test (`go test ./...` in GUI CI) rejects stale copies. The loader
 applies these before installed values, and the GUI uses them for reads, reset and
 sparse-save pruning; zero is a valid explicit override. Do not add model-name or
 offset branches to those consumers. Other calibrated preset fields are not reapplied.

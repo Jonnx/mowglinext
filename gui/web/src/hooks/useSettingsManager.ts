@@ -390,6 +390,8 @@ export const useSettingsManager = () => {
 
     // The reset value follows the draft preset, including before Save. Discard
     // responses from an earlier selection rather than displaying stale defaults.
+    const draftModel: unknown = localValues.mower_model;
+    const draftMowerModel = typeof draftModel === "string" ? draftModel : undefined;
     useEffect(() => {
         if (loading) return;
         let active = true;
@@ -398,12 +400,12 @@ export const useSettingsManager = () => {
             path: "/settings/yaml/defaults",
             method: "GET",
             format: "json",
-            query: {mower_model: localValues.mower_model},
+            query: draftMowerModel === undefined ? {} : {mower_model: draftMowerModel},
         }).then(res => {
-            if (active && !res.error) setDefaults((res.data as Record<string, any>) || {});
+            if (active && !res.error) setDefaults((res.data as Record<string, unknown>) || {});
         }).catch(() => { /* defaults unavailable: reset affordance stays hidden */ });
         return () => { active = false; };
-    }, [loading, localValues.mower_model, guiApi]);
+    }, [loading, draftMowerModel, guiApi]);
 
     const handleChange = useCallback((key: string, value: any) => {
         setLocalValues((prev) => ({ ...materializeLegacyCasterPosition(prev), [key]: value }));
