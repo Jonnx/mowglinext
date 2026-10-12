@@ -791,7 +791,7 @@ def compute_trial_metrics(
     ticks_seen: int,
     left_ticks_seen: int,
     right_ticks_seen: int,
-    params_used: DrivePidParams,
+    params_used: DrivePidParams | OdometryParams,
     ground_speed_mean: float | None,
     odom_distance_m: float | None,
     rtk_distance_m: float | None,
@@ -844,7 +844,9 @@ def compute_trial_metrics(
     if tick_average > 1e-6:
         left_right_tick_imbalance = abs(left_ticks_seen - right_ticks_seen) / tick_average
     integral_enabled = (
-        params_used.wheel_pid_ki > 0.0 and params_used.wheel_pid_integral_limit > 0.0
+        isinstance(params_used, DrivePidParams)
+        and params_used.wheel_pid_ki > 0.0
+        and params_used.wheel_pid_integral_limit > 0.0
     )
     # Treat integral saturation as a sustained underspeed problem only. Mild
     # overshoot or a still-settling but otherwise responsive trial should not
