@@ -22,6 +22,10 @@ target_include_directories(replay_planner PUBLIC "${PLANNER_INCLUDE}"
     "${ROS_SRC}/mowgli_interfaces/include")
 target_link_libraries(replay_planner PUBLIC Fields2Cover::Fields2Cover)
 target_compile_options(replay_planner PRIVATE -Wall -Wextra -Wpedantic)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # Retain cc1's effective target switches, including implicit/spec defaults.
+  target_compile_options(replay_planner PRIVATE -frecord-gcc-switches)
+endif()
 
 set(REPLAY_REVISION "" CACHE STRING "Repository revision for a source archive")
 include(configure_replay.cmake)

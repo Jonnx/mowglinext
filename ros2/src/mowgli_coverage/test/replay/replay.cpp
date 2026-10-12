@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Cedric <cedric@mowgli.dev>
 
 #include <bit>
+#include <cfloat>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -26,6 +27,24 @@ using Json = nlohmann::json;
 using Point = std::pair<double, double>;
 using Path = std::vector<Point>;
 using Paths = std::vector<Path>;
+
+Json compilerFpFeatures()
+{
+  Json features{{"fma", false},
+                {"avx2", false},
+                {"fast_math", false},
+                {"evaluation_method", FLT_EVAL_METHOD}};
+#ifdef __FMA__
+  features["fma"] = true;
+#endif
+#ifdef __AVX2__
+  features["avx2"] = true;
+#endif
+#ifdef __FAST_MATH__
+  features["fast_math"] = true;
+#endif
+  return features;
+}
 
 std::string hex(uint64_t value)
 {
@@ -341,6 +360,8 @@ Json replay(const Json& input, bool trace_enabled)
             {"planner_header_sha256", REPLAY_HEADER_SHA256},
             {"compiler", REPLAY_COMPILER},
             {"configuration", REPLAY_BUILD_TYPE},
+            {"requested_cxx_flags_sha256", REPLAY_REQUESTED_FLAGS_SHA256},
+            {"compiler_fp_features", compilerFpFeatures()},
             {"gdal", GDALVersionInfo("RELEASE_NAME")},
             {"geos", GEOSversion()}}}};
 }
