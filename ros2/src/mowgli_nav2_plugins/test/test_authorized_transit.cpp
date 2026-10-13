@@ -1,8 +1,11 @@
 // Copyright 2026 Mowgli Project
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #include "mowgli_nav2_plugins/authorized_transit_planner.hpp"
+#include "mowgli_nav2_plugins/transit_raster.hpp"
 #include <gtest/gtest.h>
 
 namespace mowgli_nav2_plugins
@@ -79,6 +82,78 @@ TEST(TransitGeometry, ObstaclesRejectWholeSegmentsIncludingMargin)
   EXPECT_TRUE(geometry.segmentClear({-2, 1.2}, {2, 1.2}));
 }
 
+TEST(TransitGeometry, RasterMatchesOriginalCellClassifier)
+{
+  for (double shift : {0.0, 1048576.07, -1048576.07})
+    for (double resolution : {0.05, 0.08})
+      for (double seam : {-0.000001, 0.0, 0.000001})
+      {
+        const transit::RasterGrid grid{80, 64, resolution, shift - 1.03, shift - 1.03};
+        Geometry geometry;
+        geometry.allowed = {rectangle(shift - 0.8, shift - 0.8, shift + 0.4, shift + 2),
+                            rectangle(shift + 0.4 + seam, shift - 0.8, shift + 3, shift + 0.4),
+                            {{shift + 0.4, shift + 0.4},
+                             {shift + 3, shift + 0.4},
+                             {shift + 3, shift + 2.5},
+                             {shift + 2.5, shift + 2.5},
+                             {shift + 2.5, shift + 0.8},
+                             {shift + 0.4, shift + 0.8}}};
+        geometry.blocked = {rectangle(shift, shift, shift + 0.2, shift + 0.2),
+                            {{shift + 1, shift + 0.5},
+                             {shift + 1.4, shift + 1},
+                             {shift + 0.6, shift + 1}}};
+        geometry.blocked_margins = {0, 0.13};
+        const auto mask = transit::rasterAuthorization(geometry, grid, [] {});
+        ASSERT_EQ(mask.size(), grid.width * grid.height);
+        for (unsigned y = 0; y < grid.height; ++y)
+          for (unsigned x = 0; x < grid.width; ++x)
+          {
+            const auto p = grid.centre(x, y);
+            ASSERT_EQ(bool(mask[y * grid.width + x]), geometry.authorized(p) && geometry.clear(p))
+                << "shift=" << shift << " resolution=" << resolution << " seam=" << seam
+                << " cell=" << x << "," << y;
+          }
+      }
+}
+
+TEST(TransitGeometry, RasterPreservesEpsilonBoundaryAndObstacleMargin)
+{
+  const transit::RasterGrid grid{10, 10, 0.08, 0, 0};
+  for (double offset :
+       {-2 * transit::kEpsilon, -transit::kEpsilon, 0.0, transit::kEpsilon, 2 * transit::kEpsilon})
+  {
+    Geometry geometry;
+    geometry.allowed = {rectangle(0.04 + offset, 0.04 + offset, 0.68 + offset, 0.68 + offset)};
+    geometry.blocked = {rectangle(0.4 + offset, 0.4 + offset, 0.6, 0.6)};
+    geometry.blocked_margins = {0.12};
+    const auto mask = transit::rasterAuthorization(geometry, grid, [] {});
+    for (unsigned y = 0; y < grid.height; ++y)
+      for (unsigned x = 0; x < grid.width; ++x)
+      {
+        const auto p = grid.centre(x, y);
+        EXPECT_EQ(bool(mask[y * grid.width + x]), geometry.authorized(p) && geometry.clear(p));
+      }
+  }
+}
+
+TEST(TransitGeometry, RasterMatchesCollapsedCellCentresAtExtremeOrigin)
+{
+  for (double shift : {4503599627370496.0, -4503599627370496.0})
+  {
+    const transit::RasterGrid grid{80, 80, 0.08, shift, shift};
+    Geometry geometry;
+    geometry.allowed = {rectangle(shift, shift, shift + 8, shift + 8)};
+    geometry.blocked = {rectangle(shift + 2, shift + 2, shift + 4, shift + 4)};
+    const auto mask = transit::rasterAuthorization(geometry, grid, [] {});
+    for (unsigned y = 0; y < grid.height; ++y)
+      for (unsigned x = 0; x < grid.width; ++x)
+      {
+        const auto p = grid.centre(x, y);
+        EXPECT_EQ(bool(mask[y * grid.width + x]), geometry.authorized(p) && geometry.clear(p));
+      }
+  }
+}
+
 class AuthorizedTransitPlannerTest : public testing::Test
 {
 protected:
@@ -108,7 +183,9 @@ protected:
     planner_.cleanup();
     map_->on_cleanup(rclcpp_lifecycle::State());
   }
-  void geometry(const std::vector<Ring>& rings, const std::vector<Ring>& obstacles = {})
+  void geometry(const std::vector<Ring>& rings,
+                const std::vector<Ring>& obstacles = {},
+                double obstacle_margin = 0)
   {
     auto message = std::make_shared<visualization_msgs::msg::MarkerArray>();
     for (std::size_t i = 0; i < rings.size() + obstacles.size(); ++i)
@@ -116,6 +193,7 @@ protected:
       visualization_msgs::msg::Marker marker;
       marker.header.frame_id = "map";
       marker.ns = i < rings.size() ? "area" : "obstacle";
+      marker.scale.x = i < rings.size() ? 0 : obstacle_margin;
       marker.action = marker.ADD;
       for (const auto& p : i < rings.size() ? rings[i] : obstacles[i - rings.size()])
       {
@@ -318,6 +396,49 @@ TEST_F(AuthorizedTransitPlannerTest, RejectedParameterUpdatesDoNotChangeSearchGe
   EXPECT_THROW(plan(-1.2, 1, 1.2, 1), nav2_core::NoValidPathCouldBeFound);
 }
 
+TEST_F(AuthorizedTransitPlannerTest, ConcaveCorridorRemainsAuthorizedInBothDirections)
+{
+  geometry({{{-3, 0}, {3, 0}, {3, 4}, {2.5, 4}, {2.5, 0.5}, {-3, 0.5}}});
+  EXPECT_TRUE(authorized(plan(-2, 0.25, 2.75, 3.8)));
+  EXPECT_TRUE(authorized(plan(2.75, 3.8, -2, 0.25)));
+}
+
+TEST_F(AuthorizedTransitPlannerTest, NewGeometryObstacleKeepsMarginBeforeRasterCatchesUp)
+{
+  geometry({rectangle(-4, 0, 4, 10)});
+  EXPECT_TRUE(authorized(plan(-1, 5, 1, 5)));
+  // The shared raster is deliberately unchanged when the new snapshot arrives.
+  geometry({rectangle(-4, 0, 4, 10)}, {rectangle(-0.2, 4, 0.2, 6)}, 0.25);
+  EXPECT_TRUE(authorized(plan(-1, 5, 1, 5)));
+  EXPECT_TRUE(authorized(plan(1, 5, -1, 5)));
+  EXPECT_THROW(plan(-0.4, 5, 1, 5), nav2_core::StartOccupied);
+  EXPECT_THROW(plan(1, 5, -0.4, 5), nav2_core::GoalOccupied);
+}
+
+TEST_F(AuthorizedTransitPlannerTest, CurrentSensorCostsPreventDiagonalCornerCutting)
+{
+  map_->getCostmap()->resizeMap(20, 20, 0.08, 0, 0);
+  std::fill_n(map_->getCostmap()->getCharMap(), 400, 0);
+  geometry({rectangle(0, 0, 1.6, 1.6)});
+  for (const unsigned char cost : {253, 254, 255})
+  {
+    map_->getCostmap()->setCost(10, 9, cost);
+    for (bool reverse : {false, true})
+    {
+      const auto path = reverse ? plan(0.84, 0.84, 0.76, 0.76) : plan(0.76, 0.76, 0.84, 0.84);
+      EXPECT_TRUE(authorized(path));
+      double length = 0;
+      for (std::size_t i = 1; i < path.poses.size(); ++i)
+        length += transit::distance({path.poses[i - 1].pose.position.x,
+                                     path.poses[i - 1].pose.position.y},
+                                    {path.poses[i].pose.position.x, path.poses[i].pose.position.y});
+      EXPECT_GT(length, 0.14);  // the direct diagonal would be only 0.113 m
+    }
+  }
+  map_->getCostmap()->setCost(10, 9, 0);
+  EXPECT_TRUE(authorized(plan(0.76, 0.76, 0.84, 0.84)));
+}
+
 // Opt-in real-planner benchmark, excluded from ordinary test runs. Run with
 // --gtest_also_run_disabled_tests --gtest_filter=*RepresentativePlanningBenchmark.
 // Each case uses the same geometry, costs and endpoints in both directions.
@@ -361,6 +482,9 @@ TEST_F(AuthorizedTransitPlannerTest, DISABLED_RepresentativePlanningBenchmark)
       {"obstacles32", 625, 625, {rectangle(0, 0, 45, 45)}, obstacles, {1, 1}, {44, 44}}};
   for (const auto& scenario : scenarios)
   {
+    if (const char* filter = std::getenv("MOWGLI_TRANSIT_BENCH_CASE");
+        filter && std::strcmp(filter, scenario.name) != 0)
+      continue;
     map_->getCostmap()->resizeMap(scenario.width, scenario.height, 0.08, -1.03, -1.03);
     std::fill_n(map_->getCostmap()->getCharMap(), scenario.width * scenario.height, 0);
     geometry(scenario.areas, scenario.obstacles);

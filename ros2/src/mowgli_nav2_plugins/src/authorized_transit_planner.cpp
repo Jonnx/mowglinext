@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "mowgli_nav2_plugins/authorized_transit_planner.hpp"
 
+#include "mowgli_nav2_plugins/transit_raster.hpp"
 #include <pluginlib/class_list_macros.hpp>
 
 namespace mowgli_nav2_plugins
@@ -299,14 +300,19 @@ nav_msgs::msg::Path AuthorizedTransitPlanner::createPlan(
   // cannot turn outside slack into a through-corridor.
   const auto start_anchor = anchor(start, geometry), goal_anchor = anchor(goal, geometry);
   profile("anchors");
+  const auto authorization = transit::rasterAuthorization(geometry,
+                                                          {private_map_.getSizeInCellsX(),
+                                                           private_map_.getSizeInCellsY(),
+                                                           private_map_.getResolution(),
+                                                           private_map_.getOriginX(),
+                                                           private_map_.getOriginY()},
+                                                          check);
   for (unsigned y = 0; y < private_map_.getSizeInCellsY(); ++y)
   {
     check();
     for (unsigned x = 0; x < private_map_.getSizeInCellsX(); ++x)
     {
-      transit::Point p;
-      private_map_.mapToWorld(x, y, p.x, p.y);
-      if (!geometry.authorized(p) || !geometry.clear(p))
+      if (!authorization[std::size_t{y} * private_map_.getSizeInCellsX() + x])
         private_map_.setCost(x, y, 254);
     }
   }
