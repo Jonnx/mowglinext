@@ -378,20 +378,6 @@ export const useSettingsManager = () => {
                 const data = (res.data) || {};
                 setSavedValues(data);
                 setLocalValues(data);
-                // Best-effort: the reset-to-default UI degrades gracefully
-                // (no reset icons) if this fails, so it must not block load.
-                try {
-                    const defRes = await guiApi.request({
-                        path: "/settings/yaml/defaults",
-                        method: "GET",
-                        format: "json",
-                    });
-                    if (!defRes.error) {
-                        setDefaults((defRes.data as SettingsValues) || {});
-                    }
-                } catch {
-                    /* defaults unavailable — reset affordance hidden */
-                }
                 initialLoadDone.current = true;
             } catch (e) {
                 notification.error({
@@ -403,6 +389,37 @@ export const useSettingsManager = () => {
             }
         })();
     }, []);
+
+    // The reset value follows the draft preset, including before Save.
+    // Discard responses from an earlier selection to avoid stale defaults.
+    const draftModel: unknown = localValues.mower_model;
+    const draftMowerModel = typeof draftModel === "string" ? draftModel : undefined;
+
+    useEffect(() => {
+        if (loading) return;
+
+        let active = true;
+        setDefaults({});
+
+        guiApi.request({
+            path: "/settings/yaml/defaults",
+            method: "GET",
+            format: "json",
+            query: draftMowerModel === undefined
+                ? {}
+                : {mower_model: draftMowerModel},
+        }).then(res => {
+            if (active && !res.error) {
+                setDefaults((res.data as SettingsValues) || {});
+            }
+        }).catch(() => {
+            /* defaults unavailable: reset affordance stays hidden */
+        });
+
+        return () => {
+            active = false;
+        };
+    }, [loading, draftMowerModel, guiApi]);
 
     const handleChange = useCallback((key: string, value: unknown) => {
         setLocalValues((prev) => ({
