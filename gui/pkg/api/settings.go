@@ -1443,6 +1443,14 @@ func GetSettingsYAMLDefaults(r *gin.RouterGroup, dbProvider types.IDBProvider) g
 		// On a robot whose backend changes some defaults, "default" means the
 		// backend's value (config/backends/<backend>.yaml, Invariant 15).
 		applyBackendDefaults(defaults, activeHardwareBackend(loadRuntimeEnv(dbProvider)))
+		selection := map[string]any{}
+		if doc, err := loadGNSSSettingsDocument(dbProvider); err == nil {
+			selection = doc.Flat
+		}
+		if model, supplied := c.GetQuery("mower_model"); supplied {
+			selection["mower_model"] = model
+		}
+		applyModelGeometryDefaults(defaults, selection)
 		c.JSON(200, defaults)
 	})
 }
@@ -1505,6 +1513,17 @@ func PostSettingsYAML(r *gin.RouterGroup, dbProvider types.IDBProvider) gin.IRou
 			// equal to the BACKEND's default is pruned, so the robot falls back
 			// to that same value.
 			applyBackendDefaults(defaults, activeHardwareBackend(loadRuntimeEnv(dbProvider)))
+			// Resolve against the requested model before filling absent values
+			// and pruning. Explicit zero must survive when its preset is nonzero.
+			selection := cloneFlatMap(existing)
+			if model, changed := payload["mower_model"]; changed {
+				if model == nil {
+					delete(selection, "mower_model")
+				} else {
+					selection["mower_model"] = model
+				}
+			}
+			applyModelGeometryDefaults(defaults, selection)
 			for key, value := range defaults {
 				if _, exists := existing[key]; !exists {
 					existing[key] = value
