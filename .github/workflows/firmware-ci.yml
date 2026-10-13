@@ -56,6 +56,7 @@ jobs:
           - Yardforce500B
           - BiltemaRM1000
           - BiltemaRM1000_MPU6050_Yaw180
+          - YardforceNX100i
           - Yardforce500_COASTDOWN_VALIDATION
     steps:
       - uses: actions/checkout@v6
@@ -140,6 +141,7 @@ jobs:
           pio run -e Yardforce500
           pio run -e Yardforce500B
           pio run -e BiltemaRM1000
+          pio run -e YardforceNX100i
 
       - name: Package binaries + manifest
         env:

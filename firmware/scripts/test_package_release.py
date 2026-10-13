@@ -59,6 +59,11 @@ def main():
             "board": "BOARD_YARDFORCE500B",
             "panel": "PANEL_TYPE_YARDFORCE_900_ECO",
         },
+        "yardforce-nx100i": {
+            "env": "YardforceNX100i",
+            "board": "BOARD_YARDFORCE500B",
+            "panel": "PANEL_TYPE_YARDFORCE_500B_CLASSIC",
+        },
     }
     actual = {
         key: {field: entry[field] for field in ("env", "board", "panel")}
@@ -130,6 +135,17 @@ def main():
         for field, value in expected["biltema-rm1000"].items():
             if rm1000[field] != value:
                 raise AssertionError(f"RM1000 manifest {field}: {rm1000[field]!r}")
+        nx100i = manifest["permutations"]["yardforce-nx100i"]
+        for field, value in expected["yardforce-nx100i"].items():
+            if nx100i[field] != value:
+                raise AssertionError(f"NX100i manifest {field}: {nx100i[field]!r}")
+        # The NX100i shares the 500B board/panel identity; its artifact must
+        # still get its own file name instead of overwriting the 500B binary.
+        files = [item["file"] for item in manifest["permutations"].values()]
+        if len(set(files)) != len(files):
+            raise AssertionError(f"prebuilt artifact file names collide: {files}")
+        if "_nx100i_" not in nx100i["file"]:
+            raise AssertionError(f"NX100i artifact lacks its variant tag: {nx100i['file']!r}")
         if "BiltemaRM1000_MPU6050_Yaw180" in {
             item["env"] for item in manifest["permutations"].values()
         }:
