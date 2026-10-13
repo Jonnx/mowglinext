@@ -170,6 +170,52 @@ TEST(TransitGeometry, ReusedCrossingBuffersDoNotRetainPreviousEdges)
   }
 }
 
+TEST(TransitGeometry, RemoteObstacleRejectionMatchesOriginalSegmentClearance)
+{
+  const auto original_clear = [](const Geometry& geometry, Point a, Point b)
+  {
+    if (!geometry.clear(a) || !geometry.clear(b))
+      return false;
+    for (std::size_t index = 0; index < geometry.blocked.size(); ++index)
+    {
+      const auto& ring = geometry.blocked[index];
+      if (transit::cuts(a, b, {ring}).size() > 2)
+        return false;
+      for (std::size_t i = 0, j = ring.size() - 1; i < ring.size(); j = i++)
+        if (std::min({transit::edgeDistance(a, ring[j], ring[i]),
+                      transit::edgeDistance(b, ring[j], ring[i]),
+                      transit::edgeDistance(ring[j], a, b),
+                      transit::edgeDistance(ring[i], a, b)}) <=
+            geometry.margin(index) + transit::kEpsilon)
+          return false;
+    }
+    return true;
+  };
+  for (double shift : {0.0, 1048576.07, 4503599627370496.0})
+  {
+    Geometry geometry;
+    for (unsigned i = 0; i < 16; ++i)
+    {
+      geometry.blocked.push_back(rectangle(
+          shift + i * 0.3, shift + i * 0.13, shift + i * 0.3 + 0.17, shift + i * 0.13 + 0.21));
+      geometry.blocked_margins.push_back((i % 3) * 0.05);
+    }
+    for (unsigned i = 0; i < 200; ++i)
+    {
+      const Point a{shift - 1 + (i % 19) * 0.4, shift - 1 + (i % 13) * 0.3};
+      const Point b{shift - 1 + (i % 17) * 0.35, shift - 1 + (i % 11) * 0.4};
+      EXPECT_EQ(geometry.segmentClear(a, b), original_clear(geometry, a, b));
+      EXPECT_EQ(geometry.segmentClear(b, a), original_clear(geometry, b, a));
+    }
+  }
+  Geometry near_parallel;
+  near_parallel.blocked = {rectangle(0.02, 0.0000001, 0.06, 0.1)};
+  // Preserve even the original near-collinear cut tolerance, not just metric
+  // distance: a naive bounding rejection before cuts would accept this edge.
+  EXPECT_FALSE(near_parallel.segmentClear({0, 0}, {0.08, 0}));
+  EXPECT_FALSE(near_parallel.segmentClear({0.08, 0}, {0, 0}));
+}
+
 class AuthorizedTransitPlannerTest : public testing::Test
 {
 protected:

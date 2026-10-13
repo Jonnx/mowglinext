@@ -68,6 +68,35 @@ inline double ringDistance(Point p, const Ring& ring)
   return result;
 }
 
+// Reject only distance work for a provably remote ring. Crossing checks still
+// run independently. Widen for rounding in closestOnEdge's clamped interpolation;
+// extreme/non-finite intermediate padding simply disables the fast rejection.
+inline bool remoteRing(Point a, Point b, const Ring& ring, double margin)
+{
+  double min_x = INFINITY, min_y = INFINITY, max_x = -INFINITY, max_y = -INFINITY;
+  for (const auto& p : ring)
+  {
+    min_x = std::min(min_x, p.x);
+    min_y = std::min(min_y, p.y);
+    max_x = std::max(max_x, p.x);
+    max_y = std::max(max_y, p.y);
+  }
+  const double magnitude = std::max({std::abs(min_x),
+                                     std::abs(min_y),
+                                     std::abs(max_x),
+                                     std::abs(max_y),
+                                     std::abs(a.x),
+                                     std::abs(a.y),
+                                     std::abs(b.x),
+                                     std::abs(b.y),
+                                     std::abs(margin)});
+  const double padding =
+      std::max(0.0, margin) + 8 * (std::nextafter(magnitude, INFINITY) - magnitude);
+  return std::isfinite(padding) &&
+         (std::max(a.x, b.x) < min_x - padding || std::min(a.x, b.x) > max_x + padding ||
+          std::max(a.y, b.y) < min_y - padding || std::min(a.y, b.y) > max_y + padding);
+}
+
 // Split at EVERY polygon crossing, then classify each open interval. Sampling
 // at a fixed spacing can miss arbitrarily thin gaps and diagonal corner cuts.
 inline void cuts(Point a, Point b, std::span<const Ring> rings, std::vector<double>& result)
@@ -161,6 +190,8 @@ struct Geometry
       cuts(a, b, std::span<const Ring>(&ring, 1), scratch);
       if (scratch.size() > 2)
         return false;
+      if (remoteRing(a, b, ring, margin(index) + kEpsilon))
+        continue;
       for (std::size_t i = 0, j = ring.size() - 1; i < ring.size(); j = i++)
         if (std::min({edgeDistance(a, ring[j], ring[i]),
                       edgeDistance(b, ring[j], ring[i]),
