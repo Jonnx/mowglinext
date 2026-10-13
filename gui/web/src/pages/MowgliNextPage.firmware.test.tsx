@@ -15,6 +15,8 @@ const data = {
     motorTemp: 25,
     firmwareCompatible: false,
     firmwareVersion: "",
+    settings: {},
+    docked: false,
 } as Parameters<typeof HealthCard>[0]["data"];
 
 describe("dashboard firmware inventory by hardware backend", () => {

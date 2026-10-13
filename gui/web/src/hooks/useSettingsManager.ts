@@ -28,6 +28,8 @@ import {
 } from "../components/settings/settingsFieldGroups.ts";
 import { liveHardwareParameters, settingsSectionsForBackend } from "../constants/hardwareBackends.ts";
 import { useHardwareBackend } from "./useHardwareBackend.ts";
+import {apiErrorMessage, errorMessage} from "../utils/errors";
+import type {SettingsValues} from "../types/settings.generated";
 
 
 /** A section that saves outside mowgli_robot.yaml but wants the page's Save button. */
@@ -341,13 +343,13 @@ export const useSettingsManager = () => {
     const guiApi = useApi();
     const hardware = useHardwareBackend();
     const { notification } = App.useApp();
-    const [savedValues, setSavedValues] = useState<Record<string, any>>({});
-    const [localValues, setLocalValues] = useState<Record<string, any>>({});
+    const [savedValues, setSavedValues] = useState<SettingsValues>({});
+    const [localValues, setLocalValues] = useState<SettingsValues>({});
     // Schema defaults = the GUI's source of "default value" for each key.
     // (The backend derives these from the JSON schema, which stands in for the
     // ROS2 package template it cannot read at runtime.) Used for the
     // per-field "reset to default" affordance and the overridden indicator.
-    const [defaults, setDefaults] = useState<Record<string, any>>({});
+    const [defaults, setDefaults] = useState<SettingsValues>({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [restartRequired, setRestartRequired] = useState(() => {
@@ -380,29 +382,15 @@ export const useSettingsManager = () => {
             try {
                 setLoading(true);
                 const res = await guiApi.settings.yamlList();
-                if (res.error) throw new Error((res.error as any).error);
+                if (res.error) throw new Error(apiErrorMessage(res.error));
                 const data = (res.data) || {};
                 setSavedValues(data);
                 setLocalValues(data);
-                // Best-effort: the reset-to-default UI degrades gracefully
-                // (no reset icons) if this fails, so it must not block load.
-                try {
-                    const defRes = await guiApi.request({
-                        path: "/settings/yaml/defaults",
-                        method: "GET",
-                        format: "json",
-                    });
-                    if (!defRes.error) {
-                        setDefaults((defRes.data as Record<string, any>) || {});
-                    }
-                } catch {
-                    /* defaults unavailable — reset affordance hidden */
-                }
                 initialLoadDone.current = true;
-            } catch (e: any) {
+            } catch (e) {
                 notification.error({
                     message: t("settingsSections.toasts.loadFailed"),
-                    description: e.message,
+                    description: errorMessage(e),
                 });
             } finally {
                 setLoading(false);
@@ -410,16 +398,50 @@ export const useSettingsManager = () => {
         })();
     }, []);
 
+    // The reset value follows the draft preset, including before Save.
+    // Discard responses from an earlier selection to avoid stale defaults.
+    const draftModel: unknown = localValues.mower_model;
+    const draftMowerModel = typeof draftModel === "string" ? draftModel : undefined;
 
-    const handleChange = useCallback((key: string, value: any) => {
-        setLocalValues((prev) => ({ ...materializeLegacyCasterPosition(prev), [key]: value }));
+    useEffect(() => {
+        if (loading) return;
+
+        let active = true;
+        setDefaults({});
+
+        guiApi.request({
+            path: "/settings/yaml/defaults",
+            method: "GET",
+            format: "json",
+            query: draftMowerModel === undefined
+                ? {}
+                : {mower_model: draftMowerModel},
+        }).then(res => {
+            if (active && !res.error) {
+                setDefaults((res.data as SettingsValues) || {});
+            }
+        }).catch(() => {
+            /* defaults unavailable: reset affordance stays hidden */
+        });
+
+        return () => {
+            active = false;
+        };
+    }, [loading, draftMowerModel, guiApi]);
+
+    const handleChange = useCallback((key: string, value: unknown) => {
+        setLocalValues((prev) => ({
+            ...materializeLegacyCasterPosition(prev),
+            [key]: value,
+        }));
     }, []);
 
-
-    const handleBulkChange = useCallback((changes: Record<string, any>) => {
-        setLocalValues((prev) => ({ ...materializeLegacyCasterPosition(prev), ...changes }));
+    const handleBulkChange = useCallback((changes: SettingsValues) => {
+        setLocalValues((prev) => ({
+            ...materializeLegacyCasterPosition(prev),
+            ...changes,
+        }));
     }, []);
-
 
     // hasDefault: the schema knows a default for this key (so a reset is
     // meaningful). isDefault: the current local value already equals that
@@ -572,7 +594,7 @@ export const useSettingsManager = () => {
             // preserves anything other processes may have written between
             // load and save (e.g. dock_pose_x/y from the calibration
             // service or the map "set dock pose" action).
-            const dirtyPayload: Record<string, any> = {};
+            const dirtyPayload: SettingsValues = {};
             for (const key of dirtyKeys) {
                 if (key in localValues) {
                     dirtyPayload[key] = localValues[key];
@@ -580,11 +602,11 @@ export const useSettingsManager = () => {
             }
             if (hasDirtyChanges) {
                 const res = await guiApi.settings.yamlCreate(dirtyPayload);
-                if (res.error) throw new Error((res.error as any).error);
+                if (res.error) throw new Error(apiErrorMessage(res.error));
                 // AdvancedSection deletes surface as null-valued keys. The
                 // backend drops null keys from the YAML on save, so prune them
                 // from local state too — otherwise the deleted rows reappear.
-                const pruned: Record<string, any> = {};
+                const pruned: SettingsValues = {};
                 for (const [key, value] of Object.entries(localValues)) {
                     if (value !== null) {
                         pruned[key] = value;
@@ -643,10 +665,10 @@ export const useSettingsManager = () => {
                         // an operator-entered yaw is explicit, never circular.
                         yaw_source: 1,
                     });
-                } catch (e: any) {
+                } catch (e) {
                     notification.warning({
                         message: t("settingsSections.toasts.dockRefreshFailed"),
-                        description: e?.message ??
+                        description: errorMessage(e) ??
                             t("settingsSections.toasts.dockRefreshFailedDescription"),
                     });
                 }
@@ -662,36 +684,41 @@ export const useSettingsManager = () => {
                         format: "json",
                         body: { parameters: liveParameters },
                     });
+
                     if (liveResponse.error) {
-                        throw new Error(
-                            String(
-                                (liveResponse.error as { error?: string })?.error ??
-                                liveResponse.error
-                            )
-                        );
+                        throw new Error(apiErrorMessage(liveResponse.error));
                     }
-                } catch (e: any) {
+                } catch (e) {
                     setRestartRequired(true);
                     notification.warning({
                         message: t("settingsSections.toasts.drivePidUpdateFailed"),
-                        description: e?.message ??
+                        description: errorMessage(e) ??
                             t("settingsSections.toasts.drivePidUpdateFailedDescription"),
                     });
                 }
             }
-        } catch (e: unknown) {
+        } catch (e) {
             notification.error({
                 message: t("settingsSections.toasts.saveFailed"),
-                description: e instanceof Error ? e.message : String(e),
+                description: errorMessage(e),
             });
         } finally {
             setSaving(false);
         }
-    }, [localValues, dirtyKeys, guiApi, notification, gpsRestart, t, hardware.parameterRoutes, hardware.backend]);
+    }, [
+        localValues,
+        dirtyKeys,
+        guiApi,
+        notification,
+        gpsRestart,
+        t,
+        hardware.parameterRoutes,
+        hardware.backend,
+    ]);
 
 
     const savePartialValues = useCallback(async (
-        partialValues: Record<string, any>,
+        partialValues: SettingsValues,
         options?: {
             successMessage?: string;
             successDescription?: string;
@@ -701,7 +728,7 @@ export const useSettingsManager = () => {
         },
     ) => {
         try {
-            const changedPayload: Record<string, any> = {};
+            const changedPayload: SettingsValues = {};
             for (const [key, value] of Object.entries(partialValues)) {
                 if (JSON.stringify(value) !== JSON.stringify(savedValues[key])) {
                     changedPayload[key] = value;
@@ -717,7 +744,7 @@ export const useSettingsManager = () => {
             setSaving(true);
             const res = await guiApi.settings.yamlCreate(changedPayload);
             if (res.error) {
-                throw new Error((res.error as any).error);
+                throw new Error(apiErrorMessage(res.error));
             }
 
 
@@ -739,19 +766,17 @@ export const useSettingsManager = () => {
 
 
             return true;
-        } catch (e: any) {
+        } catch (e) {
             notification.error({
                 message: options?.errorMessage ?? t("settingsSections.toasts.saveFailed"),
-                description: e.message,
+                description: errorMessage(e),
             });
             return false;
         } finally {
             setSaving(false);
         }
     }, [guiApi, notification, savedValues, t]);
-
-
-    const acceptPersistedValues = useCallback((persistedValues: Record<string, any>) => {
+    const acceptPersistedValues = useCallback((persistedValues: SettingsValues) => {
         setSavedValues((prev) => ({ ...prev, ...persistedValues }));
         setLocalValues((prev) => ({ ...prev, ...persistedValues }));
     }, []);

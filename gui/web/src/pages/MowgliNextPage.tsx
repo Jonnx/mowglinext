@@ -1,5 +1,7 @@
-import {useBladeTelemetry} from '../hooks/useBladeTelemetry';
-import {motorDisplayValue} from '../utils/motorTelemetry';
+import {useBladeTelemetry} from "../hooks/useBladeTelemetry";
+import {motorDisplayValue} from "../utils/motorTelemetry";
+import {StatusMowerIllustration} from "../components/dashboard/StatusMowerIllustration";
+import "../components/dashboard/healthCard.css";
 import {liveAreaLabel} from "../utils/areaLabel.ts";
 import type {ReactNode} from "react";
 import {useMemo} from "react";
@@ -97,6 +99,10 @@ function useMowerData(backend?: string) {
     battery: batteryPercent,
     batteryKnown: hasBatteryReading(power.v_battery),
     charging: isCharging,
+    // The charging/contact bit is also true on a full docked mower. The BT's
+    // IDLE_DOCKED name can follow a failed return, so it is not dock evidence.
+    docked: power.charger_enabled ?? status.is_charging ?? highLevelStatus.is_charging,
+    settings,
     emergency: isEmergency,
     gps: gpsStatus.percent,
     gpsLabel: gpsStatus.label,
@@ -760,7 +766,7 @@ export function HealthCard({data, hardware, mavros}: {
     }
   }
   return (
-    <GlassCard padding={20}>
+    <GlassCard padding={20} className="health-card">
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         marginBottom: 14,
@@ -775,22 +781,25 @@ export function HealthCard({data, hardware, mavros}: {
           <WeatherChip condition={weather.condition} tempC={weather.temp_c} rainSoon={weather.is_raining}/>
         )}
       </div>
-      <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
-        {rows.map(r => (
-          <div key={r.k} style={{display: 'flex', alignItems: 'center', gap: 12}}>
-            <span style={{
-              width: 8, height: 8, borderRadius: 4,
-              background: r.ok ? 'var(--lime, #7CFFB2)' : 'var(--rose, #FF6B7A)',
-              boxShadow: r.ok ? '0 0 8px rgba(124,255,178,0.4)' : '0 0 8px rgba(255,107,122,0.4)',
-              flexShrink: 0,
-            }}/>
-            <div style={{flex: 1, minWidth: 0}}>
-              <div style={{fontSize: 13, fontWeight: 600, color: 'var(--ink, #ECFFF4)'}}>{r.k}</div>
-              <div style={{fontSize: 11, color: 'rgba(236,255,244,0.42)'}}>{r.note}</div>
+      <div className="health-card-body">
+        <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
+          {rows.map(r => (
+            <div key={r.k} style={{display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap'}}>
+              <span style={{
+                width: 8, height: 8, borderRadius: 4,
+                background: r.ok ? 'var(--lime, #7CFFB2)' : 'var(--rose, #FF6B7A)',
+                boxShadow: r.ok ? '0 0 8px rgba(124,255,178,0.4)' : '0 0 8px rgba(255,107,122,0.4)',
+                flexShrink: 0,
+              }}/>
+              <div style={{flex: '1 1 90px', minWidth: 0}}>
+                <div style={{fontSize: 13, fontWeight: 600, color: 'var(--ink, #ECFFF4)'}}>{r.k}</div>
+                <div style={{fontSize: 11, color: 'rgba(236,255,244,0.42)'}}>{r.note}</div>
+              </div>
+              {r.action && <div style={{flexShrink: 0}}>{r.action}</div>}
             </div>
-            {r.action && <div style={{flexShrink: 0}}>{r.action}</div>}
-          </div>
-        ))}
+          ))}
+        </div>
+        <StatusMowerIllustration settings={data.settings} docked={data.docked}/>
       </div>
       <Button type="link" onClick={() => navigate('/settings?section=updates')} style={{paddingLeft: 0, marginTop: 10}}>
         {t('updates.title')}

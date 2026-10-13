@@ -933,6 +933,8 @@
     "lidarNoEstimate": "Pas encore d’estimation"
   },
   "mowgliNextPage": {
+    "mowerOnDockTop": "Tondeuse sur sa station — vue de dessus",
+    "mowerTop": "Tondeuse — vue de dessus",
     "headlineUntilHomePrefix": "Encore ",
     "headlineMinutes": "{{value}} min",
     "headlineUntilHomeSuffix": " avant la maison.",
@@ -1855,6 +1857,7 @@
     "add": "Ajouter"
   },
   "coveragePreview": {
+    "hide": "Masquer les lignes de tonte",
     "title": "Lignes de tonte",
     "hint": "Montre comment le robot tondra la zone sélectionnée : les tours de périmètre (bordure) et les lignes qui la traversent. Les flèches indiquent le sens de déplacement.",
     "area": "Zone",
@@ -2518,6 +2521,10 @@
     "Sabo": {
       "label": "Sabo MOWiT 500F",
       "description": "Grande tondeuse professionnelle (775x535 mm), largeur de coupe de 32 cm."
+    },
+    "Worx500MPlus": {
+      "label": "WORX 500M Plus",
+      "description": "Configuration fournie de 580×395 mm ; centre de lame décalé de 57,5 mm à droite. Vérifier la position de la roulette et l’étalonnage des composants."
     },
     "CUSTOM": {
       "label": "Robot personnalisé",
