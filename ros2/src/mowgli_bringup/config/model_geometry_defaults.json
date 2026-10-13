@@ -20,6 +20,9 @@
     "Sabo": {
       "chassis_z_offset": 0
     },
+    "Worx500MPlus": {
+      "chassis_z_offset": -0.07
+    },
     "CUSTOM": {}
   }
 }
