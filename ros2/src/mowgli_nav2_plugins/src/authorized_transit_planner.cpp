@@ -308,6 +308,12 @@ nav_msgs::msg::Path AuthorizedTransitPlanner::createPlan(
   // cannot turn outside slack into a through-corridor.
   const auto start_anchor = anchor(start, geometry), goal_anchor = anchor(goal, geometry);
   profile("anchors");
+  if (!geometry.boundsMayConnect(point(start_anchor), point(goal_anchor), check))
+  {
+    profile("static-disconnected");
+    throw nav2_core::NoValidPathCouldBeFound("Authorized transit polygon bounds are disconnected");
+  }
+  profile("connectivity");
   const auto authorization = transit::rasterAuthorization(geometry,
                                                           {private_map_.getSizeInCellsX(),
                                                            private_map_.getSizeInCellsY(),

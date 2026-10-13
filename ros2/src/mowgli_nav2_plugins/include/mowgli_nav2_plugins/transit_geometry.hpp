@@ -160,6 +160,58 @@ struct Geometry
         return false;
     return true;
   }
+
+  // A negative-only preflight for authorized anchors. Overlapping ring bounds
+  // are a superset of actual connectivity; a positive result still requires
+  // the exact search and current obstacle checks. No verdict survives a plan.
+  template <typename Check>
+  bool boundsMayConnect(Point start, Point goal, const Check& check) const
+  {
+    if (allowed.size() <= 1)
+      return !allowed.empty();
+    std::vector<bool> visited(allowed.size(), false);
+    std::vector<std::size_t> pending;
+    for (std::size_t i = 0; i < allowed.size(); ++i)
+    {
+      check();
+      if (inside(start, allowed[i]))
+      {
+        if (inside(goal, allowed[i]))
+          return true;
+        visited[i] = true;
+        pending.push_back(i);
+      }
+    }
+    while (!pending.empty())
+    {
+      check();
+      const auto current = pending.back();
+      pending.pop_back();
+      if (inside(goal, allowed[current]))
+        return true;
+      Point lo{INFINITY, INFINITY}, hi{-INFINITY, -INFINITY};
+      for (const auto& p : allowed[current])
+      {
+        lo.x = std::min(lo.x, p.x);
+        lo.y = std::min(lo.y, p.y);
+        hi.x = std::max(hi.x, p.x);
+        hi.y = std::max(hi.y, p.y);
+      }
+      for (std::size_t i = 0; i < allowed.size(); ++i)
+        if (!visited[i])
+        {
+          check();
+          // Each closed ring includes its own epsilon boundary tolerance.
+          if (!remoteRing(lo, hi, allowed[i], 2 * kEpsilon))
+          {
+            visited[i] = true;
+            pending.push_back(i);
+          }
+        }
+    }
+    return false;
+  }
+
   bool segmentAuthorized(Point a, Point b) const
   {
     std::vector<double> scratch;

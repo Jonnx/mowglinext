@@ -216,6 +216,24 @@ TEST(TransitGeometry, RemoteObstacleRejectionMatchesOriginalSegmentClearance)
   EXPECT_FALSE(near_parallel.segmentClear({0.08, 0}, {0, 0}));
 }
 
+TEST(TransitGeometry, BoundsConnectivityIsOnlyANegativeCheck)
+{
+  Geometry geometry;
+  geometry.allowed = {rectangle(-4, 0, -0.2, 10), rectangle(0.2, 0, 4, 10)};
+  EXPECT_FALSE(geometry.boundsMayConnect({-1, 1}, {1, 1}, [] {}));
+  geometry.allowed.push_back(rectangle(-1, 8, 1, 9));
+  EXPECT_TRUE(geometry.boundsMayConnect({-1, 1}, {1, 1}, [] {}));
+  EXPECT_TRUE(geometry.boundsMayConnect({1, 1}, {-1, 1}, [] {}));
+  geometry.allowed = {rectangle(-1, 0, 0, 1), rectangle(0, 0, 1, 1)};
+  EXPECT_TRUE(geometry.boundsMayConnect({-0.5, 0.5}, {0.5, 0.5}, [] {}));
+  geometry.allowed[1] = rectangle(1.5 * transit::kEpsilon, 0, 1, 1);
+  EXPECT_TRUE(geometry.segmentAuthorized({-0.5, 0.5}, {0.5, 0.5}));
+  EXPECT_TRUE(geometry.boundsMayConnect({-0.5, 0.5}, {0.5, 0.5}, [] {}));
+  // Disconnected triangles with overlapping boxes must go through exact A*.
+  geometry.allowed = {{{0, 0}, {2, 0}, {0, 2}}, {{2, 2}, {0.9, 2}, {2, 0.9}}};
+  EXPECT_TRUE(geometry.boundsMayConnect({0.2, 0.2}, {1.8, 1.8}, [] {}));
+}
+
 class AuthorizedTransitPlannerTest : public testing::Test
 {
 protected:
@@ -499,6 +517,38 @@ TEST_F(AuthorizedTransitPlannerTest, CurrentSensorCostsPreventDiagonalCornerCutt
   }
   map_->getCostmap()->setCost(10, 9, 0);
   EXPECT_TRUE(authorized(plan(0.76, 0.76, 0.84, 0.84)));
+}
+
+TEST_F(AuthorizedTransitPlannerTest, DisconnectedBoundsFailBeforeGridWorkAndRecheckNewGeometry)
+{
+  for (bool reverse : {false, true})
+  {
+    geometry({rectangle(-4, 0, -0.2, 10), rectangle(0.2, 0, 4, 10)});
+    unsigned checks = 0;
+    EXPECT_THROW(planner_.createPlan(pose(reverse ? 1.2 : -1.2, 1),
+                                     pose(reverse ? -1.2 : 1.2, 1),
+                                     {},
+                                     [&]
+                                     {
+                                       return ++checks > 20;
+                                     }),
+                 nav2_core::NoValidPathCouldBeFound);
+    EXPECT_LT(checks, 20U);
+    geometry({rectangle(-4, 0, -0.2, 10), rectangle(0.2, 0, 4, 10), rectangle(-1, 8, 1, 9)});
+    EXPECT_TRUE(authorized(reverse ? plan(1.2, 1, -1.2, 1) : plan(-1.2, 1, 1.2, 1)));
+  }
+  geometry({{{0, 0}, {2, 0}, {0, 2}}, {{2, 2}, {0.9, 2}, {2, 0.9}}});
+  EXPECT_THROW(plan(0.2, 0.2, 1.8, 1.8), nav2_core::NoValidPathCouldBeFound);
+  EXPECT_THROW(plan(1.8, 1.8, 0.2, 0.2), nav2_core::NoValidPathCouldBeFound);
+}
+
+TEST_F(AuthorizedTransitPlannerTest, BothRingBoundaryTolerancesRemainCrossable)
+{
+  map_->getCostmap()->resizeMap(30, 20, 0.08, 0, 0);
+  std::fill_n(map_->getCostmap()->getCharMap(), 600, 0);
+  geometry({rectangle(0, 0, 1, 1), rectangle(1 + 1.5 * transit::kEpsilon, 0, 2, 1)});
+  EXPECT_TRUE(authorized(plan(0.52, 0.52, 1.48, 0.52)));
+  EXPECT_TRUE(authorized(plan(1.48, 0.52, 0.52, 0.52)));
 }
 
 // Opt-in real-planner benchmark, excluded from ordinary test runs. Run with
