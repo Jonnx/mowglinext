@@ -22,7 +22,10 @@ Crimp a 2.0 mm-pitch housing (or use a HY2.0 pre-wired lead) on the J18 side, an
 > [!WARNING] Bare 3.3 V chips
 > A bare LSM6 / ICM breakout without a regulator must be fed 3.3 V, not J18's 5 V. Check the board before plugging it in.
 
-Pin numbering follows the community wiring diagram (verified on 500 and 500B). Confirm pin 1 on your board's silkscreen — an inverted plug puts 29 V (pin 8) where you expect GND.`,
+Pin numbering follows the community wiring diagram (verified on 500 and 500B). Confirm pin 1 on your board's silkscreen — an inverted plug puts 29 V (pin 8) where you expect GND.
+
+> [!DANGER] YardForce NX100i — J18 not yet verified
+> On the NX100i the stock firmware runs SPI3 on PB3 / PB4 / PB5 to this header and the pin order (GND / 5 V / SCL / SDA / VBat) has **not** been measured on this chassis; one pin carries ~29 V. Measure every pin with a meter before connecting an IMU. The board's onboard LIS3DH accelerometer (I²C 0x18) is read by Mowgli as on the 500B.`,
         fr: `L'IMU parle en I²C au STM32 sur le connecteur rouge **J18** (bus logiciel sur PB3 / PB4). Quatre fils :
 
 | Broche IMU | Broche J18 |
@@ -37,7 +40,10 @@ Sertissez un boîtier au pas de 2,0 mm (ou un fil HY2.0 pré-câblé) côté J18
 > [!WARNING] Puces 3,3 V nues
 > Un module LSM6 / ICM sans régulateur doit être alimenté en 3,3 V, pas en 5 V depuis J18. Vérifiez le module avant de le brancher.
 
-La numérotation suit le schéma de câblage communautaire (vérifié sur 500 et 500B). Confirmez la broche 1 sur la sérigraphie de votre carte — une prise inversée met 29 V (broche 8) là où vous attendez la masse.`,
+La numérotation suit le schéma de câblage communautaire (vérifié sur 500 et 500B). Confirmez la broche 1 sur la sérigraphie de votre carte — une prise inversée met 29 V (broche 8) là où vous attendez la masse.
+
+> [!DANGER] YardForce NX100i — J18 non vérifié
+> Sur la NX100i, le firmware d'origine fait tourner SPI3 sur PB3 / PB4 / PB5 vers ce connecteur et l'ordre des broches (GND / 5 V / SCL / SDA / VBat) n'a **pas** été mesuré sur ce châssis ; une broche porte ~29 V. Mesurez chaque broche au multimètre avant de brancher une IMU. L'accéléromètre LIS3DH intégré à la carte (I²C 0x18) est lu par Mowgli comme sur la 500B.`,
       },
       parts: [
         { qty: 1, name: { en: "IMU module (WT901 I²C / MPU6050)", fr: "Module IMU (WT901 I²C / MPU6050)" } },
