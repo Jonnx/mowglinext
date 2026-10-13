@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <span>
 #include <vector>
 
 namespace mowgli_nav2_plugins::transit
@@ -69,9 +70,9 @@ inline double ringDistance(Point p, const Ring& ring)
 
 // Split at EVERY polygon crossing, then classify each open interval. Sampling
 // at a fixed spacing can miss arbitrarily thin gaps and diagonal corner cuts.
-inline std::vector<double> cuts(Point a, Point b, const std::vector<Ring>& rings)
+inline void cuts(Point a, Point b, std::span<const Ring> rings, std::vector<double>& result)
 {
-  std::vector<double> result{0, 1};
+  result.assign({0, 1});
   const Point d{b.x - a.x, b.y - a.y};
   const double length2 = d.x * d.x + d.y * d.y;
   for (const auto& ring : rings)
@@ -94,6 +95,11 @@ inline std::vector<double> cuts(Point a, Point b, const std::vector<Ring>& rings
     }
   std::sort(result.begin(), result.end());
   result.erase(std::unique(result.begin(), result.end()), result.end());
+}
+inline std::vector<double> cuts(Point a, Point b, const std::vector<Ring>& rings)
+{
+  std::vector<double> result;
+  cuts(a, b, rings, result);
   return result;
 }
 
@@ -127,22 +133,33 @@ struct Geometry
   }
   bool segmentAuthorized(Point a, Point b) const
   {
+    std::vector<double> scratch;
+    return segmentAuthorized(a, b, scratch);
+  }
+  bool segmentAuthorized(Point a, Point b, std::vector<double>& scratch) const
+  {
     if (!authorized(a) || !authorized(b))
       return false;
-    const auto ts = cuts(a, b, allowed);
-    for (std::size_t i = 1; i < ts.size(); ++i)
-      if (!authorized(interpolate(a, b, (ts[i - 1] + ts[i]) / 2)))
+    cuts(a, b, allowed, scratch);
+    for (std::size_t i = 1; i < scratch.size(); ++i)
+      if (!authorized(interpolate(a, b, (scratch[i - 1] + scratch[i]) / 2)))
         return false;
     return true;
   }
   bool segmentClear(Point a, Point b) const
+  {
+    std::vector<double> scratch;
+    return segmentClear(a, b, scratch);
+  }
+  bool segmentClear(Point a, Point b, std::vector<double>& scratch) const
   {
     if (!clear(a) || !clear(b))
       return false;
     for (std::size_t index = 0; index < blocked.size(); ++index)
     {
       const auto& ring = blocked[index];
-      if (cuts(a, b, {ring}).size() > 2)
+      cuts(a, b, std::span<const Ring>(&ring, 1), scratch);
+      if (scratch.size() > 2)
         return false;
       for (std::size_t i = 0, j = ring.size() - 1; i < ring.size(); j = i++)
         if (std::min({edgeDistance(a, ring[j], ring[i]),

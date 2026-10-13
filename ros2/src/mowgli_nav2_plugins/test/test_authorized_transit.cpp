@@ -154,6 +154,22 @@ TEST(TransitGeometry, RasterMatchesCollapsedCellCentresAtExtremeOrigin)
   }
 }
 
+TEST(TransitGeometry, ReusedCrossingBuffersDoNotRetainPreviousEdges)
+{
+  Geometry geometry;
+  geometry.allowed = {rectangle(-1, -1, 0, 1), rectangle(0.000001, -1, 1, 1)};
+  geometry.blocked = {rectangle(-0.01, -0.2, 0.01, 0.2)};
+  geometry.blocked_margins = {0.1};
+  std::vector<double> scratch{0.25, 0.5, 0.75};
+  for (unsigned iteration = 0; iteration < 10; ++iteration)
+  {
+    EXPECT_FALSE(geometry.segmentAuthorized({-0.8, 0.8}, {0.8, 0.8}, scratch));
+    EXPECT_TRUE(geometry.segmentAuthorized({-0.8, 0.8}, {-0.2, 0.8}, scratch));
+    EXPECT_FALSE(geometry.segmentClear({-0.8, 0}, {0.8, 0}, scratch));
+    EXPECT_TRUE(geometry.segmentClear({-0.8, 0.8}, {0.8, 0.8}, scratch));
+  }
+}
+
 class AuthorizedTransitPlannerTest : public testing::Test
 {
 protected:

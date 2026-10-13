@@ -128,9 +128,17 @@ void AuthorizedTransitPlanner::onGeometry(
 
 bool AuthorizedTransitPlanner::costSegmentClear(transit::Point a, transit::Point b) const
 {
+  std::vector<double> cuts;
+  return costSegmentClear(a, b, cuts);
+}
+
+bool AuthorizedTransitPlanner::costSegmentClear(transit::Point a,
+                                                transit::Point b,
+                                                std::vector<double>& ts) const
+{
   // Split at grid lines: every crossed cell is checked, even a very short
   // segment clipping a lethal corner. The copy retains shared obstacle costs.
-  std::vector<double> ts{0, 1};
+  ts.assign({0, 1});
   const auto split = [&](double start, double end, double origin)
   {
     if (start == end)
@@ -318,6 +326,9 @@ nav_msgs::msg::Path AuthorizedTransitPlanner::createPlan(
   }
   profile("authorization");
   std::size_t edge_checks = 0;
+  // Buffers belong to this synchronous plan; only capacity is reused, never
+  // a geometry verdict or obstacle observation from a previous edge/plan.
+  std::vector<double> geometry_cuts, cost_cuts;
   TransitNode::edge_allowed = [&](uint64_t a, uint64_t b)
   {
     ++edge_checks;
@@ -326,8 +337,8 @@ nav_msgs::msg::Path AuthorizedTransitPlanner::createPlan(
     const auto width = private_map_.getSizeInCellsX();
     private_map_.mapToWorld(a % width, a / width, p.x, p.y);
     private_map_.mapToWorld(b % width, b / width, q.x, q.y);
-    return geometry.segmentAuthorized(p, q) && geometry.segmentClear(p, q) &&
-           costSegmentClear(p, q);
+    return geometry.segmentAuthorized(p, q, geometry_cuts) &&
+           geometry.segmentClear(p, q, geometry_cuts) && costSegmentClear(p, q, cost_cuts);
   };
   struct ResetContext
   {
