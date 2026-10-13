@@ -28,6 +28,10 @@ extern "C"
     #define BOARD_YARDFORCE500_VARIANT_B 1
     #define BOARD_BILTEMA_RM1000 1
 {{end}}
+{{if eq .BoardType "BOARD_YARDFORCE_NX100I"}}
+    #define BOARD_YARDFORCE500_VARIANT_B 1
+    #define BOARD_YARDFORCE_NX100I 1
+{{end}}
 {{if eq .BoardType "BOARD_LUV1000RI"}}
     #define BOARD_LUV1000RI 1
 {{end}}
@@ -97,7 +101,20 @@ extern "C"
 #define WHEEL_BASE  {{.WheelBase}}        // The distance between the center of the wheels in meters
 
 #define OPTION_ULTRASONIC 0
+/* OPTION_BUMPER 0 compiles HALLSTOP_{Left,Right}_Sense() to a constant 0
+ * (main.c), so PD2/PD3 never influence drivemotor.c. */
 #define OPTION_BUMPER 0
+
+#if defined(BOARD_YARDFORCE_NX100I)
+/* YardForce NX100i: same GForce STM32F401VC mainboard and pinout as the 500B,
+ * same PAC5210 / PAC5223 UART protocols. PD2/PD3 hall-stop lines are unused on
+ * the NX100i (collision detection is meant to come from the hood ultrasonic
+ * sensors in a future driver). The hood stop button's white contact (PC8) is
+ * normally-closed to GND and opens when pressed, so it needs a pull-up to read
+ * 1 = pressed; a disconnected hood cable then also reads as pressed. See the
+ * matching block in board.h. */
+#define STOP_BUTTON_WHITE_PULL GPIO_PULLUP
+#endif
 
 #define BOARD_HAS_MASTER_USART 0
 #elif defined(BOARD_LUV1000RI)

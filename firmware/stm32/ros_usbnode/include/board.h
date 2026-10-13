@@ -90,7 +90,29 @@ extern "C"
 #define WHEEL_BASE  0.325		// The distance between the center of the wheels in meters
 
 #define OPTION_ULTRASONIC 0
+/* OPTION_BUMPER 0 compiles HALLSTOP_{Left,Right}_Sense() to a constant 0
+ * (main.c), so PD2/PD3 never influence drivemotor.c. */
 #define OPTION_BUMPER 0
+
+#if defined(BOARD_YARDFORCE_NX100I)
+/* YardForce NX100i: same GForce STM32F401VC mainboard and pinout as the 500B
+ * (verified live against the stock firmware, 2026-10-13), same PAC5210 /
+ * PAC5223 UART protocols. Differences handled here:
+ *  - PD2/PD3 hall-stop (bumper) lines are not connected on the NX100i and sit
+ *    permanently HIGH on the board; they stay compiled out (OPTION_BUMPER 0).
+ *    Collision detection is meant to come from the hood ultrasonic sensors in a
+ *    future driver (they talk to the mainboard over the hood cable, not the
+ *    trigger/echo GPIOs that OPTION_ULTRASONIC's ultrasonic_sensor.c drives).
+ *  - The hood stop button has two contacts: PC0 is driven HIGH when pressed
+ *    (works with the default pull-down); PC8 is a normally-closed contact to
+ *    GND that OPENS when pressed, so it needs a pull-up to read 1 = pressed.
+ *    With the pull-up, a disconnected hood cable also reads as pressed
+ *    (fail-safe). Verified with the stock firmware's own pull configuration.
+ *  - The NX100i LCD/18-button panel speaks a different protocol than the 500B
+ *    keypad; PANEL_TYPE stays 500B_CLASSIC until an NX100i driver exists, so
+ *    the display stays blank (harmless). */
+#define STOP_BUTTON_WHITE_PULL GPIO_PULLUP
+#endif
 
 #define BOARD_HAS_MASTER_USART 0
 #elif defined(BOARD_LUV1000RI) // TODO: This currently can't be selected via platformio

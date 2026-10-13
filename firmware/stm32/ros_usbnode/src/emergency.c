@@ -381,7 +381,14 @@ void Emergency_Init(void)
 
     GPIO_InitStruct.Pin = STOP_BUTTON_WHITE_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    /* Boards whose white contact is normally-closed-to-GND (opens when pressed,
+     * e.g. NX100i) define STOP_BUTTON_WHITE_PULL as GPIO_PULLUP in board.h so
+     * the pin still reads 1 = pressed (and 1 when the cable is unplugged). */
+#ifdef STOP_BUTTON_WHITE_PULL
+    GPIO_InitStruct.Pull = STOP_BUTTON_WHITE_PULL;
+#else
     GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+#endif
     HAL_GPIO_Init(STOP_BUTTON_WHITE_PORT, &GPIO_InitStruct);
 
     TILT_GPIO_CLK_ENABLE();
