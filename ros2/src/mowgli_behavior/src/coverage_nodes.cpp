@@ -1774,8 +1774,7 @@ BT::NodeStatus FollowStrip::yieldToFleet(const std::shared_ptr<BTContext>& ctx, 
 {
   if (mid_pass &&
       (follow_handle_ || follow_future_.valid() || transit_active_ || transit_pending_) &&
-      total_path_poses_ > 0 &&
-      swath_idx_ < swaths_.size())
+      total_path_poses_ > 0 && swath_idx_ < swaths_.size())
   {
     if (follow_handle_ && !transit_active_ && !transit_pending_)
     {
