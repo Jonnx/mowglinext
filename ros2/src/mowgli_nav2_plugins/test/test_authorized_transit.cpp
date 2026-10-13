@@ -1,5 +1,7 @@
 // Copyright 2026 Mowgli Project
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include <iostream>
+
 #include "mowgli_nav2_plugins/authorized_transit_planner.hpp"
 #include <gtest/gtest.h>
 
@@ -314,5 +316,83 @@ TEST_F(AuthorizedTransitPlannerTest, RejectedParameterUpdatesDoNotChangeSearchGe
   EXPECT_NO_THROW(plan(-4, 0, 4, 10));
   geometry({rectangle(-4, 0, -0.2, 10), rectangle(0.2, 0, 4, 10)});
   EXPECT_THROW(plan(-1.2, 1, 1.2, 1), nav2_core::NoValidPathCouldBeFound);
+}
+
+// Opt-in real-planner benchmark, excluded from ordinary test runs. Run with
+// --gtest_also_run_disabled_tests --gtest_filter=*RepresentativePlanningBenchmark.
+// Each case uses the same geometry, costs and endpoints in both directions.
+TEST_F(AuthorizedTransitPlannerTest, DISABLED_RepresentativePlanningBenchmark)
+{
+  ASSERT_EQ(rcutils_logging_set_logger_level(node_->get_logger().get_name(),
+                                             RCUTILS_LOG_SEVERITY_DEBUG),
+            RCUTILS_RET_OK);
+  node_->set_parameter(rclcpp::Parameter("GridBased.max_planning_time", 60.0));
+  node_->set_parameter(rclcpp::Parameter("GridBased.cost_travel_multiplier", 3.0));
+  node_->set_parameter(rclcpp::Parameter("GridBased.allow_unknown", false));
+  struct Scenario
+  {
+    const char* name;
+    unsigned width, height;
+    std::vector<Ring> areas, obstacles;
+    Point start, goal;
+    bool connected{true};
+  };
+  Ring detailed;
+  for (unsigned i = 0; i < 750; ++i)
+  {
+    const double angle = i * 2 * std::acos(-1.0) / 750;
+    const double radius = 35 + 2 * std::sin(7 * angle);
+    detailed.push_back({45 + radius * std::cos(angle), 45 + radius * std::sin(angle)});
+  }
+  const auto lawns = std::vector<Ring>{rectangle(0, 0, 45, 75), rectangle(55, 0, 100, 75)};
+  auto detour = lawns;
+  detour.push_back(rectangle(40, 70, 60, 75));
+  std::vector<Ring> obstacles;
+  for (unsigned y = 0; y < 4; ++y)
+    for (unsigned x = 0; x < 8; ++x)
+      obstacles.push_back(rectangle(6 + x * 4, 5 + y * 9, 7 + x * 4, 8 + y * 9));
+  const std::vector<Scenario> scenarios{
+      {"small", 160, 160, {rectangle(0, 0, 10, 10)}, {}, {1, 1}, {9, 9}},
+      {"medium", 625, 625, {rectangle(0, 0, 45, 45)}, {}, {1, 1}, {44, 44}},
+      {"large", 1250, 1250, {rectangle(0, 0, 95, 95)}, {}, {1, 1}, {94, 94}},
+      {"vertices750", 1250, 1250, {detailed}, {}, {20, 45}, {70, 45}},
+      {"detour", 1375, 1000, detour, {}, {40, 1}, {60, 1}},
+      {"disconnected", 1375, 1000, lawns, {}, {40, 1}, {60, 1}, false},
+      {"obstacles32", 625, 625, {rectangle(0, 0, 45, 45)}, obstacles, {1, 1}, {44, 44}}};
+  for (const auto& scenario : scenarios)
+  {
+    map_->getCostmap()->resizeMap(scenario.width, scenario.height, 0.08, -1.03, -1.03);
+    std::fill_n(map_->getCostmap()->getCharMap(), scenario.width * scenario.height, 0);
+    geometry(scenario.areas, scenario.obstacles);
+    std::vector<double> times;
+    for (unsigned iteration = 0; iteration < 30; ++iteration)
+    {
+      const auto a = iteration % 2 ? scenario.goal : scenario.start;
+      const auto b = iteration % 2 ? scenario.start : scenario.goal;
+      const auto begin = std::chrono::steady_clock::now();
+      nav_msgs::msg::Path path;
+      bool reached = false;
+      try
+      {
+        path = plan(a.x, a.y, b.x, b.y);
+        reached = true;
+      }
+      catch (const nav2_core::NoValidPathCouldBeFound&)
+      {
+      }
+      times.push_back(
+          std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - begin)
+              .count());
+      ASSERT_EQ(reached, scenario.connected) << scenario.name;
+      if (reached)
+      {
+        ASSERT_TRUE(authorized(path)) << scenario.name;
+      }
+    }
+    std::sort(times.begin(), times.end());
+    std::cout << "TRANSIT_BENCH " << scenario.name << " cells=" << scenario.width * scenario.height
+              << " median_ms=" << (times[14] + times[15]) / 2 << " p95_ms=" << times[28]
+              << " max_ms=" << times.back() << std::endl;
+  }
 }
 }  // namespace mowgli_nav2_plugins
