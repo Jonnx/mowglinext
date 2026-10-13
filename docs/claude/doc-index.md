@@ -13,6 +13,8 @@
 - [Transit authorization](../TRANSIT_AUTHORIZATION.md) — **current**, operator/contributor:
   normal transit polygon authorization, bounded terminal legs, explicit recovery,
   and required physical acceptance procedure.
+- [Transit planner performance](../TRANSIT_PLANNER_PERFORMANCE.md) — **current**, contributor:
+  optimization evidence, reproducible benchmarks and required Pi 4 validation.
 
 - [Nav2 Lyrical controller review](../NAV2_LYRICAL_CONTROLLER_REVIEW.md) — **current**, contributor:
   why FTC stays the coverage controller after the Lyrical migration, what Nav2 1.5.1 actually adds
