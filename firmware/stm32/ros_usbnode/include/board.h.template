@@ -114,6 +114,10 @@ extern "C"
  * 1 = pressed; a disconnected hood cable then also reads as pressed. See the
  * matching block in board.h. */
 #define STOP_BUTTON_WHITE_PULL GPIO_PULLUP
+/* NX100i dock handshake: the station holds a ~14 V current-limited probe until
+ * the mower connects its battery bus, so the 500B thresholds would never fire. */
+#define MIN_DOCKED_VOLTAGE 12.0f
+#define CHARGER_CONNECT_VOLTAGE 12.0f
 #endif
 
 #define BOARD_HAS_MASTER_USART 0

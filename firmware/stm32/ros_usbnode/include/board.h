@@ -112,6 +112,15 @@ extern "C"
  *    keypad; PANEL_TYPE stays 500B_CLASSIC until an NX100i driver exists, so
  *    the display stays blank (harmless). */
 #define STOP_BUTTON_WHITE_PULL GPIO_PULLUP
+/* Dock handshake. The NX100i station holds a current-limited ~14 V probe on
+ * its contacts (32 V open circuit) until the mower connects its battery bus;
+ * the stock firmware treats the charger as present above ~13 V (ADC > 1000),
+ * raises TF4 and starts the buck, after which the station ramps to full
+ * voltage. Mowgli's 500B thresholds (connect >= 30 V, docked >= 20 V) would
+ * never fire on this station. Charger topology, measurements and limits are
+ * otherwise identical to the 500B (verified against the stock firmware). */
+#define MIN_DOCKED_VOLTAGE 12.0f
+#define CHARGER_CONNECT_VOLTAGE 12.0f
 #endif
 
 #define BOARD_HAS_MASTER_USART 0
