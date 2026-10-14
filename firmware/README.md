@@ -111,7 +111,7 @@ There are no firmware-side unit tests. Behaviour is pinned by the host mirror
   contact (PC8) is normally closed to GND and opens when pressed, so this build pulls PC8 up
   (1 = pressed, also pressed when the hood cable is unplugged). PD2/PD3 hall-stop lines are
   unconnected (`OPTION_BUMPER 0`). LCD panel protocol and hood ultrasonic sensors not supported yet
-  (display stays blank, control via the GUI).
+  (display stays blank, control via the GUI). Hood ultrasonic board (I2C 0x51 on PC10/PC11) is read by `ultrasonic_nx100i.c` into `uss_ranges_m[0..1]`; protocol notes in `stm32/ros_usbnode/NX100I-HOOD.md`.
 
 `BOARD_LUV1000RI` exists in `board.h` / `board.h.template` and the GUI offers the board, but
 `platformio.ini` has **no `LUV1000RI` env** — the target MCU/clock and the LUV blade-motor UART

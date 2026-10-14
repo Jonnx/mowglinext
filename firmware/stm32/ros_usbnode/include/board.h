@@ -35,6 +35,10 @@ extern "C"
 #define PANEL_TYPE_YARDFORCE_900_ECO 3
 #define PANEL_TYPE_YARDFORCE_500B_CLASSIC 4
 
+/* ultrasonic backends, used when OPTION_ULTRASONIC == 1 */
+#define ULTRASONIC_TYPE_UART 1       /* LUV1000RI: serial module on MASTER_USART (ultrasonic_sensor.c) */
+#define ULTRASONIC_TYPE_NX100I_I2C 2 /* NX100i: "RM CSB" board on bit-banged I2C PC10/PC11 (ultrasonic_nx100i.c) */
+
 #if BOARD_YARDFORCE500_VARIANT_ORIG
 ///////////////////////////
 // Yardforce 500 CLASSIC //
@@ -89,7 +93,14 @@ extern "C"
 #define TICKS_PER_M 277.0 // Power-on fallback encoder ticks per meter; ROS runtime tuning overrides this after host connection
 #define WHEEL_BASE  0.325		// The distance between the center of the wheels in meters
 
+#if defined(BOARD_YARDFORCE_NX100I)
+/* The NX100i hood carries an ultrasonic board ("RM CSB", two sensors) that
+ * the mainboard reads over a bit-banged I2C bus; see ultrasonic_nx100i.c. */
+#define OPTION_ULTRASONIC 1
+#define ULTRASONIC_TYPE ULTRASONIC_TYPE_NX100I_I2C
+#else
 #define OPTION_ULTRASONIC 0
+#endif
 /* OPTION_BUMPER 0 compiles HALLSTOP_{Left,Right}_Sense() to a constant 0
  * (main.c), so PD2/PD3 never influence drivemotor.c. */
 #define OPTION_BUMPER 0
@@ -100,9 +111,11 @@ extern "C"
  * PAC5223 UART protocols. Differences handled here:
  *  - PD2/PD3 hall-stop (bumper) lines are not connected on the NX100i and sit
  *    permanently HIGH on the board; they stay compiled out (OPTION_BUMPER 0).
- *    Collision detection is meant to come from the hood ultrasonic sensors in a
- *    future driver (they talk to the mainboard over the hood cable, not the
- *    trigger/echo GPIOs that OPTION_ULTRASONIC's ultrasonic_sensor.c drives).
+ *    Collision sensing comes from the hood's ultrasonic board instead: an I2C
+ *    slave (addr 0x51, "RM CSB") on PC10 SCL / PC11 SDA that reports two
+ *    distances; ultrasonic_nx100i.c reads it and the values travel to the
+ *    host in pkt_status.uss_ranges_m[0..1] (protocol reverse-engineered from
+ *    the stock firmware, see docs in the PR).
  *  - The hood stop button has two contacts: PC0 is driven HIGH when pressed
  *    (works with the default pull-down); PC8 is a normally-closed contact to
  *    GND that OPENS when pressed, so it needs a pull-up to read 1 = pressed.
@@ -112,6 +125,12 @@ extern "C"
  *    keypad; PANEL_TYPE stays 500B_CLASSIC until an NX100i driver exists, so
  *    the display stays blank (harmless). */
 #define STOP_BUTTON_WHITE_PULL GPIO_PULLUP
+/* Hood ultrasonic board bus (bit-banged, open-drain). */
+#define NX100I_USS_SCL_PIN GPIO_PIN_10
+#define NX100I_USS_SCL_PORT GPIOC
+#define NX100I_USS_SDA_PIN GPIO_PIN_11
+#define NX100I_USS_SDA_PORT GPIOC
+#define NX100I_USS_GPIO_CLK_ENABLE() __HAL_RCC_GPIOC_CLK_ENABLE()
 /* Dock handshake. The NX100i station holds a current-limited ~14 V probe on
  * its contacts (32 V open circuit) until the mower connects its battery bus;
  * the stock firmware treats the charger as present above ~13 V (ADC > 1000),
@@ -157,6 +176,10 @@ extern "C"
 // #define I_DONT_NEED_MY_FINGERS           1      // disables EmergencyController()
 
 // Battery/charge envelope, emergency-sensor timeouts and the onboard-IMU tilt
+#if (OPTION_ULTRASONIC == 1) && !defined(ULTRASONIC_TYPE)
+#define ULTRASONIC_TYPE ULTRASONIC_TYPE_UART
+#endif
+
 // threshold are single-sourced in board_defaults.h (shared with board.h.template
 // so CI and the GUI-flashed firmware can never drift). This file defines none of
 // them itself; the #ifndef fallbacks in board_defaults.h supply the blessed

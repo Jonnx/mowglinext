@@ -51,6 +51,10 @@ extern "C"
 #define PANEL_TYPE_YARDFORCE_900_ECO 3
 #define PANEL_TYPE_YARDFORCE_500B_CLASSIC 4
 
+/* ultrasonic backends, used when OPTION_ULTRASONIC == 1 */
+#define ULTRASONIC_TYPE_UART 1       /* LUV1000RI: serial module on MASTER_USART (ultrasonic_sensor.c) */
+#define ULTRASONIC_TYPE_NX100I_I2C 2 /* NX100i: "RM CSB" board on bit-banged I2C PC10/PC11 (ultrasonic_nx100i.c) */
+
 #if BOARD_YARDFORCE500_VARIANT_ORIG
 ///////////////////////////
 // Yardforce 500 CLASSIC //
@@ -100,7 +104,12 @@ extern "C"
 #define TICKS_PER_M {{.TickPerM}} // Power-on fallback encoder ticks per meter; ROS runtime tuning overrides this after host connection
 #define WHEEL_BASE  {{.WheelBase}}        // The distance between the center of the wheels in meters
 
+#if defined(BOARD_YARDFORCE_NX100I)
+#define OPTION_ULTRASONIC 1
+#define ULTRASONIC_TYPE ULTRASONIC_TYPE_NX100I_I2C
+#else
 #define OPTION_ULTRASONIC 0
+#endif
 /* OPTION_BUMPER 0 compiles HALLSTOP_{Left,Right}_Sense() to a constant 0
  * (main.c), so PD2/PD3 never influence drivemotor.c. */
 #define OPTION_BUMPER 0
@@ -114,6 +123,12 @@ extern "C"
  * 1 = pressed; a disconnected hood cable then also reads as pressed. See the
  * matching block in board.h. */
 #define STOP_BUTTON_WHITE_PULL GPIO_PULLUP
+/* Hood ultrasonic board bus (bit-banged, open-drain). */
+#define NX100I_USS_SCL_PIN GPIO_PIN_10
+#define NX100I_USS_SCL_PORT GPIOC
+#define NX100I_USS_SDA_PIN GPIO_PIN_11
+#define NX100I_USS_SDA_PORT GPIOC
+#define NX100I_USS_GPIO_CLK_ENABLE() __HAL_RCC_GPIOC_CLK_ENABLE()
 /* NX100i dock handshake: the station holds a ~14 V current-limited probe until
  * the mower connects its battery bus, so the 500B thresholds would never fire. */
 #define MIN_DOCKED_VOLTAGE 12.0f
@@ -185,6 +200,10 @@ extern "C"
 // AFTER the GUI-substituted values above so a supplied value WINS (the #ifndef
 // fallbacks only fire for anything the GUI left unset), and the inclination
 // clamp constrains whatever value was substituted. See board_defaults.h.
+#if (OPTION_ULTRASONIC == 1) && !defined(ULTRASONIC_TYPE)
+#define ULTRASONIC_TYPE ULTRASONIC_TYPE_UART
+#endif
+
 #include "board_defaults.h"
 
 // Enable Emergency debugging
