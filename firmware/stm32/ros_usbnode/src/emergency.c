@@ -25,6 +25,9 @@
 #include "actuator_authorization.h"
 #include "i2c.h"
 #include "emergency_clear_policy.h"
+#if PANEL_TYPE == PANEL_TYPE_YARDFORCE_NX100I
+#include "panel.h"
+#endif
 #include "fw_param_catalog.h"
 
 //#define EMERGENCY_DEBUG 1
@@ -216,6 +219,12 @@ void EmergencyController(void)
     uint8_t wheel_lift_red = Emergency_WheelLiftRed();
     uint8_t tilt = Emergency_Tilt();
     GPIO_PinState play_button = !HAL_GPIO_ReadPin(PLAY_BUTTON_PORT, PLAY_BUTTON_PIN); // pullup, active low    
+#if PANEL_TYPE == PANEL_TYPE_YARDFORCE_NX100I
+    /* The NX100i hood has no play GPIO; its panel sends START as a command.
+     * The panel driver turns that into a virtual held play button for the
+     * configured hold time, so the normal release policy below applies. */
+    if (PANEL_NX100I_VirtualPlayHeld()) play_button = GPIO_PIN_SET;
+#endif
     uint8_t accelerometer_int_triggered = Emergency_LowZAccelerometer();
 
     uint32_t now = HAL_GetTick();

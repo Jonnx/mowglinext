@@ -50,6 +50,7 @@ extern "C"
 #define PANEL_TYPE_YARDFORCE_LUV1000RI 2
 #define PANEL_TYPE_YARDFORCE_900_ECO 3
 #define PANEL_TYPE_YARDFORCE_500B_CLASSIC 4
+#define PANEL_TYPE_YARDFORCE_NX100I 5 /* "RM EC3" LCD panel, USART1, panel_nx100i.c */
 
 /* ultrasonic backends, used when OPTION_ULTRASONIC == 1 */
 #define ULTRASONIC_TYPE_UART 1       /* LUV1000RI: serial module on MASTER_USART (ultrasonic_sensor.c) */
@@ -90,7 +91,12 @@ extern "C"
 #define BLADEMOTOR_POLL_INTERVAL_MS 20u
 #define BLADEMOTOR_SEQUENCED_POWER 1
 #else
+#if defined(BOARD_YARDFORCE_NX100I)
+/* The NX100i hood panel has its own driver; the GUI still labels it "500B classic". */
+#define PANEL_TYPE PANEL_TYPE_YARDFORCE_NX100I
+#else
 #define PANEL_TYPE {{.PanelType}}
+#endif
 #define BLADEMOTOR_STOP_COMMAND_VALUE 0x00u
 #define BLADEMOTOR_FORWARD_COMMAND_VALUE 0x80u
 #define BLADEMOTOR_REVERSE_COMMAND_VALUE 0xC0u

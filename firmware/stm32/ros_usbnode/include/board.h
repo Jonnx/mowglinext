@@ -34,6 +34,7 @@ extern "C"
 #define PANEL_TYPE_YARDFORCE_LUV1000RI 2
 #define PANEL_TYPE_YARDFORCE_900_ECO 3
 #define PANEL_TYPE_YARDFORCE_500B_CLASSIC 4
+#define PANEL_TYPE_YARDFORCE_NX100I 5 /* "RM EC3" LCD panel, USART1, panel_nx100i.c */
 
 /* ultrasonic backends, used when OPTION_ULTRASONIC == 1 */
 #define ULTRASONIC_TYPE_UART 1       /* LUV1000RI: serial module on MASTER_USART (ultrasonic_sensor.c) */
@@ -79,7 +80,11 @@ extern "C"
 #define BLADEMOTOR_POLL_INTERVAL_MS 20u
 #define BLADEMOTOR_SEQUENCED_POWER 1
 #else
+#if defined(BOARD_YARDFORCE_NX100I)
+#define PANEL_TYPE PANEL_TYPE_YARDFORCE_NX100I
+#else
 #define PANEL_TYPE PANEL_TYPE_YARDFORCE_500B_CLASSIC
+#endif
 #define BLADEMOTOR_STOP_COMMAND_VALUE 0x00u
 #define BLADEMOTOR_FORWARD_COMMAND_VALUE 0x80u
 #define BLADEMOTOR_REVERSE_COMMAND_VALUE 0xC0u
@@ -121,9 +126,11 @@ extern "C"
  *    GND that OPENS when pressed, so it needs a pull-up to read 1 = pressed.
  *    With the pull-up, a disconnected hood cable also reads as pressed
  *    (fail-safe). Verified with the stock firmware's own pull configuration.
- *  - The NX100i LCD/18-button panel speaks a different protocol than the 500B
- *    keypad; PANEL_TYPE stays 500B_CLASSIC until an NX100i driver exists, so
- *    the display stays blank (harmless). */
+ *  - The NX100i LCD/18-button panel ("RM EC3") speaks its own protocol on
+ *    USART1: panel_nx100i.c (PANEL_TYPE_YARDFORCE_NX100I) does the handshake
+ *    and keepalive, forwards the panel's START/HOME as UI events, lets START
+ *    release a latched emergency like the play button, and can push a message
+ *    code to the LCD. */
 #define STOP_BUTTON_WHITE_PULL GPIO_PULLUP
 /* Hood ultrasonic board bus (bit-banged, open-drain). */
 #define NX100I_USS_SCL_PIN GPIO_PIN_10

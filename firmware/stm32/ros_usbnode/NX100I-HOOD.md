@@ -1,9 +1,11 @@
 # YardForce NX100i hood protocols
 
 Reverse-engineered offline from the stock mainboard firmware ("GRM V4.03_2021") and live RAM
-dumps of a running NX100i (2026-10-14). What Mowgli implements today: the ultrasonic board
-(`src/ultrasonic_nx100i.c`, selected by `ULTRASONIC_TYPE_NX100I_I2C` in `board.h`). The panel
-protocol is documented for a future `PANEL_TYPE_YARDFORCE_NX100I` driver.
+dumps of a running NX100i (2026-10-14). What Mowgli implements: the ultrasonic board (`src/ultrasonic_nx100i.c`, selected by
+`ULTRASONIC_TYPE_NX100I_I2C` in `board.h`) and the panel (`src/panel_nx100i.c`,
+`PANEL_TYPE_YARDFORCE_NX100I`: handshake, keepalive, START/HOME as UI events 4/5, START as a
+virtual play button for the emergency release, `PANEL_NX100I_ShowMessageCode()` for the LCD).
+Both await their first run on hardware.
 
 Confirmed from code + live RAM unless marked (inferred).
 
