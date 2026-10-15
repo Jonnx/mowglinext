@@ -151,7 +151,7 @@ Notes :
 > [!NOTE] Blank panel
 > The NX100i panel protocol differs from the 500B keypad. Under Mowgli the LCD lights up but stays blank; you control the mower from the GUI. A panel driver is future work.
 
-**External IMU.** J18 pins 5 (SCL, PB3) and 6 (SDA, PB4) are verified on this chassis; power the module from the neighbouring J17 (5 V / GND) because the hood harness fills J18. The 5 V there is a switched accessory rail that only comes up at the end of the firmware's init, so the \`YardforceNX100i\` build probes the IMU **after** the motor-controller init — an MPU-6050 (GY-521) was detected and streamed at ~90 Hz on the bench. Pin 8 of J18 still carries ~29 V: confirm pin 1 before plugging anything in.
+**External IMU.** J18 pins 5 (SCL, PB3) and 6 (SDA, PB4) are verified on this chassis; power the module from the neighbouring J17 (5 V / GND) because the hood harness fills J18. The 5 V there is a switched accessory rail that only comes up at the end of the firmware's init, so the \`YardforceNX100i\` build probes the IMU **after** the motor-controller init — an MPU-6050 (GY-521) was detected and streamed at ~90 Hz on the bench. Mount it chip-side up with the X arrow forward; a chip-side-down mount needs the \`YardforceNX100i_MPU6050_Roll180\` (arrow forward) or \`_Pitch180\` (arrow backward) build, otherwise the firmware yaw loop steers the wrong way and the mower cannot drive straight (field-confirmed 2026-10-15). Pin 8 of J18 still carries ~29 V: confirm pin 1 before plugging anything in.
 
 > [!DANGER] Still unverified
 > The tilt-switch polarity on PA8 has not been verified on this chassis.`,
@@ -173,7 +173,7 @@ Notes :
 > [!NOTE] Panneau vide
 > Le protocole du panneau NX100i diffère du clavier 500B. Sous Mowgli, le LCD s'allume mais reste vide ; vous pilotez la tondeuse depuis l'interface. Un pilote de panneau est un travail futur.
 
-**IMU externe.** Les broches 5 (SCL, PB3) et 6 (SDA, PB4) de J18 sont vérifiées sur ce châssis ; alimentez le module depuis le connecteur voisin J17 (5 V / GND), le faisceau du capot occupant J18. Ce 5 V est un rail accessoire commuté qui n'apparaît qu'à la fin de l'initialisation du firmware ; le build \`YardforceNX100i\` sonde donc l'IMU **après** l'initialisation des contrôleurs moteurs — un MPU-6050 (GY-521) a été détecté et diffusé à ~90 Hz sur banc. La broche 8 de J18 porte toujours ~29 V : confirmez la broche 1 avant de brancher quoi que ce soit.
+**IMU externe.** Les broches 5 (SCL, PB3) et 6 (SDA, PB4) de J18 sont vérifiées sur ce châssis ; alimentez le module depuis le connecteur voisin J17 (5 V / GND), le faisceau du capot occupant J18. Ce 5 V est un rail accessoire commuté qui n'apparaît qu'à la fin de l'initialisation du firmware ; le build \`YardforceNX100i\` sonde donc l'IMU **après** l'initialisation des contrôleurs moteurs — un MPU-6050 (GY-521) a été détecté et diffusé à ~90 Hz sur banc. Montez-le puce vers le haut, flèche X vers l'avant ; un montage puce vers le bas demande le build \`YardforceNX100i_MPU6050_Roll180\` (flèche vers l'avant) ou \`_Pitch180\` (flèche vers l'arrière), sinon la boucle de lacet du firmware corrige à l'envers et la tondeuse ne roule pas droit (confirmé sur le terrain le 2026-10-15). La broche 8 de J18 porte toujours ~29 V : confirmez la broche 1 avant de brancher quoi que ce soit.
 
 > [!DANGER] Toujours non vérifié
 > La polarité du capteur d'inclinaison sur PA8 n'a pas été vérifiée sur ce châssis.`,

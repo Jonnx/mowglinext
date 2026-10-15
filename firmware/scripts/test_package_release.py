@@ -146,10 +146,14 @@ def main():
             raise AssertionError(f"prebuilt artifact file names collide: {files}")
         if "_nx100i_" not in nx100i["file"]:
             raise AssertionError(f"NX100i artifact lacks its variant tag: {nx100i['file']!r}")
-        if "BiltemaRM1000_MPU6050_Yaw180" in {
-            item["env"] for item in manifest["permutations"].values()
-        }:
-            raise AssertionError("mount-specific yaw-180 firmware must not be a default prebuilt")
+        mount_specific = {
+            "BiltemaRM1000_MPU6050_Yaw180",
+            "YardforceNX100i_MPU6050_Roll180",
+            "YardforceNX100i_MPU6050_Pitch180",
+        }
+        prebuilt_envs = {item["env"] for item in manifest["permutations"].values()}
+        if mount_specific & prebuilt_envs:
+            raise AssertionError("mount-specific IMU-rotation firmware must not be a default prebuilt")
 
     print("Release catalog, PlatformIO targets, workflows, and manifest are aligned.")
 
