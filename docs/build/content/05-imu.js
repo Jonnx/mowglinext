@@ -24,8 +24,8 @@ Crimp a 2.0 mm-pitch housing (or use a HY2.0 pre-wired lead) on the J18 side, an
 
 Pin numbering follows the community wiring diagram (verified on 500 and 500B). Confirm pin 1 on your board's silkscreen — an inverted plug puts 29 V (pin 8) where you expect GND.
 
-> [!DANGER] YardForce NX100i — J18 not yet verified
-> On the NX100i the stock firmware runs SPI3 on PB3 / PB4 / PB5 to this header and the pin order (GND / 5 V / SCL / SDA / VBat) has **not** been measured on this chassis; one pin carries ~29 V. Measure every pin with a meter before connecting an IMU. The board's onboard LIS3DH accelerometer (I²C 0x18) is read by Mowgli as on the 500B.`,
+> [!NOTE] YardForce NX100i — J18 verified, power comes up late
+> Verified on an NX100i (2026-10-15) by toggling PB3 / PB4 from the debugger: J18 **pin 5 = SCL (PB3)** and **pin 6 = SDA (PB4)**, as in the table. Pin 8 still carries ~29 V — confirm pin 1 before plugging in. The factory hood harness occupies all nine J18 positions, so take the IMU's **5 V and GND from the neighbouring J17 header** (labelled 5 V / GND) and only push the SCL / SDA leads into positions 5 / 6. That 5 V is a switched accessory rail: it is off until the firmware has initialised the motor controllers, and an unpowered module's pull-ups hold the bus low, so the \`YardforceNX100i\` build probes the IMU **after** that init (the 500B build would spend its whole 20 s probe window on a dead bus and report no IMU). With the main switch off and only USB powering the board the rail reads ~3.6 V — a GY-521 / MPU-6050 still runs, but test with the switch on. The board's onboard LIS3DH accelerometer (I²C 0x18) is read by Mowgli as on the 500B.`,
         fr: `L'IMU parle en I²C au STM32 sur le connecteur rouge **J18** (bus logiciel sur PB3 / PB4). Quatre fils :
 
 | Broche IMU | Broche J18 |
@@ -42,8 +42,8 @@ Sertissez un boîtier au pas de 2,0 mm (ou un fil HY2.0 pré-câblé) côté J18
 
 La numérotation suit le schéma de câblage communautaire (vérifié sur 500 et 500B). Confirmez la broche 1 sur la sérigraphie de votre carte — une prise inversée met 29 V (broche 8) là où vous attendez la masse.
 
-> [!DANGER] YardForce NX100i — J18 non vérifié
-> Sur la NX100i, le firmware d'origine fait tourner SPI3 sur PB3 / PB4 / PB5 vers ce connecteur et l'ordre des broches (GND / 5 V / SCL / SDA / VBat) n'a **pas** été mesuré sur ce châssis ; une broche porte ~29 V. Mesurez chaque broche au multimètre avant de brancher une IMU. L'accéléromètre LIS3DH intégré à la carte (I²C 0x18) est lu par Mowgli comme sur la 500B.`,
+> [!NOTE] YardForce NX100i — J18 vérifié, alimentation tardive
+> Vérifié sur une NX100i (2026-10-15) en basculant PB3 / PB4 depuis le débogueur : J18 **broche 5 = SCL (PB3)** et **broche 6 = SDA (PB4)**, comme dans le tableau. La broche 8 porte toujours ~29 V — confirmez la broche 1 avant de brancher. Le faisceau d'origine du capot occupe les neuf positions de J18 : prenez donc le **5 V et la masse de l'IMU sur le connecteur voisin J17** (marqué 5 V / GND) et n'insérez que les fils SCL / SDA en positions 5 / 6. Ce 5 V est un rail accessoire commuté : il est coupé tant que le firmware n'a pas initialisé les contrôleurs moteurs, et les pull-ups d'un module non alimenté maintiennent le bus à l'état bas ; le build \`YardforceNX100i\` sonde donc l'IMU **après** cette initialisation (le build 500B passerait ses 20 s de sondage sur un bus mort et ne verrait aucune IMU). Interrupteur principal éteint et carte alimentée seulement par l'USB, le rail lit ~3,6 V — un GY-521 / MPU-6050 fonctionne encore, mais testez interrupteur allumé. L'accéléromètre LIS3DH intégré à la carte (I²C 0x18) est lu par Mowgli comme sur la 500B.`,
       },
       parts: [
         { qty: 1, name: { en: "IMU module (WT901 I²C / MPU6050)", fr: "Module IMU (WT901 I²C / MPU6050)" } },

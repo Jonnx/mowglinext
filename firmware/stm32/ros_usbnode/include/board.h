@@ -132,6 +132,14 @@ extern "C"
  *    release a latched emergency like the play button, and can push a message
  *    code to the LCD. */
 #define STOP_BUTTON_WHITE_PULL GPIO_PULLUP
+/* The J17/J18 accessory 5 V rail that powers an external IMU only comes up
+ * once the motor controllers and TF4 have been initialised; it is not a
+ * single GPIO (PD7, PD8, PE11, PE14, PE15 and PC5 were each tried alone and in
+ * combination at reset-halt, 2026-10-15). An unpowered IMU module's pull-ups
+ * hold J18 SCL/SDA low, so the stock boot order (IMU probe before the motor
+ * init) spends its whole 20 s window on a dead bus and never finds the
+ * sensor. main.c therefore probes the IMU after that init on this board. */
+#define IMU_PROBE_AFTER_POWER_INIT 1
 /* Hood ultrasonic board bus (bit-banged, open-drain). */
 #define NX100I_USS_SCL_PIN GPIO_PIN_10
 #define NX100I_USS_SCL_PORT GPIOC

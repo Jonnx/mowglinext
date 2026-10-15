@@ -129,6 +129,9 @@ extern "C"
  * 1 = pressed; a disconnected hood cable then also reads as pressed. See the
  * matching block in board.h. */
 #define STOP_BUTTON_WHITE_PULL GPIO_PULLUP
+/* The accessory 5 V rail powering the J18 IMU only comes up after the motor
+ * controllers and TF4 are initialised; main.c probes the IMU after that. */
+#define IMU_PROBE_AFTER_POWER_INIT 1
 /* Hood ultrasonic board bus (bit-banged, open-drain). */
 #define NX100I_USS_SCL_PIN GPIO_PIN_10
 #define NX100I_USS_SCL_PORT GPIOC

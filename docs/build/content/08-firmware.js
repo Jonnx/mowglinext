@@ -151,8 +151,10 @@ Notes :
 > [!NOTE] Blank panel
 > The NX100i panel protocol differs from the 500B keypad. Under Mowgli the LCD lights up but stays blank; you control the mower from the GUI. A panel driver is future work.
 
-> [!DANGER] J18 not yet verified
-> Measure the J18 pins before connecting an external IMU — the order is not verified on this chassis and one pin carries ~29 V. The tilt-switch polarity on PA8 is also not yet verified.`,
+**External IMU.** J18 pins 5 (SCL, PB3) and 6 (SDA, PB4) are verified on this chassis; power the module from the neighbouring J17 (5 V / GND) because the hood harness fills J18. The 5 V there is a switched accessory rail that only comes up at the end of the firmware's init, so the \`YardforceNX100i\` build probes the IMU **after** the motor-controller init — an MPU-6050 (GY-521) was detected and streamed at ~90 Hz on the bench. Pin 8 of J18 still carries ~29 V: confirm pin 1 before plugging anything in.
+
+> [!DANGER] Still unverified
+> The tilt-switch polarity on PA8 has not been verified on this chassis.`,
         fr: `La NX100i utilise la **même carte mère GForce STM32F401** que la 500B — même brochage, mêmes contrôleurs PAC5210 (traction) et PAC5223 (lame) et mêmes protocoles UART — avec son propre câblage du bouton stop. Choisissez **YardForce NX100i** comme modèle dans l'assistant ; il correspond au build firmware \`YardforceNX100i\` (carte STM32F401, panneau « 500B classic »). Mowgli-Next a fait rouler ce châssis sur banc sans modifier le code firmware de la 500B ; le moteur de lame n'a **pas encore** été testé.
 
 **Les connecteurs diffèrent de la 500B :**
@@ -171,8 +173,10 @@ Notes :
 > [!NOTE] Panneau vide
 > Le protocole du panneau NX100i diffère du clavier 500B. Sous Mowgli, le LCD s'allume mais reste vide ; vous pilotez la tondeuse depuis l'interface. Un pilote de panneau est un travail futur.
 
-> [!DANGER] J18 non vérifié
-> Mesurez les broches de J18 avant de brancher une IMU externe — l'ordre n'est pas vérifié sur ce châssis et une broche porte ~29 V. La polarité du capteur d'inclinaison sur PA8 n'est pas non plus vérifiée.`,
+**IMU externe.** Les broches 5 (SCL, PB3) et 6 (SDA, PB4) de J18 sont vérifiées sur ce châssis ; alimentez le module depuis le connecteur voisin J17 (5 V / GND), le faisceau du capot occupant J18. Ce 5 V est un rail accessoire commuté qui n'apparaît qu'à la fin de l'initialisation du firmware ; le build \`YardforceNX100i\` sonde donc l'IMU **après** l'initialisation des contrôleurs moteurs — un MPU-6050 (GY-521) a été détecté et diffusé à ~90 Hz sur banc. La broche 8 de J18 porte toujours ~29 V : confirmez la broche 1 avant de brancher quoi que ce soit.
+
+> [!DANGER] Toujours non vérifié
+> La polarité du capteur d'inclinaison sur PA8 n'a pas été vérifiée sur ce châssis.`,
       },
     },
     {
